@@ -1,0 +1,20 @@
+rule simple-rule(A, B, C, D) {
+    start seq {
+        A -> C : EX1_REQ
+        B -> C : EX2_REQ
+    }
+    C -> D : EX_REQ
+    optional one-of {
+        seq {
+            D -> A : REQ
+            A -> D : RES
+        }
+        seq {
+            D -> B : REQ
+            B -> D : RES
+        }
+    }
+    D -> C : EX_RES
+    C -> A : EX1_RES
+    C -> B : EX2_RES
+}

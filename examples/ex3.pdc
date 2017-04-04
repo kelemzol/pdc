@@ -1,0 +1,13 @@
+rule simple-rule-2 (A, B, Q, W) {
+    start { B -> A: REQ }
+    A -> Q: REQ
+    one-of {
+        Q -> W: REQ1
+        Q -> W: REQ2
+    }
+    many-of {
+        W -> Q: RES1
+        W -> Q: RES2
+    }
+    optional { A -> B: RES }
+}

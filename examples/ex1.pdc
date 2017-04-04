@@ -1,0 +1,3 @@
+rule simple-rule(A, B) {
+    start A -> B : REQ
+}

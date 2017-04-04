@@ -1,0 +1,26 @@
+rule simple-rule(A, B, C, D) {
+    start seq {
+        A -> C : EX1_REQ
+        B -> C : EX2_REQ
+    }
+    C -> D : EX_REQ
+    optional seq(a {A,B}) {}
+        D -> a : REQ
+        a -> D : RES
+    }
+    D -> C : EX_RES
+    C -> A : EX1_RES
+    C -> B : EX2_RES
+}
+
+
+family simple-rule-family {
+    main-rule simple-rule
+    rule-part-of simple-rule {
+        simple-mod
+        simple-ext
+        simple-ext-start
+    }
+}
+
+

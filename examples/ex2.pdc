@@ -1,0 +1,9 @@
+rule simple-rule(A, B) {
+    start A -> B : REQ
+    B -> A : RES
+    optional B -> A : RES
+    optional {
+        A -> B : REQ
+        B -> A : RES
+    }
+}
