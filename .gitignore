@@ -1,4 +1,5 @@
 k/pdc-kompiled
+k/pdc-semantics.k.proc-kompiled
 sandbox
 dist
 .cabal-sandbox
