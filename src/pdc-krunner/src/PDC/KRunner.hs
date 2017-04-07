@@ -37,6 +37,7 @@ work (k:f:confs) = do
         d <- getLine
         if d == "Y"
           then do
+            putStrLn $ "remove: " ++ genKFile ++ ", " ++ genPDCFile
             removeFile genKFile
             removeFile genPDCFile
           else return ()

@@ -1,18 +1,27 @@
-module PDC-SYNTAX
+
+module PDC-ID-SYNTAX
 
   syntax PDCId ::= "@UC" "(" Id ")"
                  | "@LC" "(" Id ")"
                  | ".PDCId"
+  
+endmodule
+
+module PDC-MSG-SYNTAX
+
+  imports PDC-ID-SYNTAX
 
   syntax PDCMSG    ::= "@MSG" "(" PDCId "," PDCId "," PDCId ")" [seqstrict]
                      | ".PDCMSG"
   syntax PDCMSGList ::= ".PDCMSGList"
                       | PDCMSG PDCMSGList                      [right, strict(2)]
 
+endmodule
 
+module PDC-RULE-SYNTAX
 
-  //List {PDCMSG, " "}
-
+  imports PDC-MSG-SYNTAX
+  imports PDC-ID-SYNTAX
 
   syntax PDCParamList ::= List {PDCId, ","}
 
@@ -29,5 +38,17 @@ module PDC-SYNTAX
                      | "@optional" RuleBody                 
                      | "@optional" Entry                    
                      | PDCMSG
+
+endmodule
+
+module PDC-SYNTAX
+
+  imports PDC-MSG-SYNTAX
+  imports PDC-ID-SYNTAX
+  imports PDC-RULE-SYNTAX
+
+  //List {PDCMSG, " "}
+
+
 
 endmodule
