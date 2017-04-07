@@ -9,9 +9,28 @@ rule simple-rule(A, B, C, D) {
         a -> D : RES
     }
     D -> C : EX_RES
-    C -> A : EX1_RES
+    C -> A : EX1_RES @check_reply(EX_RES, 1)
     C -> B : EX2_RES
 }
+
+
+fun ex_reply : msg m -> int variant -> msg {
+    match m, variant {
+        EX_REQ, 1 -> EX_RES
+        EX_REQ, 2 -> EX_RES2
+    }
+}
+
+fun check_reply : msg q -> int v -> msg s -> result {
+    ex_reply(q, v) == s
+}
+
+
+
+
+
+
+
 
 
 family simple-rule-family {
@@ -22,5 +41,3 @@ family simple-rule-family {
         simple-ext-start
     }
 }
-
-

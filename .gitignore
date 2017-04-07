@@ -7,6 +7,8 @@ cabal.sandbox.config
 *.o
 *.hi-boot
 *.o-boot
+*.proc.pdc
+*.proc.k
 .stack-work
 demoSources
 error-log.txt
