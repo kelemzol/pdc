@@ -3,18 +3,45 @@ module PDC-ID-SYNTAX
 
   syntax PDCId ::= "@UC" "(" Id ")"
                  | "@LC" "(" Id ")"
-                 | ".PDCId"
-  
+
+  syntax Bool ::= PDCId "==PDCId" PDCId                    [function, left]
+  syntax Bool ::= PDCId "=/=PDCId" PDCId                   [function, left]
+  // is process variable
+  syntax Bool ::= "isPV" "(" PDCId ")"                     [function]
+  // is process instance
+  syntax Bool ::= "isPI" "(" PDCId ")"                     [function]
+
+  syntax PDCIdList ::= ".PDCIdList"
+                      | PDCId PDCIdList                    [right, strict(2)]
+
+  // filter PI-s
+  syntax PDCIdList ::= "pis" "(" PDCIdList ")"             [function]
+  // filter PV-s
+  syntax PDCIdList ::= "pvs" "(" PDCIdList ")"             [function]
+  syntax PDCIdList ::= "idConcat" "(" PDCIdList "," PDCIdList ")"
+                                                           [function]
+  syntax PDCIdList ::= "idInsert" "(" PDCId "," PDCIdList ")"
+                                                           [function]
+  syntax PDCIdList ::= "idRemove" "(" PDCId "," PDCIdList ")"
+                                                           [function]
+  syntax Bool      ::= "idIsMember" "(" PDCId "," PDCIdList ")"
+                                                           [function]
+
 endmodule
 
 module PDC-MSG-SYNTAX
 
   imports PDC-ID-SYNTAX
 
-  syntax PDCMSG    ::= "@MSG" "(" PDCId "," PDCId "," PDCId ")" [seqstrict]
-                     | ".PDCMSG"
+  syntax PDCMSG ::= "@MSG" "(" PDCId "," PDCId "," PDCId ")"
+                                                           [seqstrict]
   syntax PDCMSGList ::= ".PDCMSGList"
-                      | PDCMSG PDCMSGList                      [right, strict(2)]
+                      | PDCMSG PDCMSGList                  [right, strict(2)]
+
+  syntax Bool ::= PDCMSG "==PDCMSG" PDCMSG                 [function, left]
+  syntax Bool ::= PDCMSG "=/=PDCMSG" PDCMSG                [function]
+  syntax PDCIdList  ::= "pvsOfMsg" "(" PDCMSG ")"          [function]
+  syntax PDCIdList  ::= "pisOfMsg" "(" PDCMSG ")"          [function]
 
 endmodule
 
@@ -38,6 +65,16 @@ module PDC-RULE-SYNTAX
                      | "@optional" RuleBody                 
                      | "@optional" Entry                    
                      | PDCMSG
+
+endmodule
+
+module PDC-RULE-STATUS
+
+  syntax RuleStatus ::= "@Passive"
+                      | "@Activated"
+                      | "@Failed"
+                      | "@Success"
+
 
 endmodule
 
