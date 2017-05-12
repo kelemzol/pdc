@@ -1,2 +1,6 @@
 A -> B : REQ
+B -> A : WHUT
+B -> A : WHUT
+B -> A : WAWA
+B -> A : WHUT
 B -> A : RES

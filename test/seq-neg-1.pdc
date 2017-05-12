@@ -1,0 +1,4 @@
+rule seq-neg-1 (A, B) {
+	A -> B : REQ
+	B -> A : RES
+}

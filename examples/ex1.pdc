@@ -1,3 +1,8 @@
 rule simple-rule(A, B) {
-    start A -> B : REQ
+    A -> B : REQ
+    many-of {
+        B -> A : WHUT
+        B -> A : WAWA
+    }
+    B -> A : RES
 }

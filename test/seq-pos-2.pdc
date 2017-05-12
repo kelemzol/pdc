@@ -1,0 +1,6 @@
+rule seq-pos-2 (A, B) {
+	seq {
+	    A -> B : REQ
+	    B -> A : RES
+	}
+}

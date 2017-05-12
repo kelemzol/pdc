@@ -1,0 +1,8 @@
+rule seq-pos-3 (A, B) {
+	seq {
+	    A -> B : REQ1
+	    B -> A : RES1
+	}
+    A -> B : REQ2
+    B -> A : RES2
+}

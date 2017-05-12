@@ -1,0 +1,14 @@
+rule seq-pos-4 (A, B) {
+	seq {
+	    A -> B : REQ1
+	    seq {
+	        B -> A : RES1
+	    }
+	}
+    seq {
+        seq {
+            A -> B : REQ2
+        }
+    }
+    B -> A : RES2
+}

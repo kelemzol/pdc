@@ -1,0 +1,4 @@
+rule seq-pos-1 (A, B) {
+	A -> B : REQ
+	B -> A : RES
+}

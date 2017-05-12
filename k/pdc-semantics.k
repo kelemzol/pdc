@@ -60,11 +60,154 @@ module PDC-MSG-SEMANTICS
 
   endmodule
 
+
 module PDC-RULE-SEMANTICS
 
   imports PDC-SYNTAX
   imports PDC-ID-SEMANTICS
   imports PDC-MSG-SEMANTICS
+  imports PDC-SETUP
+
+    
+
+// running:
+//   \pdc>pdc-krunner k\pdc-semantics.k examples\ex1.pdc msglist=examples\ex1_msglist.txt
+
+    // init rule
+    //-------------------------------------------------------------------------
+
+
+    rule <k> @rule I ( PL ) { EL } </k>
+         <orig> .EntryList             => prepareEL ( EL ) </orig>
+         <current-el> .EntryList       => prepareEL ( EL ) </current-el>
+         <params> .PDCParamList        => PL </params>
+         <metadata> <name> .K          => I </name> </metadata>
+         <rulestatus> @Passive         => @Running </rulestatus>
+
+    // preparating rules/functions
+    // ------------------------------------------------------------------------
+    
+    //rule (E:Entry EL:EntryList):EntryList => E ~> EL [structural]
+    //rule (E:Entry):EntryList => E .EntryList [macro, structural]
+
+/*
+    rule { E } => E [structural]
+    rule @rule I PL EL => EL ~> PL [structural]
+    rule @rule I PL EL => EL ~> I [structural]
+    rule (E:Entry EL:EntryList):EntryList => E ~> EL [structural]
+    rule (E:Entry):EntryList => E .EntryList
+*/
+
+//    syntax PDCRule ::= "prepare" "(" PDCRule ")"      [function]
+//    rule (prepare ( @rule I PL { EL } )) => @rule I PL { prepareEL ( EL ) }
+//                                                      [owise]
+
+    syntax EntryList ::= "prepareEL" "(" EntryList ")"     [function]
+    rule ( prepareEL ( E:Entry EL:EntryList ) ) => ( prepareE ( E ) prepareEL ( EL ) )
+    rule ( prepareEL ( E:Entry ) ) => ( prepareE ( E ) .EntryList )
+    rule ( prepareEL ( .EntryList ) ) => .EntryList        [owise]
+
+    syntax Entry ::= "prepareE" "(" Entry ")"              [function]
+    rule (prepareE ( @start E:Entry ) )               => ( @start    { prepareE ( E ) .EntryList } )
+    rule (prepareE ( @start { EL:EntryList } ) )      => ( @start    { prepareEL ( EL )          } )
+    rule (prepareE ( @optional E:Entry ) )            => ( @optional { prepareE ( E ) .EntryList } )
+    rule (prepareE ( @optional { EL:EntryList } ) )   => ( @optional { prepareEL ( EL )          } )
+    rule (prepareE ( @seq { EL:EntryList } ) )        => ( @seq      { prepareEL ( EL )          } )
+    rule (prepareE ( @one-of { EL:EntryList } ) )     => ( @one-of   { prepareEL ( EL )          } )
+    rule (prepareE ( @many-of { EL:EntryList } ) )    => ( @many-of  { prepareEL ( EL )          } )
+    rule (prepareE ( M:PDCMSG ) ) => M                     [owise]
+
+    syntax EntryList ::= "appendEL" "(" EntryList "," EntryList ")"
+                                                           [function]
+    rule appendEL ( E EL , O ) => E appendEL ( EL , O )
+    rule appendEL ( .EntryList , O ) => O                  [owise]
+
+
+    // processing rules
+    // ========================================================================
+
+    // START ------------------------------------------------------------------
+    rule <current-el> @start { EL } NEXT    => appendEL(EL, NEXT) </current-el>
+
+
+    // SEQ --------------------------------------------------------------------
+    rule <current-el> @seq { EL } NEXT      => appendEL(EL, NEXT) </current-el>
+
+
+    // ONE-OF -----------------------------------------------------------------
+    rule <current-el> @one-of { E EL } NEXT => @one-of { EL } NEXT </current-el>
+         <current-sequence> SEQUENCE </current-sequence>
+         <branches>
+             (.Bag => <branch>
+                          <branch-el> E NEXT </branch-el>
+                          <branch-sequence> SEQUENCE </branch-sequence>
+                      </branch>)
+             ...
+         </branches>
+                                                           when NotEmptyEL ( EL )
+    
+    rule <current-el> @one-of { E .EntryList } NEXT => E NEXT </current-el>
+
+
+    // MANY-OF ----------------------------------------------------------------
+    rule <current-el> @many-of { EL } NEXT => NEXT </current-el>
+         <current-sequence> SEQUENCE </current-sequence>
+         <branches>
+             (.Bag => <branch>
+                          <branch-el> @one-of { EL } @many-of { EL } NEXT </branch-el>
+                          <branch-sequence> SEQUENCE </branch-sequence>
+                      </branch>)
+             ...
+         </branches>
+                                                           when NotEmptyEL ( EL )
+
+
+    // OPTIONAL ---------------------------------------------------------------
+    rule <current-el> @optional { EL } NEXT => NEXT </current-el>
+         <current-sequence> SEQUENCE </current-sequence>
+         <branches>
+             (.Bag => <branch>
+                          <branch-el> appendEL(EL, NEXT) </branch-el>
+                          <branch-sequence> SEQUENCE </branch-sequence>
+                      </branch>)
+             ...
+         </branches>
+
+
+    rule <current-el> MSG1 ES               => ES </current-el>
+         <current-sequence> MSG2 MS         => MS </current-sequence>
+                                                           when MSG1 ==PDCMSG MSG2
+
+    // current branch failed, activate anoter one
+    rule <current-el> MSG1 ES               => EL </current-el>
+         <current-sequence> MSG2 MS         => SL </current-sequence>
+         <branches>
+             (<branch>
+                 <branch-el> EL </branch-el>
+                 <branch-sequence> SL </branch-sequence>
+             </branch>
+             => .Bag)
+             ...
+         </branches>
+                                                           when MSG1 =/=PDCMSG MSG2
+
+
+    // helpers
+    // ========================================================================
+    
+    syntax Bool ::= "NotEmptyEL" "(" EntryList ")"         [function]
+    rule NotEmptyEL ( .EntryList ) => false
+    rule NotEmptyEL ( O ) => true                          [owise]
+
+// I was glad to meet you
+
+
+    // success rule
+    // ========================================================================
+
+    rule <current-el> .EntryList </current-el>
+         // <current-sequence> .PDCMSGList </current-sequence>
+         <rulestatus> @Running => @Success </rulestatus>
 
 endmodule
 
@@ -75,20 +218,68 @@ module PDC-SEMANTICS
   imports PDC-MSG-SEMANTICS
   imports PDC-RULE-SEMANTICS
 
-  syntax KResult ::= PDCRule
+endmodule
 
-  configuration <T color="yellow">
-                    <k color="green">
+
+
+
+module PDC-SETUP
+
+  imports PDC-SYNTAX
+  imports PDC-RULE-STATUS
+
+  syntax KResult ::= PDCRule
+  // syntax KResult ::= "@Success" // RuleStatus
+  // syntax KResult ::= Entry
+  // syntax KResult ::= EntityList
+
+//  syntax PDCMSG ::= ".MSG"
+
+
+  configuration <T>
+                    // Original Program
+                    <k>
                         $PGM
                     </k>
-                    <sc>
+                    // original preparated entry list
+                    <orig>
+                        .EntryList
+                    </orig>
+                    // Entries
+                    <current-el>
+                        .EntryList
+                    </current-el>
+                    // Msg list
+                    <current-sequence>
                         .PDCMSGList
-                    </sc>
+                    </current-sequence>
+                    <branches>
+                        <branch multiplicity="*">
+                            <branch-el>
+                                .EntryList
+                            </branch-el>
+                            <branch-sequence>
+                                .PDCMSGList
+                            </branch-sequence>
+                        </branch>
+                    </branches>
+                    // Parameters
+                    <params>
+                        .PDCParamList
+                    </params>
+                    // Metadata
+                    <metadata>
+                        <name> .K </name>
+                    </metadata>
+                    <rulestatus>
+                        @Passive
+                    </rulestatus>
                 </T>
 
-  rule <sc> .PDCMSGList =>
+  rule <current-sequence> .PDCMSGList =>
            &include& msglist
            .PDCMSGList
-       </sc>
+       </current-sequence>
 
 endmodule
+

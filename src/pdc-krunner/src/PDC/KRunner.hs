@@ -9,6 +9,13 @@ import System.Directory
 import System.FilePath
 import Data.List
 import Data.Maybe
+import Control.Monad
+
+import Text.XML.Expat.Tree
+import Text.XML.Expat.Format
+import Data.ByteString.Lazy.Char8 (pack, unpack)
+
+import GHC.IO.Handle
 
 import PDC.KFormat
 
@@ -31,8 +38,10 @@ work (k:f:confs) = do
         writeFile genKFile kfile'
     run ("[5/2] generate " ++ genPDCFile) $ do
         kFormatIO f genPDCFile
-    runCmd "[5/3] " $ "kompile " ++ genKFile ++ " --syntax-module PDC-SYNTAX --main-module PDC-SEMANTICS"
-    runCmd "[5/4] " $ "krun " ++ genPDCFile ++ " --directory " ++ (takeDirectory  k)
+    success <- runCmd TextFormat "[5/3] " $ "kompile " ++ genKFile ++ " --syntax-module PDC-SYNTAX --main-module PDC-SEMANTICS"
+    if success
+        then void $ runCmd XMLFormat "[5/4] " $ "krun " ++ genPDCFile ++ " --directory " ++ (takeDirectory  k)
+        else return ()
     run ("[5/5] delete? [Y/_]") $ do
         d <- getLine
         if d == "Y"
@@ -47,11 +56,32 @@ ex1 = work ["..\\..\\..\\k\\pdc-semantics.k", "..\\..\\..\\examples\\ex1.pdc", "
 
 -- dir = reverse . (\x-> if length x == 0 then "." else tail x) . dropWhile (/= '\\') . reverse
 
-runCmd p m = do
+data Format = TextFormat | XMLFormat
+
+runCmd f p m = do
     putStr p
     putStrLn m
-    callCommand m
+    (_, outH, errH, _) <- runInteractiveCommand m
+    out <- hGetContents outH
+    err <- hGetContents errH
+    success <- if err == []
+      then do
+        case f of
+          TextFormat -> void $ putStrLn out
+          XMLFormat -> void $ do
+            let (xml, mErr) = parse defaultParseOptions (pack out) :: (UNode String, Maybe XMLParseError)
+            putStrLn $ unpack $ format $ indent 4 xml
+        return True
+      else do
+        putStrLn "stderr:"
+        putStrLn err
+        if out == []
+          then return ()
+          else do putStrLn "stdout:"
+                  putStrLn out
+        return False
     putStrLn "done"
+    return success
 
 run msg m = do
     putStrLn msg

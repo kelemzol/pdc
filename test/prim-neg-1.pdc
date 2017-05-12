@@ -1,0 +1,3 @@
+rule prim-neg-1 (A, B) {
+	A -> B : MESSAGE
+}
