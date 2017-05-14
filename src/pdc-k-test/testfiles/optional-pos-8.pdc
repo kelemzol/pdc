@@ -1,0 +1,3 @@
+rule optional-pos-7 (A,B) {
+	optional { optional { } }
+}

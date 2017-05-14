@@ -77,9 +77,9 @@ module PDC-RULE-SEMANTICS
     //-------------------------------------------------------------------------
 
 
-    rule <k> @rule I ( PL ) { EL } </k>
-         <orig> .EntryList             => prepareEL ( EL ) </orig>
-         <current-el> .EntryList       => prepareEL ( EL ) </current-el>
+    rule <k> @rule I ( PL ) B </k>
+         <orig> .EntryList             => prepareEL ( prepareB ( B ) ) </orig>
+         <current-el> .EntryList       => prepareEL ( prepareB ( B ) ) </current-el>
          <params> .PDCParamList        => PL </params>
          <metadata> <name> .K          => I </name> </metadata>
          <rulestatus> @Passive         => @Running </rulestatus>
@@ -103,11 +103,27 @@ module PDC-RULE-SEMANTICS
 //    rule (prepare ( @rule I PL { EL } )) => @rule I PL { prepareEL ( EL ) }
 //                                                      [owise]
 
+    syntax EntryList ::= "prepareB" "(" RuleBody ")"       [function]
+    rule ( prepareB ( { } ) ) => .EntryList
+    rule ( prepareB ( { EL } ) ) => ( prepareEL ( EL ) )
+
     syntax EntryList ::= "prepareEL" "(" EntryList ")"     [function]
     rule ( prepareEL ( E:Entry EL:EntryList ) ) => ( prepareE ( E ) prepareEL ( EL ) )
     rule ( prepareEL ( E:Entry ) ) => ( prepareE ( E ) .EntryList )
     rule ( prepareEL ( .EntryList ) ) => .EntryList        [owise]
 
+    syntax Entry ::= "prepareE" "(" Entry ")"              [function]
+    rule (prepareE ( @start E:Entry ) )          => ( @start    { prepareE ( E ) .EntryList    } )
+    rule (prepareE ( @start B:RuleBody ) )       => ( @start    { prepareEL ( prepareB ( B ) ) } )
+    rule (prepareE ( @optional E:Entry ) )       => ( @optional { prepareE ( E ) .EntryList    } )
+    rule (prepareE ( @optional B:RuleBody ) )    => ( @optional { prepareEL ( prepareB ( B ) ) } )
+    rule (prepareE ( @seq B:RuleBody ) )         => ( @seq      { prepareEL ( prepareB ( B ) ) } )
+    rule (prepareE ( @one-of B:RuleBody ) )      => ( @one-of   { prepareEL ( prepareB ( B ) ) } )
+    rule (prepareE ( @many-of B:RuleBody ) )     => ( @many-of  { prepareEL ( prepareB ( B ) ) } )
+    rule (prepareE ( M:PDCMSG ) )                => M
+    rule (prepareE ( O ) ) => O                            [owise]
+
+/*
     syntax Entry ::= "prepareE" "(" Entry ")"              [function]
     rule (prepareE ( @start E:Entry ) )               => ( @start    { prepareE ( E ) .EntryList } )
     rule (prepareE ( @start { EL:EntryList } ) )      => ( @start    { prepareEL ( EL )          } )
@@ -118,7 +134,7 @@ module PDC-RULE-SEMANTICS
     rule (prepareE ( @many-of { EL:EntryList } ) )    => ( @many-of  { prepareEL ( EL )          } )
     rule (prepareE ( M:PDCMSG ) )                     => M
     rule (prepareE ( O ) ) => O                            [owise]
-
+*/
     syntax EntryList ::= "appendEL" "(" EntryList "," EntryList ")"
                                                            [function]
     rule appendEL ( E EL , O ) => E appendEL ( EL , O )
@@ -194,9 +210,8 @@ module PDC-RULE-SEMANTICS
          </branches>
                                                            when MSG1 =/=PDCMSG MSG2
     // Message list empty
-    /*
-    rule <current-el> MSG ES => EL </current-el>
-         <current-sequence> .PDCMSGList => SL </current-sequence>
+    rule <current-el> MSG:PDCMSG ES         => EL </current-el>
+         <current-sequence> .PDCMSGList     => SL </current-sequence>
          <branches>
              (<branch>
                  <branch-el> EL </branch-el>
@@ -205,7 +220,7 @@ module PDC-RULE-SEMANTICS
              => .Bag)
              ...
          </branches>
-*/
+
 
     // helpers
     // ========================================================================
@@ -224,7 +239,7 @@ module PDC-RULE-SEMANTICS
          // <current-sequence> .PDCMSGList </current-sequence>
          <rulestatus> @Running => @Success </rulestatus>
 
-    rule <current-el> E EL </current-el>
+    rule <current-el> MSG:PDCMSG EL </current-el>
          <current-sequence> .PDCMSGList </current-sequence>
          <branches> .Bag </branches>
          <rulestatus> @Running => @Failed </rulestatus>

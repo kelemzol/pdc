@@ -1,0 +1,3 @@
+rule optional-pos-3 (A,B) {
+	optional A -> B : MSG
+}

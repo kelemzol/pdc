@@ -1,0 +1,3 @@
+rule optional-pos-6 (A,B) {
+	optional { optional A -> B : RES }
+}

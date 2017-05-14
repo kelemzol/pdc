@@ -33,8 +33,8 @@ parseRuleResult str = case filter ((/= ' ')) str of
     _ -> Nothing
 
 unitTests = testGroup "Unit tests"
-    [ {- positiveTest "prim-pos-1"
-    , -} positiveTest "prim-pos-2"
+    [ positiveTest "prim-pos-1"
+    , positiveTest "prim-pos-2"
     , negativeTest "prim-neg-1"
     , negativeTest "prim-neg-2"
     , negativeTest "prim-neg-3"
@@ -45,14 +45,16 @@ unitTests = testGroup "Unit tests"
     , negativeTest "seq-neg-1"
     , negativeTest "seq-neg-2"
     , negativeTest "seq-neg-3"
+    , positiveTest "optional-pos-1"
+    , positiveTest "optional-pos-2"
+    , positiveTest "optional-pos-3"
+    , positiveTest "optional-pos-4"
+    , positiveTest "optional-pos-5"
+    , positiveTest "optional-pos-5"
+    , positiveTest "optional-pos-6"
+    , positiveTest "optional-pos-7"
+    , positiveTest "optional-pos-8"
     ]
-{-
-    [ testCase "rule prim-pos-1" $ do
-        conf <- parseconf <$> readFile "./.pdc_krunner"
-        res <- dowork "pdc-semantics.k" "seq-pos-4.pdc" (Just True) ["msglist=seq-pos-4-msglist.txt"]
-        assertEqual "ruleresult" (parseRuleResult (getRunResult (krun_stdout res))) (Just Success)
-    ]
--}
 
 gentest :: RuleResult -> String -> TestTree
 gentest expRes id = testCase id $ do
