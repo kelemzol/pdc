@@ -55,7 +55,8 @@ module PDC-RULE-SYNTAX
   syntax PDCRule   ::= "@rule" PDCId "(" PDCParamList ")" RuleBody
                      | ".PDCRule"
                                                            
-  syntax RuleBody  ::= "{" EntryList "}"                   
+  syntax RuleBody  ::= "{" EntryList "}"
+                     | "{" "}"                   
   syntax EntryList ::= Entry
                      | Entry EntryList                     [right, strict(2)]
                      | ".EntryList"
@@ -72,7 +73,8 @@ endmodule
 
 module PDC-RULE-STATUS
 
-  syntax RuleStatus ::= "@Passive"
+  syntax RuleStatus ::= "@Init"
+                      | "@Passive"
                       | "@Running"
                       | "@Failed"
                       | "@Success"

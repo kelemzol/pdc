@@ -84,6 +84,7 @@ module PDC-RULE-SEMANTICS
          <metadata> <name> .K          => I </name> </metadata>
          <rulestatus> @Passive         => @Running </rulestatus>
 
+
     // preparating rules/functions
     // ------------------------------------------------------------------------
     
@@ -115,7 +116,8 @@ module PDC-RULE-SEMANTICS
     rule (prepareE ( @seq { EL:EntryList } ) )        => ( @seq      { prepareEL ( EL )          } )
     rule (prepareE ( @one-of { EL:EntryList } ) )     => ( @one-of   { prepareEL ( EL )          } )
     rule (prepareE ( @many-of { EL:EntryList } ) )    => ( @many-of  { prepareEL ( EL )          } )
-    rule (prepareE ( M:PDCMSG ) ) => M                     [owise]
+    rule (prepareE ( M:PDCMSG ) )                     => M
+    rule (prepareE ( O ) ) => O                            [owise]
 
     syntax EntryList ::= "appendEL" "(" EntryList "," EntryList ")"
                                                            [function]
@@ -178,6 +180,7 @@ module PDC-RULE-SEMANTICS
          <current-sequence> MSG2 MS         => MS </current-sequence>
                                                            when MSG1 ==PDCMSG MSG2
 
+    // MESSAGE ----------------------------------------------------------------
     // current branch failed, activate anoter one
     rule <current-el> MSG1 ES               => EL </current-el>
          <current-sequence> MSG2 MS         => SL </current-sequence>
@@ -190,7 +193,19 @@ module PDC-RULE-SEMANTICS
              ...
          </branches>
                                                            when MSG1 =/=PDCMSG MSG2
-
+    // Message list empty
+    /*
+    rule <current-el> MSG ES => EL </current-el>
+         <current-sequence> .PDCMSGList => SL </current-sequence>
+         <branches>
+             (<branch>
+                 <branch-el> EL </branch-el>
+                 <branch-sequence> SL </branch-sequence>
+             </branch>
+             => .Bag)
+             ...
+         </branches>
+*/
 
     // helpers
     // ========================================================================
@@ -202,12 +217,17 @@ module PDC-RULE-SEMANTICS
 // I was glad to meet you
 
 
-    // success rule
+    // termination rules
     // ========================================================================
 
     rule <current-el> .EntryList </current-el>
          // <current-sequence> .PDCMSGList </current-sequence>
          <rulestatus> @Running => @Success </rulestatus>
+
+    rule <current-el> E EL </current-el>
+         <current-sequence> .PDCMSGList </current-sequence>
+         <branches> .Bag </branches>
+         <rulestatus> @Running => @Failed </rulestatus>
 
 endmodule
 
@@ -272,7 +292,7 @@ module PDC-SETUP
                         <name> .K </name>
                     </metadata>
                     <rulestatus>
-                        @Passive
+                        @Init
                     </rulestatus>
                 </T>
 
@@ -280,6 +300,7 @@ module PDC-SETUP
            &include& msglist
            .PDCMSGList
        </current-sequence>
+       <rulestatus> @Init => @Passive </rulestatus>
 
 endmodule
 

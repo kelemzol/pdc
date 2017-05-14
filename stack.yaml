@@ -3,3 +3,4 @@ resolver: lts-8.8
 packages:
   - src/language-pdc
   - src/pdc-krunner
+  - src/pdc-k-test
