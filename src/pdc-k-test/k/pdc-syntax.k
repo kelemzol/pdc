@@ -62,6 +62,7 @@ module PDC-RULE-SYNTAX
                      | ".EntryList"
   syntax Entry     ::= "@start" RuleBody
                      | "@start" Entry
+                     | "@start" "@instantly"
                      | "@seq" RuleBody
                      | "@one-of" RuleBody
                      | "@many-of" RuleBody
@@ -73,7 +74,8 @@ endmodule
 
 module PDC-RULE-STATUS
 
-  syntax RuleStatus ::= "@Init"
+  syntax RuleStatus ::= "@InitInclude"
+                      | "@InitPrepare"
                       | "@Passive"
                       | "@Running"
                       | "@Failed"

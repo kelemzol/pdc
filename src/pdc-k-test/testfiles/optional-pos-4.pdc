@@ -1,3 +1,4 @@
 rule optional-pos-4 (A,B) {
+	start instantly
 	optional { }
 }

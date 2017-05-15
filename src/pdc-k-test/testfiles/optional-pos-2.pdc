@@ -1,3 +1,4 @@
 rule optional-pos-2 (A,B) {
+	start instantly
 	optional A -> B : MSG
 }

@@ -28,6 +28,7 @@ tokens :-
     "optional"                         { tok TkOptional }
     "one-of"                           { tok TkOneOf }
     "many-of"                          { tok TkManyOf }
+    "instantly"                        { tok TkInstantly }
     "->"                               { tok TkArrow }
     ":"                                { tok TkColon }
     ","                                { tok TkComma }
@@ -65,6 +66,7 @@ data Token
   | TkOptional     { pos :: Pos }
   | TkOneOf        { pos :: Pos }
   | TkManyOf       { pos :: Pos }
+  | TkInstantly    { pos :: Pos }
   | TkArrow        { pos :: Pos }
   | TkColon        { pos :: Pos }
   | TkComma        { pos :: Pos }

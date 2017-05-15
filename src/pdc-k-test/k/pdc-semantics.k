@@ -82,7 +82,8 @@ module PDC-RULE-SEMANTICS
          <current-el> .EntryList       => prepareEL ( prepareB ( B ) ) </current-el>
          <params> .PDCParamList        => PL </params>
          <metadata> <name> .K          => I </name> </metadata>
-         <rulestatus> @Passive         => @Running </rulestatus>
+         <rulestatus> @InitPrepare     => @Passive </rulestatus>
+
 
 
     // preparating rules/functions
@@ -147,6 +148,9 @@ module PDC-RULE-SEMANTICS
     // START ------------------------------------------------------------------
     rule <current-el> @start { EL } NEXT    => appendEL(EL, NEXT) </current-el>
 
+    rule <current-el> @start @instantly NEXT => NEXT </current-el>
+         <rulestatus> @Passive              => @Running </rulestatus>
+
 
     // SEQ --------------------------------------------------------------------
     rule <current-el> @seq { EL } NEXT      => appendEL(EL, NEXT) </current-el>
@@ -177,7 +181,7 @@ module PDC-RULE-SEMANTICS
                       </branch>)
              ...
          </branches>
-                                                           when NotEmptyEL ( EL )
+//                                                           when NotEmptyEL ( EL )
 
 
     // OPTIONAL ---------------------------------------------------------------
@@ -307,7 +311,7 @@ module PDC-SETUP
                         <name> .K </name>
                     </metadata>
                     <rulestatus>
-                        @Init
+                        @InitInclude
                     </rulestatus>
                 </T>
 
@@ -315,7 +319,7 @@ module PDC-SETUP
            &include& msglist
            .PDCMSGList
        </current-sequence>
-       <rulestatus> @Init => @Passive </rulestatus>
+       <rulestatus> @InitInclude => @InitPrepare </rulestatus>
 
 endmodule
 

@@ -1,3 +1,4 @@
 rule optional-pos-7 (A,B) {
+	start instantly
 	optional { optional A -> B : RES }
 }

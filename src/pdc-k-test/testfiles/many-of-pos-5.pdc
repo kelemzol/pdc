@@ -1,0 +1,6 @@
+rule many-of-pos-5 () {
+	start instantly
+	many-of {
+		A -> B : MSG
+	}
+}

@@ -1,4 +1,5 @@
 rule seq-pos-1 (A, B) {
+	start instantly
 	A -> B : REQ
 	B -> A : RES
 }

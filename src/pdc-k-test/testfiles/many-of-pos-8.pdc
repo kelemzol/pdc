@@ -1,0 +1,9 @@
+rule many-of-pos-8 () {
+	start instantly
+	many-of {
+	    many-of {
+			A -> B : MSG
+			B -> A : MSG
+		}
+	}
+}

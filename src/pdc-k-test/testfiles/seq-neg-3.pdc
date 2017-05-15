@@ -1,4 +1,5 @@
 rule seq-neg-2 (A, B) {
+	start instantly
 	A -> B : REQ
 	B -> A : RES
 	B -> A : RES2

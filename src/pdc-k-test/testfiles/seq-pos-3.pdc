@@ -1,4 +1,5 @@
 rule seq-pos-3 (A, B) {
+	start instantly
 	seq {
 	    A -> B : REQ1
 	    B -> A : RES1

@@ -1,0 +1,44 @@
+
+optional { optional A }
+===
+optional A
+
+
+one-of { A }
+===
+a
+
+
+one-of { one-of { A1 .. An } }
+===
+one-of { A1 .. An }
+
+
+one-of { one-of { A1 .. An } one-of { An+1 .. Am } ... one-of { Ak+1 .. Aj } }
+===
+one-of { A1 .. Aj }
+
+
+many-of { many-of { A1 .. An } }
+===
+many-of { A1 .. An }
+
+
+many-of { one-of { A1 .. An } }
+===
+many-of { A1 .. An }
+
+
+one-of { many-of { A1 .. An } }
+===
+many-of { A1 .. An }
+
+
+one-of { optional A }
+===
+optional one-of { A }
+
+
+many-of { optiona A }
+===
+many-of { A }

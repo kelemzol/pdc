@@ -1,0 +1,4 @@
+rule many-of-pos-1 () {
+    start instantly
+	many-of { }
+}

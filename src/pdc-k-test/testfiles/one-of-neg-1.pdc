@@ -1,0 +1,4 @@
+rule one-of-neg-1 (A, B) {
+	start instantly
+    one-of { }
+}

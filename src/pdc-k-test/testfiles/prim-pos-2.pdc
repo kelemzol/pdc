@@ -1,3 +1,4 @@
 rule prim-pos-2 (A, B) {
+	start instantly
 	A -> B : MESSAGE
 }

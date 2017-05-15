@@ -1,4 +1,5 @@
 rule seq-pos-4 (A, B) {
+	start instantly
 	seq {
 	    A -> B : REQ1
 	    seq {

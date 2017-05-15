@@ -1,0 +1,8 @@
+rule one-of-pos-4 (A, B) {
+	start instantly
+	one-of {
+	    one-of { 
+	        A -> B : MSG
+	    }
+	}
+}
