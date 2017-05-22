@@ -6,7 +6,7 @@ optional A
 
 one-of { A }
 ===
-a
+A
 
 
 one-of { one-of { A1 .. An } }
@@ -39,6 +39,6 @@ one-of { optional A }
 optional one-of { A }
 
 
-many-of { optiona A }
+many-of { optional A }
 ===
 many-of { A }
