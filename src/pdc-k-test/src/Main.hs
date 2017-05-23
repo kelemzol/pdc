@@ -4,6 +4,7 @@ module Main where
 import Control.Monad
 import Data.List
 import Data.Ord
+import Data.Maybe
 import Data.Typeable (Typeable)
 
 import Test.Tasty
@@ -33,13 +34,18 @@ instance IsOption Target where
 
 
 tests :: TestTree
-tests = testGroup "All unit test" [primUnitTests, seqUnitTests, optionalUnitTests, oneOfUnitTests, manyOfTests]
--- tests ["prim"] = testGroup "Prim unit test" [primUnitTests]
--- tests ["many-of"] = testGroup "Many-of unit test" [manyOfTests]
+tests = testGroup "All unit test" [ primUnitTests
+                                  , seqUnitTests
+                                  , optionalUnitTests
+                                  , oneOfUnitTests
+                                  , manyOfUnitTests
+                                  , startUnitTests
+                                  ]
 
 data RuleResult
   = InitInclude
   | InitPrepare
+  | InitStart
   | Passive
   | Running
   | Success
@@ -52,6 +58,7 @@ parseRuleResult :: String -> Maybe RuleResult
 parseRuleResult str = case filter ((/= ' ')) str of
     "@InitInclude" -> Just InitInclude
     "@InitPrepare" -> Just InitPrepare
+    "@InitStart" -> Just InitStart
     "@Passive" -> Just Passive
     "@Running" -> Just Running
     "@Success" -> Just Success
@@ -68,14 +75,16 @@ unitTests = testGroup "All unit tests"
     , seqUnitTestsList
     , optionalUnitTestsList
     , oneOfUnitTestsList
-    , manyOfTestsList
+    , manyOfUnitTestsList
+    , startUnitTestsList
     ]
 
 primUnitTests = testGroup "Prim tests" primUnitTestsList
 seqUnitTests = testGroup "Seq tests" seqUnitTestsList
 optionalUnitTests = testGroup "Optional tests" optionalUnitTestsList
 oneOfUnitTests = testGroup "One-of tests" oneOfUnitTestsList
-manyOfTests = testGroup "Many-of tests" manyOfTestsList
+manyOfUnitTests = testGroup "Many-of tests" manyOfUnitTestsList
+startUnitTests = testGroup "Start tests" startUnitTestsList
 
 primUnitTestsList =
     [ positiveTest "prim-pos-1"
@@ -114,7 +123,7 @@ oneOfUnitTestsList =
     , negativeTest "one-of-neg-1"
     , negativeTest "one-of-neg-2"
     ]
-manyOfTestsList =
+manyOfUnitTestsList =
     [ positiveTest "many-of-pos-1"
     , positiveTest "many-of-pos-2"
     , positiveTest "many-of-pos-3"
@@ -124,6 +133,15 @@ manyOfTestsList =
     , positiveTest "many-of-pos-7"
     , positiveTest "many-of-pos-8"
     , positiveTest "many-of-pos-9"
+    ]
+startUnitTestsList =
+    [ positiveTest "start-pos-1"
+    , positiveTest "start-pos-2"
+    , positiveTest "start-pos-3"
+    , positiveTest "start-pos-4"
+    , positiveTest "start-pos-5"
+    , positiveTest "start-pos-6"
+    , smarttest "try"
     ]
 
 gentest :: (RuleResult -> Bool) -> String -> TestTree
@@ -135,4 +153,22 @@ gentest expect id = testCase id $ do
 positiveTest = gentest isSuccess
 negativeTest = gentest (not . isSuccess)
 
+
+smarttest :: String -> TestTree
+smarttest id = testCase id $ do
+    conf <- parseconf <$> readFile "./.pdc_krunner"
+    let path = pdc_prog_dir conf
+        xmlpath = path ++ id ++ "-res.txt"
+    expose conf id
+    xml <- readXML xmlpath
+    workRres <- dowork "pdc-semantics.k" (id ++ ".pdc") (Just True) ["msglist="++(id++"-msglist.txt")]
+    
+    
+    let exceptedRuleresult = parseRuleResult $ fromJust $ xml `getBy` "rulestatus"
+        ruleresult = parseRuleResult $ getRunResult (krun_stdout workRres)
+
+    eq <- assertEqual "ruleresult" exceptedRuleresult ruleresult
+    deleteExposed conf id
+    return eq
+    -- assertEqual "ruleresult" (fmap expect (parseRuleResult (getRunResult (krun_stdout res)))) (Just True)
 

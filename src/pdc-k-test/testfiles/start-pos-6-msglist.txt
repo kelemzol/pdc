@@ -1,0 +1,2 @@
+A -> B : REQ2
+B -> A : RES

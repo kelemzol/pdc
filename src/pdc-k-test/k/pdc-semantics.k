@@ -82,9 +82,7 @@ module PDC-RULE-SEMANTICS
          <current-el> .EntryList       => prepareEL ( prepareB ( B ) ) </current-el>
          <params> .PDCParamList        => PL </params>
          <metadata> <name> .K          => I </name> </metadata>
-         <rulestatus> @InitPrepare     => @Passive </rulestatus>
-
-
+         <rulestatus> @InitPrepare     => @InitStart </rulestatus>
 
     // preparating rules/functions
     // ------------------------------------------------------------------------
@@ -146,10 +144,20 @@ module PDC-RULE-SEMANTICS
     // ========================================================================
 
     // START ------------------------------------------------------------------
-    rule <current-el> @start { EL } NEXT    => appendEL(EL, NEXT) </current-el>
+    rule <current-el> @start { EL } NEXT     => appendEL(EL, NEXT) </current-el>
 
     rule <current-el> @start @instantly NEXT => NEXT </current-el>
-         <rulestatus> @Passive              => @Running </rulestatus>
+         <rulestatus> @InitStart             => @Running </rulestatus>
+
+    rule <current-el> @start { SEL } EL      => SEL </current-el>
+         <after-start> .EntryList            => EL </after-start>
+         <rulestatus> @InitStart             => @Passive </rulestatus>
+
+    rule <current-el> .EntryList       => OB </current-el>
+         <after-start> OB              => .EntryList </after-start>
+         <branches> BRS                => .Bag </branches>
+         <rulestatus> @Passive         => @Running </rulestatus>
+
 
 
     // SEQ --------------------------------------------------------------------
@@ -292,6 +300,10 @@ module PDC-SETUP
                     <current-sequence>
                         .PDCMSGList
                     </current-sequence>
+                    // temp field for non-activated entities without start
+                    <after-start>
+                        .EntryList
+                    </after-start>
                     <branches>
                         <branch multiplicity="*">
                             <branch-el>

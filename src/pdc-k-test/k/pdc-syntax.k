@@ -76,6 +76,7 @@ module PDC-RULE-STATUS
 
   syntax RuleStatus ::= "@InitInclude"
                       | "@InitPrepare"
+                      | "@InitStart"
                       | "@Passive"
                       | "@Running"
                       | "@Failed"
