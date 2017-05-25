@@ -150,8 +150,17 @@ module PDC-RULE-SEMANTICS
          <rulestatus> @InitStart             => @Running </rulestatus>
 
     rule <current-el> @start { SEL } EL      => SEL </current-el>
-         <after-start> .EntryList            => EL </after-start>
+         <after-start> X                     => EL </after-start>
+         <current-sequence> MSG OMSG </current-sequence>
          <rulestatus> @InitStart             => @Passive </rulestatus>
+         <branches>
+             (.Bag => <branch>
+                          <branch-el> @start { SEL } EL </branch-el>
+                          <branch-sequence> OMSG </branch-sequence>
+                          <branch-rulestatus> @InitStart </branch-rulestatus>
+                      </branch>)
+             ...
+         </branches>
 
     rule <current-el> .EntryList       => OB </current-el>
          <after-start> OB              => .EntryList </after-start>
@@ -167,10 +176,12 @@ module PDC-RULE-SEMANTICS
     // ONE-OF -----------------------------------------------------------------
     rule <current-el> @one-of { E EL } NEXT => @one-of { EL } NEXT </current-el>
          <current-sequence> SEQUENCE </current-sequence>
+         <rulestatus> RULESTATUS </rulestatus>
          <branches>
              (.Bag => <branch>
                           <branch-el> E NEXT </branch-el>
                           <branch-sequence> SEQUENCE </branch-sequence>
+                          <branch-rulestatus> RULESTATUS </branch-rulestatus>
                       </branch>)
              ...
          </branches>
@@ -182,10 +193,12 @@ module PDC-RULE-SEMANTICS
     // MANY-OF ----------------------------------------------------------------
     rule <current-el> @many-of { EL } NEXT => NEXT </current-el>
          <current-sequence> SEQUENCE </current-sequence>
+         <rulestatus> RULESTATUS </rulestatus>
          <branches>
              (.Bag => <branch>
                           <branch-el> @one-of { EL } @many-of { EL } NEXT </branch-el>
                           <branch-sequence> SEQUENCE </branch-sequence>
+                          <branch-rulestatus> RULESTATUS </branch-rulestatus>
                       </branch>)
              ...
          </branches>
@@ -195,27 +208,35 @@ module PDC-RULE-SEMANTICS
     // OPTIONAL ---------------------------------------------------------------
     rule <current-el> @optional { EL } NEXT => NEXT </current-el>
          <current-sequence> SEQUENCE </current-sequence>
+         <rulestatus> RULESTATUS </rulestatus>
          <branches>
              (.Bag => <branch>
                           <branch-el> appendEL(EL, NEXT) </branch-el>
                           <branch-sequence> SEQUENCE </branch-sequence>
+                          <branch-rulestatus> RULESTATUS </branch-rulestatus>
                       </branch>)
              ...
          </branches>
+
+
+
+    // MESSAGE ----------------------------------------------------------------
 
 
     rule <current-el> MSG1 ES               => ES </current-el>
          <current-sequence> MSG2 MS         => MS </current-sequence>
                                                            when MSG1 ==PDCMSG MSG2
 
-    // MESSAGE ----------------------------------------------------------------
+
     // current branch failed, activate anoter one
     rule <current-el> MSG1 ES               => EL </current-el>
          <current-sequence> MSG2 MS         => SL </current-sequence>
+         <rulestatus> X                     => RULESTATUS </rulestatus>
          <branches>
              (<branch>
                  <branch-el> EL </branch-el>
                  <branch-sequence> SL </branch-sequence>
+                 <branch-rulestatus> RULESTATUS </branch-rulestatus>
              </branch>
              => .Bag)
              ...
@@ -224,14 +245,19 @@ module PDC-RULE-SEMANTICS
     // Message list empty
     rule <current-el> MSG:PDCMSG ES         => EL </current-el>
          <current-sequence> .PDCMSGList     => SL </current-sequence>
+         <rulestatus> X                     => RULESTATUS </rulestatus>
          <branches>
              (<branch>
                  <branch-el> EL </branch-el>
                  <branch-sequence> SL </branch-sequence>
+                 <branch-rulestatus> RULESTATUS </branch-rulestatus>
              </branch>
              => .Bag)
              ...
          </branches>
+
+    // InitStart msg fail
+
 
 
     // helpers
@@ -312,6 +338,9 @@ module PDC-SETUP
                             <branch-sequence>
                                 .PDCMSGList
                             </branch-sequence>
+                            <branch-rulestatus>
+                                @InitInclude
+                            </branch-rulestatus>
                         </branch>
                     </branches>
                     // Parameters

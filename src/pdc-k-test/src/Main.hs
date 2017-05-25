@@ -1,4 +1,7 @@
 
+{-# LANGUAGE ViewPatterns
+           #-}
+
 module Main where
 
 import Control.Monad
@@ -141,7 +144,8 @@ startUnitTestsList =
     , positiveTest "start-pos-4"
     , positiveTest "start-pos-5"
     , positiveTest "start-pos-6"
-    , smarttest "try"
+    , smarttest "start-pos-7"
+    , smarttest "start-pos-8"
     ]
 
 gentest :: (RuleResult -> Bool) -> String -> TestTree
@@ -163,12 +167,10 @@ smarttest id = testCase id $ do
     xml <- readXML xmlpath
     workRres <- dowork "pdc-semantics.k" (id ++ ".pdc") (Just True) ["msglist="++(id++"-msglist.txt")]
     
-    
     let exceptedRuleresult = parseRuleResult $ fromJust $ xml `getBy` "rulestatus"
         ruleresult = parseRuleResult $ getRunResult (krun_stdout workRres)
-
+    
     eq <- assertEqual "ruleresult" exceptedRuleresult ruleresult
     deleteExposed conf id
     return eq
-    -- assertEqual "ruleresult" (fmap expect (parseRuleResult (getRunResult (krun_stdout res)))) (Just True)
 
