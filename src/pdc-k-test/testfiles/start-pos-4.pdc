@@ -1,0 +1,7 @@
+rule start-pos-4 (A, B) {
+	start {
+	    A -> B : REQ1
+	    A -> B : REQ2
+	}
+	B -> A : RES
+}

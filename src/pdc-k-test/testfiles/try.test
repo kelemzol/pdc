@@ -1,0 +1,23 @@
+
+#> expose try.pdc -----------------------------------------
+
+rule start-pos-6 (A, B) {
+	start one-of {
+	    A -> B : REQ1
+	    A -> B : REQ2
+	}
+	B -> A : RES
+}
+
+
+
+#> expose try-msglist.txt ---------------------------------
+
+A -> B : REQ2
+B -> A : RES
+
+
+
+#> expose try-res.txt -------------------------------------
+
+<rulestatus> @Success </rulestatus>

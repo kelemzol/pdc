@@ -1,0 +1,25 @@
+
+#> expose start-pos-8.pdc ---------------------------------
+
+rule start-pos-7 (A, B) {
+	start one-of {
+		A -> B : REQ1
+		A -> B : REQ2
+	}
+	B -> A : RES
+}
+
+
+
+#> expose start-pos-8-msglist.txt -------------------------
+
+A -> B : REQ
+B -> A : RES
+A -> B : REQ1
+B -> A : RES
+
+
+
+#> expose start-pos-8-res.txt -----------------------------
+
+<rulestatus> @Success </rulestatus>

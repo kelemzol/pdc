@@ -1,7 +1,8 @@
 
 {-# LANGUAGE TupleSections
-            , RecordWildCards
-            #-}
+           , RecordWildCards
+           , ViewPatterns
+           #-}
 
 module PDC.KRunner where
 
@@ -55,6 +56,27 @@ work (k:f:"--delete-temp":confs) = void $ dowork k f (Just True) confs
 work (k:f:"--no-delete-temp":confs) = void $ dowork k f (Just False) confs
 work (k:f:confs) = void $ dowork k f Nothing confs
 work _ = help
+
+
+genericExpose :: (FilePath -> String -> IO ()) -> Conf -> String -> IO ()
+genericExpose work conf name = do
+    let path = pdc_prog_dir conf
+    content <- readFile (path ++ name ++ ".test")
+    doExpose path Nothing [] (lines content)
+  where
+    doExpose path Nothing   _ [] = return ()
+    doExpose path (Just fn) c [] = work (path++fn) (concat (reverse c))
+    doExpose path Nothing c ((words -> ("#>":"expose":fn':_)):xs) = do
+        doExpose path (Just fn') [] xs
+    doExpose path (Just fn) c ((words -> ("#>":"expose":fn':_)):xs) = do
+        work (path++fn) (unlines (reverse c))
+        doExpose path (Just fn') [] xs
+    doExpose path fn c (x:xs) = doExpose path fn (x:c) xs
+
+
+expose = genericExpose writeFile
+
+deleteExposed = genericExpose (\ fn _ -> removeFile fn)
 
 
 dowork k' f' del confs = do
@@ -131,6 +153,17 @@ runCmd conf f p m = do
 
 getRunResult :: UNode String -> String
 getRunResult = textContent . fromJust . findElement "rulestatus"
+
+readXML :: FilePath -> IO XML
+readXML fn = do
+    content <- readFile fn
+    let (xml, mErr) = parse defaultParseOptions (pack content) :: (UNode String, Maybe XMLParseError)
+    return (XML xml)
+
+getBy :: XML -> String -> Maybe String
+getBy (XML xml) name = fmap textContent (findElement name xml)
+
+newtype XML = XML (UNode String)
 
 run conf msg m = do
     outputStrLn conf msg
