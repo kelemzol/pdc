@@ -1,1 +1,0 @@
-A -> B : REQ2B -> A : RES
