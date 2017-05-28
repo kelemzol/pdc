@@ -97,7 +97,7 @@ module PDC-RULE-SEMANTICS
 
     rule <k> @rule I ( PL ) B </k>
          <orig> .EntryList             => prepareEL ( prepareB ( B ) ) </orig>
-         <current-el> .EntryList       => prepareEL ( prepareB ( B ) ) </current-el>
+         <current-pattern> .EntryList  => prepareEL ( prepareB ( B ) ) </current-pattern>
          <params> .PDCParamList        => PL </params>
          <metadata> <name> .K          => I </name> </metadata>
          <rulestatus> @InitPrepare     => @InitStart </rulestatus>
@@ -177,23 +177,24 @@ module PDC-RULE-SEMANTICS
 
     // START ------------------------------------------------------------------
 
-    rule <current-el> @start @instantly NEXT => NEXT </current-el>
-         <rulestatus> @InitStart             => @Running </rulestatus>
+    rule <current-pattern> @start @instantly NEXT => NEXT </current-pattern>
+         <rulestatus> @InitStart       => @Running </rulestatus>
 
-    rule <current-el> @start { SEL } EL      => SEL </current-el>
-         <after-start> X                     => EL </after-start>
-         <current-sequence> MSG OMSG </current-sequence>
-         <rulestatus> @InitStart             => @Passive </rulestatus>
+    rule <current-pattern> @start { SEL } EL
+                                       => SEL </current-pattern>
+         <after-start> X               => EL </after-start>
+         <current-stream> MSG OMSG </current-stream>
+         <rulestatus> @InitStart       => @Passive </rulestatus>
          <branches>
              (.Bag => <branch>
-                          <branch-el> @start { SEL } EL </branch-el>
-                          <branch-sequence> OMSG </branch-sequence>
+                          <branch-pattern> @start { SEL } EL </branch-pattern>
+                          <branch-stream> OMSG </branch-stream>
                           <branch-rulestatus> @InitStart </branch-rulestatus>
                       </branch>)
              ...
          </branches>
 
-    rule <current-el> .EntryList       => OB </current-el>
+    rule <current-pattern> .EntryList  => OB </current-pattern>
          <after-start> OB              => .EntryList </after-start>
          <branches> BRS                => .Bag </branches>
          <rulestatus> @Passive         => @Running </rulestatus>
@@ -201,18 +202,20 @@ module PDC-RULE-SEMANTICS
 
 
     // SEQ --------------------------------------------------------------------
-    rule <current-el> @seq { EL } NEXT      => appendEL(EL, NEXT) </current-el>
+    rule <current-pattern> @seq { EL } NEXT
+                                       => appendEL(EL, NEXT) </current-pattern>
 
 
 
     // ONE-OF -----------------------------------------------------------------
-    rule <current-el> @one-of { E EL } NEXT => E NEXT </current-el>
-         <current-sequence> SEQUENCE </current-sequence>
+    rule <current-pattern> @one-of { E EL } NEXT
+                                       => E NEXT </current-pattern>
+         <current-stream> SEQUENCE </current-stream>
          <rulestatus> RULESTATUS </rulestatus>
          <branches>
              (.Bag => <branch>
-                          <branch-el> @one-of { EL } NEXT </branch-el>
-                          <branch-sequence> SEQUENCE </branch-sequence>
+                          <branch-pattern> @one-of { EL } NEXT </branch-pattern>
+                          <branch-stream> SEQUENCE </branch-stream>
                           <branch-rulestatus> RULESTATUS </branch-rulestatus>
                       </branch>)
              ...
@@ -221,13 +224,14 @@ module PDC-RULE-SEMANTICS
 
 
     // MORE-OF ----------------------------------------------------------------
-    rule <current-el> @more-of { EL } NEXT => @one-of { EL } @more-of { EL } NEXT </current-el>
-         <current-sequence> SEQUENCE </current-sequence>
+    rule <current-pattern> @more-of { EL } NEXT
+                                       => @one-of { EL } @more-of { EL } NEXT </current-pattern>
+         <current-stream> SEQUENCE </current-stream>
          <rulestatus> RULESTATUS </rulestatus>
          <branches>
              (.Bag => <branch>
-                          <branch-el> @one-of { EL } NEXT </branch-el>
-                          <branch-sequence> SEQUENCE </branch-sequence>
+                          <branch-pattern> @one-of { EL } NEXT </branch-pattern>
+                          <branch-stream> SEQUENCE </branch-stream>
                           <branch-rulestatus> RULESTATUS </branch-rulestatus>
                       </branch>)
              ...
@@ -236,13 +240,14 @@ module PDC-RULE-SEMANTICS
 
 
     // MANY-OF ----------------------------------------------------------------
-    rule <current-el> @many-of { EL } NEXT => @one-of { EL } @many-of { EL } NEXT </current-el>
-         <current-sequence> SEQUENCE </current-sequence>
+    rule <current-pattern> @many-of { EL } NEXT
+                                       => @one-of { EL } @many-of { EL } NEXT </current-pattern>
+         <current-stream> SEQUENCE </current-stream>
          <rulestatus> RULESTATUS </rulestatus>
          <branches>
              (.Bag => <branch>
-                          <branch-el> NEXT </branch-el>
-                          <branch-sequence> SEQUENCE </branch-sequence>
+                          <branch-pattern> NEXT </branch-pattern>
+                          <branch-stream> SEQUENCE </branch-stream>
                           <branch-rulestatus> RULESTATUS </branch-rulestatus>
                       </branch>)
              ...
@@ -250,13 +255,14 @@ module PDC-RULE-SEMANTICS
 
 
     // OPTIONAL ---------------------------------------------------------------
-    rule <current-el> @optional { EL } NEXT => NEXT </current-el>
-         <current-sequence> SEQUENCE </current-sequence>
+    rule <current-pattern> @optional { EL } NEXT
+                                       => NEXT </current-pattern>
+         <current-stream> SEQUENCE </current-stream>
          <rulestatus> RULESTATUS </rulestatus>
          <branches>
              (.Bag => <branch>
-                          <branch-el> appendEL(EL, NEXT) </branch-el>
-                          <branch-sequence> SEQUENCE </branch-sequence>
+                          <branch-pattern> appendEL(EL, NEXT) </branch-pattern>
+                          <branch-stream> SEQUENCE </branch-stream>
                           <branch-rulestatus> RULESTATUS </branch-rulestatus>
                       </branch>)
              ...
@@ -267,23 +273,23 @@ module PDC-RULE-SEMANTICS
     // MESSAGE ----------------------------------------------------------------
 
 
-    rule <current-el> MSG1 ES               => boundMSGVariables ( MSG2 , MSG1 , MSG1 ES) </current-el>
-         <current-sequence> MSG2 MS         => MSG2 MS </current-sequence>
+    rule <current-pattern> MSG1 ES     => boundMSGVariables ( MSG2 , MSG1 , MSG1 ES) </current-pattern>
+         <current-stream> MSG2 MS      => MSG2 MS </current-stream>
                                                            when containProcessVariable(MSG1) andBool (MSG1 ==PDCMSGPartial MSG2)
 
-    rule <current-el> MSG1 ES               => ES </current-el>
-         <current-sequence> MSG2 MS         => MS </current-sequence>
+    rule <current-pattern> MSG1 ES     => ES </current-pattern>
+         <current-stream> MSG2 MS      => MS </current-stream>
                                                            when MSG1 ==PDCMSG MSG2 andBool ( notContainProcessVariable ( MSG1 ) )
 
 
     // current branch failed, activate anoter one
-    rule <current-el> MSG1 ES               => EL </current-el>
-         <current-sequence> MSG2 MS         => SL </current-sequence>
-         <rulestatus> X                     => RULESTATUS </rulestatus>
+    rule <current-pattern> MSG1 ES     => EL </current-pattern>
+         <current-stream> MSG2 MS      => SL </current-stream>
+         <rulestatus> X                => RULESTATUS </rulestatus>
          <branches>
              (<branch>
-                 <branch-el> EL </branch-el>
-                 <branch-sequence> SL </branch-sequence>
+                 <branch-pattern> EL </branch-pattern>
+                 <branch-stream> SL </branch-stream>
                  <branch-rulestatus> RULESTATUS </branch-rulestatus>
              </branch>
              => .Bag)
@@ -292,13 +298,14 @@ module PDC-RULE-SEMANTICS
                                                            when MSG1 =/=PDCMSG MSG2
                                                                 andBool (containProcessVariable(MSG1) impliesBool (notBool(MSG1 ==PDCMSGPartial MSG2)))
     // Message list empty
-    rule <current-el> MSG:PDCMSG ES         => EL </current-el>
-         <current-sequence> .PDCMSGList     => SEQUENCE </current-sequence>
-         <rulestatus> X                     => RULESTATUS </rulestatus>
+    rule <current-pattern> MSG:PDCMSG ES
+                                       => EL </current-pattern>
+         <current-stream> .PDCMSGList  => SEQUENCE </current-stream>
+         <rulestatus> X                => RULESTATUS </rulestatus>
          <branches>
              (<branch>
-                 <branch-el> EL </branch-el>
-                 <branch-sequence> SEQUENCE </branch-sequence>
+                 <branch-pattern> EL </branch-pattern>
+                 <branch-stream> SEQUENCE </branch-stream>
                  <branch-rulestatus> RULESTATUS </branch-rulestatus>
              </branch>
              => .Bag)
@@ -306,13 +313,14 @@ module PDC-RULE-SEMANTICS
          </branches>
 
     // one-of empty
-    rule <current-el> @one-of { .EntryList } ES => EL </current-el>
-         <current-sequence> _               => SEQUENCE </current-sequence>
-         <rulestatus> _                     => RULESTATUS </rulestatus>
+    rule <current-pattern> @one-of { .EntryList } ES
+                                       => EL </current-pattern>
+         <current-stream> _            => SEQUENCE </current-stream>
+         <rulestatus> _                => RULESTATUS </rulestatus>
          <branches>
              (<branch>
-                 <branch-el> EL </branch-el>
-                 <branch-sequence> SEQUENCE </branch-sequence>
+                 <branch-pattern> EL </branch-pattern>
+                 <branch-stream> SEQUENCE </branch-stream>
                  <branch-rulestatus> RULESTATUS </branch-rulestatus>
              </branch>
              => .Bag)
@@ -334,15 +342,15 @@ module PDC-RULE-SEMANTICS
     // termination rules
     // ========================================================================
 
-    rule <current-el> .EntryList </current-el>
-         // <current-sequence> .PDCMSGList </current-sequence>
-         <rulestatus> @Running => @Success </rulestatus>
-         <branches> _ => .Bag </branches>
+    rule <current-pattern> .EntryList </current-pattern>
+         // <current-stream> .PDCMSGList </current-stream>
+         <rulestatus> @Running         => @Success </rulestatus>
+         <branches> _                  => .Bag </branches>
 
-    rule <current-el> MSG:PDCMSG EL </current-el>
-         <current-sequence> .PDCMSGList </current-sequence>
+    rule <current-pattern> MSG:PDCMSG EL </current-pattern>
+         <current-stream> .PDCMSGList </current-stream>
          <branches> .Bag </branches>
-         <rulestatus> @Running => @Failed </rulestatus>
+         <rulestatus> @Running         => @Failed </rulestatus>
 
 endmodule
 
@@ -381,25 +389,25 @@ module PDC-SETUP
                         .EntryList
                     </orig>
                     // Entries
-                    <current-el>
+                    <current-pattern>
                         .EntryList
-                    </current-el>
+                    </current-pattern>
                     // Msg list
-                    <current-sequence>
+                    <current-stream>
                         .PDCMSGList
-                    </current-sequence>
+                    </current-stream>
                     // temp field for non-activated entities without start
                     <after-start>
                         .EntryList
                     </after-start>
                     <branches>
                         <branch multiplicity="*">
-                            <branch-el>
+                            <branch-pattern>
                                 .EntryList
-                            </branch-el>
-                            <branch-sequence>
+                            </branch-pattern>
+                            <branch-stream>
                                 .PDCMSGList
-                            </branch-sequence>
+                            </branch-stream>
                             <branch-rulestatus>
                                 @InitInclude
                             </branch-rulestatus>
@@ -418,10 +426,10 @@ module PDC-SETUP
                     </rulestatus>
                 </T>
 
-  rule <current-sequence> .PDCMSGList =>
+  rule <current-stream> .PDCMSGList =>
            &include& msglist
            .PDCMSGList
-       </current-sequence>
+       </current-stream>
        <rulestatus> @InitInclude => @InitPrepare </rulestatus>
 
 endmodule
