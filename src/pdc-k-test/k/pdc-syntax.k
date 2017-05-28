@@ -73,6 +73,7 @@ module PDC-RULE-SYNTAX
                      | "@start" "@instantly"
                      | "@seq" RuleBody
                      | "@one-of" RuleBody
+                     | "@more-of" RuleBody
                      | "@many-of" RuleBody
                      | "@optional" RuleBody
                      | "@optional" Entry

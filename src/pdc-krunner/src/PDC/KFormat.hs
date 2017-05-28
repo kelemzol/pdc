@@ -28,6 +28,7 @@ genKFormat ((TkStart {..}):o)          = (o, "@start")
 genKFormat ((TkSeq {..}):o)            = (o, "@seq")
 genKFormat ((TkOptional {..}):o)       = (o, "@optional")
 genKFormat ((TkOneOf {..}):o)          = (o, "@one-of")
+genKFormat ((TkMoreOf {..}):o)         = (o, "@more-of")
 genKFormat ((TkManyOf {..}):o)         = (o, "@many-of")
 genKFormat ((TkInstantly {..}):o)      = (o, "@instantly")
 genKFormat (msg [] -> Just (o, [i,_,j,_,m])) = (o, "@MSG(" ++ idKF i ++ ", " ++ idKF j ++ ", " ++ idKF m ++ ")")
@@ -59,22 +60,3 @@ msg [i,a,j] (t@(TkColon {..}):o)  = msg [i,a,j,t] o
 msg [i,a,j,c] (t@(isTkId -> True):o) = Just (o, [i,a,j,c,t])
 msg _ _ = Nothing
 
-
-{-
-= TkWs           { pos :: Pos, tkws :: String }
-  | TkRule         { pos :: Pos }
-  | TkStart        { pos :: Pos }
-  | TkSeq          { pos :: Pos }
-  | TkOptional     { pos :: Pos }
-  | TkOneOf        { pos :: Pos }
-  | TkManyOf       { pos :: Pos }
-  | TkArrow        { pos :: Pos }
-  | TkColon        { pos :: Pos }
-  | TkComma        { pos :: Pos }
-  | TkBraceOpen    { pos :: Pos }
-  | TkBraceClose   { pos :: Pos }
-  | TkBracketOpen  { pos :: Pos }
-  | TkBracketClose { pos :: Pos }
-  | TkIdLC         { pos :: Pos, tkid :: String }
-  | TkIdUC         { pos :: Pos, tkid :: String }
--}

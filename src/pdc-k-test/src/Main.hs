@@ -42,6 +42,7 @@ tests = testGroup "All unit test" [ primUnitTests
                                   , optionalUnitTests
                                   , oneOfUnitTests
                                   , manyOfUnitTests
+                                  , moreOfUnitTests
                                   , startUnitTests
                                   , boundingUnitTests
                                   ]
@@ -80,6 +81,7 @@ unitTests = testGroup "All unit tests"
     , optionalUnitTestsList
     , oneOfUnitTestsList
     , manyOfUnitTestsList
+    , moreOfUnitTestsList
     , startUnitTestsList
     , boundingUnitTestsList
     ]
@@ -88,6 +90,7 @@ primUnitTests = testGroup "Prim tests" primUnitTestsList
 seqUnitTests = testGroup "Seq tests" seqUnitTestsList
 optionalUnitTests = testGroup "Optional tests" optionalUnitTestsList
 oneOfUnitTests = testGroup "One-of tests" oneOfUnitTestsList
+moreOfUnitTests = testGroup "More-of tests" moreOfUnitTestsList
 manyOfUnitTests = testGroup "Many-of tests" manyOfUnitTestsList
 startUnitTests = testGroup "Start tests" startUnitTestsList
 boundingUnitTests = testGroup "Bounding tests" boundingUnitTestsList
@@ -158,6 +161,19 @@ boundingUnitTestsList =
     , smarttest "bounding-pos-5"
     , smarttest "full-bounding-pos-1"
     , smarttest "full-bounding-pos-2"
+    ]
+moreOfUnitTestsList =
+    [ smarttest "more-of-pos-1"
+    , smarttest "more-of-pos-2"
+    , smarttest "more-of-pos-3"
+    , smarttest "more-of-pos-4"
+    , smarttest "more-of-pos-5"
+    , smarttest "more-of-pos-6"
+    , smarttest "more-of-pos-7"
+    , smarttest "more-of-pos-8"
+    , smarttest "more-of-pos-9"
+    , smarttest "more-of-pos-10"
+    , smarttest "more-of-pos-11"
     ]
 
 gentest :: (RuleResult -> Bool) -> String -> TestTree

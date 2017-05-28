@@ -1,0 +1,22 @@
+
+#> expose more-of-pos-4.pdc -------------------------------
+
+rule more-of-pos-4 (A, b) {
+	start instantly
+	more-of {
+	    A -> B : REQ1
+	    A -> B : REQ2
+	}
+}
+
+
+
+#> expose more-of-pos-4-msglist.txt -----------------------
+
+A -> B : REQ2
+
+
+
+#> expose more-of-pos-4-res.txt ---------------------------
+
+<rulestatus> @Success </rulestatus>

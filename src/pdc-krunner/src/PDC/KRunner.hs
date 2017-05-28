@@ -35,10 +35,11 @@ data Conf
     , pdc_msgl_dir :: String
     , outputStr :: String -> IO ()
     , outputStrLn :: String -> IO ()
+    , run_k_debug :: Bool
     }
 
 parseconf :: String -> Conf
-parseconf = pc (Conf "" "" "" putStr putStrLn) . map words . lines
+parseconf = pc (Conf "" "" "" putStr putStrLn False) . map words . lines
   where
     pc :: Conf -> [[String]] -> Conf
     pc c [] = c
@@ -47,6 +48,8 @@ parseconf = pc (Conf "" "" "" putStr putStrLn) . map words . lines
     pc c (["pdc-msgl-dir", "=", pmd]:ol) = pc c {pdc_msgl_dir = pmd} ol
     pc c (["output-str", "=", "stdout"]:ol) = pc c {outputStr = putStr, outputStrLn = putStrLn} ol
     pc c (["output-str", "=", out]:ol) = pc c {outputStr = appendFile out, outputStrLn = appendFile out . (++"\n")} ol
+    pc c (["run-k-debug",  "=", "true"]:ol) = pc c {run_k_debug = True} ol
+    pc c (["run-k-debug",  "=", "false"]:ol) = pc c {run_k_debug = False} ol
     pc c (_:ol) = pc c ol
 
 work :: [String] -> IO ()
@@ -97,7 +100,7 @@ dowork k' f' del confs = do
         kFormatIO f genPDCFile
     (success, _, kompile_stdout, kompile_stderr) <- runCmd conf TextFormat "[5/3] " $ "kompile " ++ genKFile ++ " --syntax-module PDC-SYNTAX --main-module PDC-SEMANTICS"
     (xmlres, krun_stdout, _, krun_stderr) <- if success
-        then runCmd conf XMLFormat "[5/4] " $ "krun " ++ genPDCFile ++ " --directory " ++ (takeDirectory  k)
+        then runCmd conf XMLFormat "[5/4] " $ "krun " ++ genPDCFile ++ " --directory " ++ (takeDirectory  k) ++ (if run_k_debug conf then " --debug" else "")
         else return (False, Text "empty", "", "")
     run conf ("[5/5] delete? [Y/_]") $ do
         d <- case del of
