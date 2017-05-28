@@ -123,6 +123,7 @@ module PDC-RULE-SEMANTICS
     rule (prepareE ( @optional B:RuleBody ) )    => ( @optional { prepareEL ( prepareB ( B ) ) } )
     rule (prepareE ( @seq B:RuleBody ) )         => ( @seq      { prepareEL ( prepareB ( B ) ) } )
     rule (prepareE ( @one-of B:RuleBody ) )      => ( @one-of   { prepareEL ( prepareB ( B ) ) } )
+    rule (prepareE ( @more-of B:RuleBody ) )     => ( @more-of  { prepareEL ( prepareB ( B ) ) } )
     rule (prepareE ( @many-of B:RuleBody ) )     => ( @many-of  { prepareEL ( prepareB ( B ) ) } )
     rule (prepareE ( M:PDCMSG ) )                => M
     rule (prepareE ( O ) ) => O                            [owise]
@@ -143,7 +144,6 @@ module PDC-RULE-SEMANTICS
     rule boundMSGVariables ( @MSG ( @UC ( FROM ) , @UC ( TO ) , MSGT ) , @MSG ( @LC ( FROMV ) , @UC ( TO ) , MSGT ) , EL ) =>
                    boundVariable ( @UC ( FROM ) , @LC ( FROMV ) , EL )
     rule boundMSGVariables ( _ , _ , EL ) => EL            [owise]
-    //rule boundMSGVariables ( @MSG ( _ , _ , MSG1 ) , @MSG ( _ , _ , MSG2 ))
 
 
 
@@ -167,30 +167,17 @@ module PDC-RULE-SEMANTICS
                    @many-of { boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL1 ) } ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL2 ) )
     rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @seq { EL1 } ) EL2) =>
                    @seq { boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL1 ) } ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL2 ) )
-//    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , O ) => O // ( @start @instantly .EntryList )
-//                                                           [owise]
     rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , .EntryList ) => .EntryList // ( @start @instantly .EntryList )
     rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , OMSG EL ) =>
                    OMSG ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL ) )
                                                            [owise]
 
-/*
-    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @MSG ( @LC ( IDV ) , @UC ( ID2 ), MSGT ) ) EL) =>
-                   @MSG ( @UC ( ID ) , @UC ( ID2 ) , MSGT ) ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL ) )
-    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @MSG ( @UC ( ID2 ) , @LC ( IDV ), MSGT ) ) EL) =>
-                   @MSG ( @UC ( ID2 ) , @UC ( ID ) , MSGT ) ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL ) )
-    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @MSG ( @UC ( ID2 ) , @UC ( ID3 ), MSGT ) ) EL) =>
-                   @MSG ( @UC ( ID2 ) , @UC ( ID3 ) , MSGT ) ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL ) )
-
-*/
     // processing rules
     // ========================================================================
 
     // START ------------------------------------------------------------------
-    // rule <current-el> @start { EL } NEXT     => appendEL(EL, NEXT) </current-el>
 
     rule <current-el> @start @instantly NEXT => NEXT </current-el>
-//       boundMSGVariables ( @MSG(@UC(String2Id("A")),@UC(String2Id("B")),@UC(String2Id("ABS"))) , @MSG(@UC(String2Id("A")),@LC(String2Id("b")),@UC(String2Id("ABS"))) , @MSG(@UC(String2Id("A")),@LC(String2Id("b")),@UC(String2Id("ABS"))) .EntryList) </current-el> // 
          <rulestatus> @InitStart             => @Running </rulestatus>
 
     rule <current-el> @start { SEL } EL      => SEL </current-el>
@@ -217,36 +204,49 @@ module PDC-RULE-SEMANTICS
     rule <current-el> @seq { EL } NEXT      => appendEL(EL, NEXT) </current-el>
 
 
+
     // ONE-OF -----------------------------------------------------------------
-    rule <current-el> @one-of { E EL } NEXT => @one-of { EL } NEXT </current-el>
+    rule <current-el> @one-of { E EL } NEXT => E NEXT </current-el>
          <current-sequence> SEQUENCE </current-sequence>
          <rulestatus> RULESTATUS </rulestatus>
          <branches>
              (.Bag => <branch>
-                          <branch-el> E NEXT </branch-el>
+                          <branch-el> @one-of { EL } NEXT </branch-el>
                           <branch-sequence> SEQUENCE </branch-sequence>
                           <branch-rulestatus> RULESTATUS </branch-rulestatus>
                       </branch>)
              ...
          </branches>
-                                                           when NotEmptyEL ( EL )
-    
-    rule <current-el> @one-of { E .EntryList } NEXT => E NEXT </current-el>
+
+
+
+    // MORE-OF ----------------------------------------------------------------
+    rule <current-el> @more-of { EL } NEXT => @one-of { EL } @more-of { EL } NEXT </current-el>
+         <current-sequence> SEQUENCE </current-sequence>
+         <rulestatus> RULESTATUS </rulestatus>
+         <branches>
+             (.Bag => <branch>
+                          <branch-el> @one-of { EL } NEXT </branch-el>
+                          <branch-sequence> SEQUENCE </branch-sequence>
+                          <branch-rulestatus> RULESTATUS </branch-rulestatus>
+                      </branch>)
+             ...
+         </branches>
+
 
 
     // MANY-OF ----------------------------------------------------------------
-    rule <current-el> @many-of { EL } NEXT => NEXT </current-el>
+    rule <current-el> @many-of { EL } NEXT => @one-of { EL } @many-of { EL } NEXT </current-el>
          <current-sequence> SEQUENCE </current-sequence>
          <rulestatus> RULESTATUS </rulestatus>
          <branches>
              (.Bag => <branch>
-                          <branch-el> @one-of { EL } @many-of { EL } NEXT </branch-el>
+                          <branch-el> NEXT </branch-el>
                           <branch-sequence> SEQUENCE </branch-sequence>
                           <branch-rulestatus> RULESTATUS </branch-rulestatus>
                       </branch>)
              ...
          </branches>
-//                                                           when NotEmptyEL ( EL )
 
 
     // OPTIONAL ---------------------------------------------------------------
@@ -293,19 +293,31 @@ module PDC-RULE-SEMANTICS
                                                                 andBool (containProcessVariable(MSG1) impliesBool (notBool(MSG1 ==PDCMSGPartial MSG2)))
     // Message list empty
     rule <current-el> MSG:PDCMSG ES         => EL </current-el>
-         <current-sequence> .PDCMSGList     => SL </current-sequence>
+         <current-sequence> .PDCMSGList     => SEQUENCE </current-sequence>
          <rulestatus> X                     => RULESTATUS </rulestatus>
          <branches>
              (<branch>
                  <branch-el> EL </branch-el>
-                 <branch-sequence> SL </branch-sequence>
+                 <branch-sequence> SEQUENCE </branch-sequence>
                  <branch-rulestatus> RULESTATUS </branch-rulestatus>
              </branch>
              => .Bag)
              ...
          </branches>
 
-    // InitStart msg fail
+    // one-of empty
+    rule <current-el> @one-of { .EntryList } ES => EL </current-el>
+         <current-sequence> _               => SEQUENCE </current-sequence>
+         <rulestatus> _                     => RULESTATUS </rulestatus>
+         <branches>
+             (<branch>
+                 <branch-el> EL </branch-el>
+                 <branch-sequence> SEQUENCE </branch-sequence>
+                 <branch-rulestatus> RULESTATUS </branch-rulestatus>
+             </branch>
+             => .Bag)
+             ...
+         </branches>
 
 
 
@@ -325,6 +337,7 @@ module PDC-RULE-SEMANTICS
     rule <current-el> .EntryList </current-el>
          // <current-sequence> .PDCMSGList </current-sequence>
          <rulestatus> @Running => @Success </rulestatus>
+         <branches> _ => .Bag </branches>
 
     rule <current-el> MSG:PDCMSG EL </current-el>
          <current-sequence> .PDCMSGList </current-sequence>

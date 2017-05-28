@@ -1,0 +1,33 @@
+
+#> expose more-of-pos-11.pdc -------------------------------
+
+rule more-of-pos-11 (A, b) {
+	start instantly
+	more-of {
+	    more-of {
+	        A -> B : REQ1
+	        more-of {
+	            A -> B : REQ2
+	        }
+	    }
+	    more-of {
+	        A -> B : REQ2
+	        A -> B : REQ1
+	    }
+	}
+}
+
+
+
+#> expose more-of-pos-11-msglist.txt -----------------------
+
+A -> B : REQ1
+A -> B : REQ2
+A -> B : REQ1
+A -> B : REQ2
+
+
+
+#> expose more-of-pos-11-res.txt ---------------------------
+
+<rulestatus> @Success </rulestatus>

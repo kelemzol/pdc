@@ -27,6 +27,7 @@ tokens :-
     "seq"                              { tok TkSeq }
     "optional"                         { tok TkOptional }
     "one-of"                           { tok TkOneOf }
+    "more-of"                          { tok TkMoreOf }
     "many-of"                          { tok TkManyOf }
     "instantly"                        { tok TkInstantly }
     "->"                               { tok TkArrow }
@@ -65,6 +66,7 @@ data Token
   | TkSeq          { pos :: Pos }
   | TkOptional     { pos :: Pos }
   | TkOneOf        { pos :: Pos }
+  | TkMoreOf       { pos :: Pos }
   | TkManyOf       { pos :: Pos }
   | TkInstantly    { pos :: Pos }
   | TkArrow        { pos :: Pos }
