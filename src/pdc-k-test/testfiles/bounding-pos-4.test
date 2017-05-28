@@ -1,0 +1,24 @@
+
+#> expose bounding-pos-4.pdc ------------------------------
+
+rule bounding-pos-4 (A, b) {
+	start instantly
+	one-of {
+	    A -> b : REQ1
+	    A -> b : REQ2
+	}
+	b -> A : RES
+}
+
+
+
+#> expose bounding-pos-4-msglist.txt ----------------------
+
+A -> B : REQ2
+B -> A : RES
+
+
+
+#> expose bounding-pos-4-res.txt --------------------------
+
+<rulestatus> @Success </rulestatus>

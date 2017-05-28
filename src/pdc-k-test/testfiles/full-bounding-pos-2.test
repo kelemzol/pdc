@@ -1,0 +1,39 @@
+
+#> expose full-bounding-pos-2.pdc ------------------------------
+
+rule full-bounding-pos-2 (a, b, c) {
+	start instantly
+	one-of {
+	    a -> b : REQ1
+	    a -> b : REQ2
+	}
+	b -> c : REQ
+	many-of {
+	    seq {
+	        b -> c : REQ
+	        c -> b : RES
+	    }
+	}
+	c -> a : RES
+	b -> a : RES
+}
+
+
+
+
+#> expose full-bounding-pos-2-msglist.txt ----------------------
+
+A -> B : REQ2
+B -> C : REQ
+B -> C : REQ
+C -> B : RES
+B -> C : REQ
+C -> B : RES
+C -> A : RES
+B -> A : RES
+
+
+
+#> expose full-bounding-pos-2-res.txt --------------------------
+
+<rulestatus> @Success </rulestatus>

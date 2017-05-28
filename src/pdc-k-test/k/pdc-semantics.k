@@ -11,6 +11,9 @@ module PDC-ID-SEMANTICS
   rule A =/=PDCId B => false                               when A ==PDCId B
   rule _ =/=PDCId _ => true                                [owise]
 
+  rule isEmptyPCDIdList ( .PDCIdList ) => true
+  rule isEmptyPCDIdList ( _ ) => false                     [owise]
+
   rule isPV(@UC(_)) => true
   rule isPV(_)      => false                               [owise]
 
@@ -54,9 +57,24 @@ module PDC-MSG-SEMANTICS
   rule @MSG(A1, B1, M1) =/=PDCMSG @MSG(A2, B2, M2) => true when A1 =/=PDCId A2 orBool B1 =/=PDCId B2 orBool M1 =/=PDCId M2
   rule _ =/=PDCMSG _ => false                              [owise]
 
-  rule pvsOfMsg(@MSG(A, B, Msg)) => pvs (A B .PDCIdList)
+  rule @MSG(A1, B1, M1) ==PDCMSGPartial @MSG(A2, B2, M2) => true
+                                                           when (M1 ==PDCId M2)
+                                                           andBool ((isPI(A1) andBool isPI(A2)) impliesBool A1 ==PDCId A2)
+                                                           andBool ((isPI(B1) andBool isPI(B2)) impliesBool B1 ==PDCId B2)
+  rule _ ==PDCMSGPartial _ => false                        [owise]
 
-  rule pisOfMsg(@MSG(A, B, Msg)) => pis (A B .PDCIdList)
+  rule isEmptyPDCMSGList ( .PDCMSGList ) => true
+  rule isEmptyPDCMSGList ( _ ) => false                    [owise]
+
+  rule containProcessVariable ( MSG ) => notBool ( isEmptyPCDIdList ( pvsOfMsg ( MSG ) ) )
+                                                           [owise]
+
+  rule notContainProcessVariable ( MSG ) => isEmptyPCDIdList ( pvsOfMsg ( MSG ) )
+                                                           [owise]
+
+  rule pvsOfMsg(@MSG(A, B, MSG)) => pvs (A B .PDCIdList)
+
+  rule pisOfMsg(@MSG(A, B, MSG)) => pis (A B .PDCIdList)
 
   endmodule
 
@@ -84,23 +102,9 @@ module PDC-RULE-SEMANTICS
          <metadata> <name> .K          => I </name> </metadata>
          <rulestatus> @InitPrepare     => @InitStart </rulestatus>
 
-    // preparating rules/functions
+    // preparating/restructuring helper rule-functions
     // ------------------------------------------------------------------------
     
-    //rule (E:Entry EL:EntryList):EntryList => E ~> EL [structural]
-    //rule (E:Entry):EntryList => E .EntryList [macro, structural]
-
-/*
-    rule { E } => E [structural]
-    rule @rule I PL EL => EL ~> PL [structural]
-    rule @rule I PL EL => EL ~> I [structural]
-    rule (E:Entry EL:EntryList):EntryList => E ~> EL [structural]
-    rule (E:Entry):EntryList => E .EntryList
-*/
-
-//    syntax PDCRule ::= "prepare" "(" PDCRule ")"      [function]
-//    rule (prepare ( @rule I PL { EL } )) => @rule I PL { prepareEL ( EL ) }
-//                                                      [owise]
 
     syntax EntryList ::= "prepareB" "(" RuleBody ")"       [function]
     rule ( prepareB ( { } ) ) => .EntryList
@@ -110,6 +114,7 @@ module PDC-RULE-SEMANTICS
     rule ( prepareEL ( E:Entry EL:EntryList ) ) => ( prepareE ( E ) prepareEL ( EL ) )
     rule ( prepareEL ( E:Entry ) ) => ( prepareE ( E ) .EntryList )
     rule ( prepareEL ( .EntryList ) ) => .EntryList        [owise]
+
 
     syntax Entry ::= "prepareE" "(" Entry ")"              [function]
     rule (prepareE ( @start E:Entry ) )          => ( @start    { prepareE ( E ) .EntryList    } )
@@ -122,31 +127,70 @@ module PDC-RULE-SEMANTICS
     rule (prepareE ( M:PDCMSG ) )                => M
     rule (prepareE ( O ) ) => O                            [owise]
 
-/*
-    syntax Entry ::= "prepareE" "(" Entry ")"              [function]
-    rule (prepareE ( @start E:Entry ) )               => ( @start    { prepareE ( E ) .EntryList } )
-    rule (prepareE ( @start { EL:EntryList } ) )      => ( @start    { prepareEL ( EL )          } )
-    rule (prepareE ( @optional E:Entry ) )            => ( @optional { prepareE ( E ) .EntryList } )
-    rule (prepareE ( @optional { EL:EntryList } ) )   => ( @optional { prepareEL ( EL )          } )
-    rule (prepareE ( @seq { EL:EntryList } ) )        => ( @seq      { prepareEL ( EL )          } )
-    rule (prepareE ( @one-of { EL:EntryList } ) )     => ( @one-of   { prepareEL ( EL )          } )
-    rule (prepareE ( @many-of { EL:EntryList } ) )    => ( @many-of  { prepareEL ( EL )          } )
-    rule (prepareE ( M:PDCMSG ) )                     => M
-    rule (prepareE ( O ) ) => O                            [owise]
-*/
+
     syntax EntryList ::= "appendEL" "(" EntryList "," EntryList ")"
                                                            [function]
     rule appendEL ( E EL , O ) => E appendEL ( EL , O )
     rule appendEL ( .EntryList , O ) => O                  [owise]
 
 
+    syntax EntryList ::= "boundMSGVariables" "(" PDCMSG "," PDCMSG "," EntryList ")"
+                                                           [function]
+    rule boundMSGVariables ( @MSG ( @UC ( FROM ) , @UC ( TO ) , MSGT ) , @MSG ( @LC ( FROMV ) , @LC ( TOV ) , MSGT ) , EL ) =>
+                   boundVariable ( @UC ( TO ) , @LC ( TOV ) , boundVariable ( @UC ( FROM ) , @LC ( FROMV ) , EL ) )
+    rule boundMSGVariables ( @MSG ( @UC ( FROM ) , @UC ( TO ) , MSGT ) , @MSG ( @UC ( FROM ) , @LC ( TOV ) , MSGT ) , EL ) =>
+                   boundVariable ( @UC ( TO ) , @LC ( TOV ) , EL )
+    rule boundMSGVariables ( @MSG ( @UC ( FROM ) , @UC ( TO ) , MSGT ) , @MSG ( @LC ( FROMV ) , @UC ( TO ) , MSGT ) , EL ) =>
+                   boundVariable ( @UC ( FROM ) , @LC ( FROMV ) , EL )
+    rule boundMSGVariables ( _ , _ , EL ) => EL            [owise]
+    //rule boundMSGVariables ( @MSG ( _ , _ , MSG1 ) , @MSG ( _ , _ , MSG2 ))
+
+
+
+    syntax EntryList ::= "boundVariable" "(" PDCId "," PDCId "," EntryList ")"
+                                                           [function]
+    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @MSG ( @LC ( IDV ) , @LC ( IDV ) , MSGT ) ) EL) =>
+                   @MSG ( @UC ( ID ) , @UC ( ID ) , MSGT ) ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL ) )
+    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @MSG ( @LC ( IDV ) , ID2 , MSGT ) ) EL) =>
+                   @MSG ( @UC ( ID ) , ID2 , MSGT ) ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL ) )
+    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @MSG ( ID2 , @LC ( IDV ), MSGT ) ) EL) =>
+                   @MSG ( ID2 , @UC ( ID ) , MSGT ) ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL ) )
+//    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @MSG ( ID2 , ID3 , MSGT ) ) EL) =>
+//                   @MSG ( ID2 , ID3 , MSGT ) ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL ) )
+    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @start { EL1 } ) EL2) =>
+                   @start { boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL1 ) } ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL2 ) )
+    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @optional { EL1 } ) EL2) =>
+                   @optional { boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL1 ) } ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL2 ) )
+    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @one-of { EL1 } ) EL2) =>
+                   @one-of { boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL1 ) } ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL2 ) )
+    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @many-of { EL1 } ) EL2) =>
+                   @many-of { boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL1 ) } ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL2 ) )
+    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @seq { EL1 } ) EL2) =>
+                   @seq { boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL1 ) } ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL2 ) )
+//    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , O ) => O // ( @start @instantly .EntryList )
+//                                                           [owise]
+    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , .EntryList ) => .EntryList // ( @start @instantly .EntryList )
+    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , OMSG EL ) =>
+                   OMSG ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL ) )
+                                                           [owise]
+
+/*
+    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @MSG ( @LC ( IDV ) , @UC ( ID2 ), MSGT ) ) EL) =>
+                   @MSG ( @UC ( ID ) , @UC ( ID2 ) , MSGT ) ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL ) )
+    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @MSG ( @UC ( ID2 ) , @LC ( IDV ), MSGT ) ) EL) =>
+                   @MSG ( @UC ( ID2 ) , @UC ( ID ) , MSGT ) ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL ) )
+    rule boundVariable ( @UC ( ID ) , @LC ( IDV ) , ( @MSG ( @UC ( ID2 ) , @UC ( ID3 ), MSGT ) ) EL) =>
+                   @MSG ( @UC ( ID2 ) , @UC ( ID3 ) , MSGT ) ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL ) )
+
+*/
     // processing rules
     // ========================================================================
 
     // START ------------------------------------------------------------------
-    rule <current-el> @start { EL } NEXT     => appendEL(EL, NEXT) </current-el>
+    // rule <current-el> @start { EL } NEXT     => appendEL(EL, NEXT) </current-el>
 
     rule <current-el> @start @instantly NEXT => NEXT </current-el>
+//       boundMSGVariables ( @MSG(@UC(String2Id("A")),@UC(String2Id("B")),@UC(String2Id("ABS"))) , @MSG(@UC(String2Id("A")),@LC(String2Id("b")),@UC(String2Id("ABS"))) , @MSG(@UC(String2Id("A")),@LC(String2Id("b")),@UC(String2Id("ABS"))) .EntryList) </current-el> // 
          <rulestatus> @InitStart             => @Running </rulestatus>
 
     rule <current-el> @start { SEL } EL      => SEL </current-el>
@@ -223,9 +267,13 @@ module PDC-RULE-SEMANTICS
     // MESSAGE ----------------------------------------------------------------
 
 
+    rule <current-el> MSG1 ES               => boundMSGVariables ( MSG2 , MSG1 , MSG1 ES) </current-el>
+         <current-sequence> MSG2 MS         => MSG2 MS </current-sequence>
+                                                           when containProcessVariable(MSG1) andBool (MSG1 ==PDCMSGPartial MSG2)
+
     rule <current-el> MSG1 ES               => ES </current-el>
          <current-sequence> MSG2 MS         => MS </current-sequence>
-                                                           when MSG1 ==PDCMSG MSG2
+                                                           when MSG1 ==PDCMSG MSG2 andBool ( notContainProcessVariable ( MSG1 ) )
 
 
     // current branch failed, activate anoter one
@@ -242,6 +290,7 @@ module PDC-RULE-SEMANTICS
              ...
          </branches>
                                                            when MSG1 =/=PDCMSG MSG2
+                                                                andBool (containProcessVariable(MSG1) impliesBool (notBool(MSG1 ==PDCMSGPartial MSG2)))
     // Message list empty
     rule <current-el> MSG:PDCMSG ES         => EL </current-el>
          <current-sequence> .PDCMSGList     => SL </current-sequence>

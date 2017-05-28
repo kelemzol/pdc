@@ -14,6 +14,8 @@ module PDC-ID-SYNTAX
   syntax PDCIdList ::= ".PDCIdList"
                       | PDCId PDCIdList                    [right, strict(2)]
 
+  syntax Bool ::= "isEmptyPCDIdList" "(" PDCIdList ")"     [function]
+
   // filter PI-s
   syntax PDCIdList ::= "pis" "(" PDCIdList ")"             [function]
   // filter PV-s
@@ -38,8 +40,14 @@ module PDC-MSG-SYNTAX
   syntax PDCMSGList ::= ".PDCMSGList"
                       | PDCMSG PDCMSGList                  [right, strict(2)]
 
+  syntax Bool ::= "isEmptyPDCMSGList" "(" PDCMSGList ")"   [function]
+
   syntax Bool ::= PDCMSG "==PDCMSG" PDCMSG                 [function, left]
   syntax Bool ::= PDCMSG "=/=PDCMSG" PDCMSG                [function]
+  syntax Bool ::= PDCMSG "==PDCMSGPartial" PDCMSG          [function]
+  syntax Bool ::= "containProcessVariable" "(" PDCMSG ")"  [function]
+  syntax Bool ::= "notContainProcessVariable" "(" PDCMSG ")"
+                                                           [function]
   syntax PDCIdList  ::= "pvsOfMsg" "(" PDCMSG ")"          [function]
   syntax PDCIdList  ::= "pisOfMsg" "(" PDCMSG ")"          [function]
 

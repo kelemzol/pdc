@@ -2,3 +2,4 @@ pdc-def-dir = .\src\pdc-k-test\k\
 pdc-prog-dir = .\src\pdc-k-test\testfiles\
 pdc-msgl-dir = .\src\pdc-k-test\testfiles\
 output-str = logfile.txt
+run-k-debug = false

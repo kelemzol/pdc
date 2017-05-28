@@ -43,6 +43,7 @@ tests = testGroup "All unit test" [ primUnitTests
                                   , oneOfUnitTests
                                   , manyOfUnitTests
                                   , startUnitTests
+                                  , boundingUnitTests
                                   ]
 
 data RuleResult
@@ -80,6 +81,7 @@ unitTests = testGroup "All unit tests"
     , oneOfUnitTestsList
     , manyOfUnitTestsList
     , startUnitTestsList
+    , boundingUnitTestsList
     ]
 
 primUnitTests = testGroup "Prim tests" primUnitTestsList
@@ -88,6 +90,7 @@ optionalUnitTests = testGroup "Optional tests" optionalUnitTestsList
 oneOfUnitTests = testGroup "One-of tests" oneOfUnitTestsList
 manyOfUnitTests = testGroup "Many-of tests" manyOfUnitTestsList
 startUnitTests = testGroup "Start tests" startUnitTestsList
+boundingUnitTests = testGroup "Bounding tests" boundingUnitTestsList
 
 primUnitTestsList =
     [ positiveTest "prim-pos-1"
@@ -146,6 +149,15 @@ startUnitTestsList =
     , positiveTest "start-pos-6"
     , smarttest "start-pos-7"
     , smarttest "start-pos-8"
+    ]
+boundingUnitTestsList =
+    [ smarttest "bounding-pos-1"
+    , smarttest "bounding-pos-2"
+    , smarttest "bounding-pos-3"
+    , smarttest "bounding-pos-4"
+    , smarttest "bounding-pos-5"
+    , smarttest "full-bounding-pos-1"
+    , smarttest "full-bounding-pos-2"
     ]
 
 gentest :: (RuleResult -> Bool) -> String -> TestTree
