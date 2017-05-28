@@ -1,0 +1,22 @@
+
+#> expose bounding-pos-2.pdc ------------------------------
+
+rule bounding-pos-2 (A, b) {
+	start {
+	    A -> b : REQ
+	}
+	b -> A : RES
+}
+
+
+
+#> expose bounding-pos-2-msglist.txt ----------------------
+
+A -> B : REQ
+B -> A : RES
+
+
+
+#> expose bounding-pos-2-res.txt --------------------------
+
+<rulestatus> @Success </rulestatus>

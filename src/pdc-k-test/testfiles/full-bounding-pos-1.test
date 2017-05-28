@@ -1,0 +1,24 @@
+
+#> expose full-bounding-pos-1.pdc ------------------------------
+
+rule full-bounding-pos-1 (a, b) {
+	start instantly
+	one-of {
+	    a -> b : REQ1
+	    a -> b : REQ2
+	}
+	b -> a : RES
+}
+
+
+
+#> expose full-bounding-pos-1-msglist.txt ----------------------
+
+A -> B : REQ2
+B -> A : RES
+
+
+
+#> expose full-bounding-pos-1-res.txt --------------------------
+
+<rulestatus> @Success </rulestatus>

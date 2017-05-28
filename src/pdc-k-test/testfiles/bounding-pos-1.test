@@ -1,0 +1,19 @@
+
+#> expose bounding-pos-1.pdc ------------------------------
+
+rule bounding-pos-1 (A, b) {
+	start instantly
+	a -> B : REQ
+}
+
+
+
+#> expose bounding-pos-1-msglist.txt ----------------------
+
+A -> B : REQ
+
+
+
+#> expose bounding-pos-1-res.txt --------------------------
+
+<rulestatus> @Success </rulestatus>

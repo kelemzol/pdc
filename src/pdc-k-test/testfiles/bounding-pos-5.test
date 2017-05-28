@@ -1,0 +1,38 @@
+
+#> expose bounding-pos-5.pdc ------------------------------
+
+rule bounding-pos-5 (A, b, c) {
+	start instantly
+	one-of {
+	    A -> b : REQ1
+	    A -> b : REQ2
+	}
+	b -> c : REQ
+	many-of {
+	    seq {
+	        b -> c : REQ
+	        c -> b : RES
+	    }
+	}
+	c -> A : RES
+	b -> A : RES
+}
+
+
+
+#> expose bounding-pos-5-msglist.txt ----------------------
+
+A -> B : REQ2
+B -> C : REQ
+B -> C : REQ
+C -> B : RES
+B -> C : REQ
+C -> B : RES
+C -> A : RES
+B -> A : RES
+
+
+
+#> expose bounding-pos-5-res.txt --------------------------
+
+<rulestatus> @Success </rulestatus>
