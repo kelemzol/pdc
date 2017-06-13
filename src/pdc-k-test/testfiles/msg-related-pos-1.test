@@ -1,0 +1,21 @@
+
+#> expose msg-related-pos-1.pdc ---------------------------------
+
+rule msg-related-pos-1 (A, B) {
+	start instantly
+	A -> B : MSG1
+	B -> A : MSG2
+}
+
+
+
+#> expose msg-related-pos-1-msglist.txt -------------------------
+
+A -> B : MSG1
+C -> D : IN
+B -> A : MSG2
+
+
+#> expose msg-related-pos-1-res.txt -----------------------------
+
+<rulestatus> @Success </rulestatus>

@@ -1,6 +1,3 @@
 A -> B : MSG
 B -> A : MSG
-A -> B : MSG
-B -> A : MSG
-A -> B : MSG
-B -> A : MSG
+

@@ -1,0 +1,32 @@
+
+#> expose complex-pos-1.pdc ---------------------------------
+
+rule complex-pos-1 (A, B) {
+	start one-of {
+		A -> B : REQ1
+		A -> B : REQ2
+	}
+	B -> A : RES
+	many-of {
+	    A -> B : REQ3
+	    B -> A : RES
+	}
+	A -> B : CLOSE
+}
+
+
+
+#> expose complex-pos-1-msglist.txt -------------------------
+
+A -> B : REQ1
+B -> A : RES
+A -> B : REQ3
+B -> A : RES
+A -> B : REQ3
+B -> A : RES
+A -> B : CLOSE
+
+
+#> expose complex-pos-1-res.txt -----------------------------
+
+<rulestatus> @Success </rulestatus>

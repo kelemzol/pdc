@@ -45,6 +45,8 @@ tests = testGroup "All unit test" [ primUnitTests
                                   , moreOfUnitTests
                                   , startUnitTests
                                   , boundingUnitTests
+                                  , msgRelatedUnitTests
+                                  , complexUnitTests
                                   ]
 
 data RuleResult
@@ -84,6 +86,8 @@ unitTests = testGroup "All unit tests"
     , moreOfUnitTestsList
     , startUnitTestsList
     , boundingUnitTestsList
+    , msgRelatedUnitTestsList
+    , complexUnitTestsList
     ]
 
 primUnitTests = testGroup "Prim tests" primUnitTestsList
@@ -94,6 +98,8 @@ moreOfUnitTests = testGroup "More-of tests" moreOfUnitTestsList
 manyOfUnitTests = testGroup "Many-of tests" manyOfUnitTestsList
 startUnitTests = testGroup "Start tests" startUnitTestsList
 boundingUnitTests = testGroup "Bounding tests" boundingUnitTestsList
+msgRelatedUnitTests = testGroup "Msg Related tests" msgRelatedUnitTestsList
+complexUnitTests = testGroup "Complex tests" complexUnitTestsList
 
 primUnitTestsList =
     [ positiveTest "prim-pos-1"
@@ -141,6 +147,8 @@ manyOfUnitTestsList =
     , positiveTest "many-of-pos-6"
     , positiveTest "many-of-pos-7"
     , positiveTest "many-of-pos-8"
+    , smarttest "many-of-pos-10"
+    , smarttest "many-of-pos-11"
     , positiveTest "many-of-pos-9"
     ]
 startUnitTestsList =
@@ -174,6 +182,21 @@ moreOfUnitTestsList =
     , smarttest "more-of-pos-9"
     , smarttest "more-of-pos-10"
     , smarttest "more-of-pos-11"
+    , smarttest "more-of-pos-12"
+    , smarttest "more-of-pos-13"
+    ]
+msgRelatedUnitTestsList =
+    [ smarttest "msg-related-pos-1"
+    , smarttest "msg-related-pos-2"
+    , smarttest "msg-related-pos-3"
+    , smarttest "msg-related-pos-4"
+    , smarttest "msg-related-neg-1"
+    , smarttest "msg-related-neg-2"
+    , smarttest "msg-related-neg-3"
+    ]
+complexUnitTestsList =
+    [ smarttest "complex-pos-1"
+    , smarttest "complex-pos-2"
     ]
 
 gentest :: (RuleResult -> Bool) -> String -> TestTree

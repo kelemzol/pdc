@@ -1,7 +1,7 @@
 
 #> expose start-pos-8.pdc ---------------------------------
 
-rule start-pos-7 (A, B) {
+rule start-pos-8 (A, B) {
 	start one-of {
 		A -> B : REQ1
 		A -> B : REQ2

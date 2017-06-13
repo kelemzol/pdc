@@ -51,6 +51,12 @@ module PDC-MSG-SYNTAX
   syntax PDCIdList  ::= "pvsOfMsg" "(" PDCMSG ")"          [function]
   syntax PDCIdList  ::= "pisOfMsg" "(" PDCMSG ")"          [function]
 
+  syntax PDCIdList ::= "insertIdsOfMsg" "(" PDCMSG "," PDCIdList ")"
+                                                           [function]
+
+  syntax Bool ::= "dependentMSG" "(" PDCMSG "," PDCIdList ")"
+                                                           [function]
+
 endmodule
 
 module PDC-RULE-SYNTAX
@@ -79,6 +85,8 @@ module PDC-RULE-SYNTAX
                      | "@optional" Entry
                      | PDCMSG
 
+  syntax Bool ::= "isEntryList" "(" EntryList ")"        [function]
+
 endmodule
 
 module PDC-RULE-STATUS
@@ -91,6 +99,8 @@ module PDC-RULE-STATUS
                       | "@Failed"
                       | "@Success"
 
+  syntax Bool ::= RuleStatus "==RuleStatus" RuleStatus     [function]
+  syntax Bool ::= RuleStatus "=/=RuleStatus" RuleStatus    [function]
 
 endmodule
 

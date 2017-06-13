@@ -1,0 +1,137 @@
+
+
+// call
+
+rule simple-caller (A, B) {
+    start instantly
+    callable
+}
+
+rule callable (A, B) {
+    A -> B : MSG
+}
+
+
+
+// template
+
+rule caller(A, B) {
+    start instantly
+    callable <A, B, high-order>
+}
+
+rule callable <proc A, proc B, rule r <proc D> (D, LOG) > (A, B) {
+    start instantly
+    A -> B : MSG
+    r <A>
+}
+
+rule high-order <proc D> (D, LOG) {
+    D -> LOG : LOGMSG
+}
+
+
+
+
+
+rule caller(A, B) {
+    start instantly
+    callable <A, B, high-order>
+}
+
+rule callable <proc A, proc B, rule r <proc R <proc D> (LOG)> () {
+    start instantly
+    A -> B : MSG
+    r <A>
+}
+
+rule high-order <proc D> (LOG) {
+    D -> LOG : LOGMSG
+}
+
+
+rule ::= rule-decl rule-body
+rule-decl ::= "rule" id template-params proc-params
+template-params ::= "<" list { template-param, "," } ">"
+template-param ::= template-proc-param | template-rule-param
+template-proc-param ::= "proc" id
+template-rule-param ::= rule-decl
+proc-params ::= "(" list { id, "," } ")"
+
+
+entry ::= ... | id | id "<" list {id, " "} ">"
+
+
+rule caller(A, B) {
+    start instantly
+    callable A B high-order
+}
+
+rule callable <proc A, proc B, rule r <proc R <proc D> (LOG)> () {
+    start instantly
+    A -> B : MSG
+    r A
+}
+
+rule high-order <proc D> (LOG) {
+    D -> LOG : LOGMSG
+}
+
+entry ::= ... | id list {id, " "}
+
+// assync
+// primary session: A send a REQ1 to B and B answer that by RES1
+// but sometime A start a different assync session with B with REQ2 and B answer that by RES2
+rule main {
+    many-of {
+        assync adapt {
+            A -> B : REQ1
+            B -> A : RES1
+        }
+        seq {
+            A -> B : REQ1
+            B -> A : RES1
+        }
+    }
+}
+
+rule adapt (A, B) {
+    A -> B : REQ2
+    B -> A : RES2
+}
+
+
+// pattern template - creating contol structures
+// pattern 
+// iseqpattern -- implicit sequence pattern
+rule assync-or <rule r(_), iseqpattern p> {
+    one-of {
+        assync name {
+            p
+        }
+        p
+    }
+}
+
+rule main {
+    assync-or adapt {
+        A -> B : REQ1
+        B -> A : RES1
+    }
+}
+
+entry ::= ... | id list {(id | block), " "}
+
+
+// pattern matching on patterns
+rule another <pattern pt> {
+    match pt {
+        e p => one-of {
+                   e
+                   another p
+               }
+        e   => seq { }
+    }
+}
+
+

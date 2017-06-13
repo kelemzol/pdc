@@ -1,0 +1,31 @@
+
+#> expose more-of-pos-13.pdc -------------------------------
+
+rule more-of-pos-13 (A, b) {
+	start instantly
+	more-of {
+	    more-of {
+			A -> B : MSG
+		}
+		more-of {
+			B -> A : MSG
+		}
+	}
+}
+
+
+
+#> expose more-of-pos-13-msglist.txt -----------------------
+
+A -> B : MSG
+B -> A : MSG
+A -> B : MSG
+B -> A : MSG
+A -> B : MSG
+B -> A : MSG
+
+
+
+#> expose more-of-pos-13-res.txt ---------------------------
+
+<rulestatus> @Success </rulestatus>

@@ -31,7 +31,7 @@ module PDC-ID-SEMANTICS
   rule idConcat(.PDCIdList, L) => L
   rule idConcat(A AS, L)       => A idConcat(AS, L)        [owise]
 
-  rule idInsert(A, .PDCIdList) => A
+  rule idInsert(A, .PDCIdList) => A .PDCIdList
   rule idInsert(A, B L)        => B idInsert(A, L)         when A =/=PDCId B
   rule idInsert(_, B L)        => B L                      [owise]
 
@@ -76,6 +76,12 @@ module PDC-MSG-SEMANTICS
 
   rule pisOfMsg(@MSG(A, B, MSG)) => pis (A B .PDCIdList)
 
+  rule insertIdsOfMsg(@MSG(A,B,_), L) => idInsert(A, idInsert(B, L))
+                                                           [owise]
+
+  rule dependentMSG(@MSG(A, B, _), L) => idIsMember(A, L) orBool idIsMember(B, L)
+                                                           [owise]
+
   endmodule
 
 
@@ -97,7 +103,7 @@ module PDC-RULE-SEMANTICS
 
     rule <k> @rule I ( PL ) B </k>
          <orig> .EntryList             => prepareEL ( prepareB ( B ) ) </orig>
-         <current-pattern> .EntryList  => prepareEL ( prepareB ( B ) ) </current-pattern>
+         <current-pattern> .EntryList  => prepareEL ( prepareB ( B ) ) </current-pattern>         
          <params> .PDCParamList        => PL </params>
          <metadata> <name> .K          => I </name> </metadata>
          <rulestatus> @InitPrepare     => @InitStart </rulestatus>
@@ -172,10 +178,28 @@ module PDC-RULE-SEMANTICS
                    OMSG ( boundVariable ( @UC ( ID ) , @LC ( IDV ) , EL ) )
                                                            [owise]
 
+
+    rule isEntryList ( .EntryList ) => true
+    rule isEntryList ( _ )          => false               [owise]
+
+
+    rule @Failed ==RuleStatus @Failed => true
+    rule @Success ==RuleStatus @Success => true
+    rule @InitInclude ==RuleStatus @InitInclude => true
+    rule @InitPrepare ==RuleStatus @InitPrepare => true
+    rule @InitStart ==RuleStatus @InitStart => true
+    rule @Passive ==RuleStatus @Passive => true
+    rule @Running ==RuleStatus @Running => true
+    rule _ ==RuleStatus _ => false                         [owise]
+
+    rule A =/=RuleStatus B => notBool (A ==RuleStatus B)   [owise]
+
+
     // processing rules
     // ========================================================================
 
     // START ------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     rule <current-pattern> @start @instantly NEXT => NEXT </current-pattern>
          <rulestatus> @InitStart       => @Running </rulestatus>
@@ -189,6 +213,7 @@ module PDC-RULE-SEMANTICS
              (.Bag => <branch>
                           <branch-pattern> @start { SEL } EL </branch-pattern>
                           <branch-stream> OMSG </branch-stream>
+                          <branch-process-instances> .PDCIdList </branch-process-instances>
                           <branch-rulestatus> @InitStart </branch-rulestatus>
                       </branch>)
              ...
@@ -202,20 +227,24 @@ module PDC-RULE-SEMANTICS
 
 
     // SEQ --------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     rule <current-pattern> @seq { EL } NEXT
                                        => appendEL(EL, NEXT) </current-pattern>
 
 
 
     // ONE-OF -----------------------------------------------------------------
+    // ------------------------------------------------------------------------
     rule <current-pattern> @one-of { E EL } NEXT
                                        => E NEXT </current-pattern>
          <current-stream> SEQUENCE </current-stream>
+         <current-process-instances> PIS </current-process-instances>
          <rulestatus> RULESTATUS </rulestatus>
          <branches>
              (.Bag => <branch>
                           <branch-pattern> @one-of { EL } NEXT </branch-pattern>
                           <branch-stream> SEQUENCE </branch-stream>
+                          <branch-process-instances> PIS </branch-process-instances>
                           <branch-rulestatus> RULESTATUS </branch-rulestatus>
                       </branch>)
              ...
@@ -224,53 +253,113 @@ module PDC-RULE-SEMANTICS
 
 
     // MORE-OF ----------------------------------------------------------------
+    // ------------------------------------------------------------------------
     rule <current-pattern> @more-of { EL } NEXT
                                        => @one-of { EL } @more-of { EL } NEXT </current-pattern>
          <current-stream> SEQUENCE </current-stream>
+         <current-process-instances> PIS </current-process-instances>
          <rulestatus> RULESTATUS </rulestatus>
          <branches>
              (.Bag => <branch>
                           <branch-pattern> @one-of { EL } NEXT </branch-pattern>
                           <branch-stream> SEQUENCE </branch-stream>
+                          <branch-process-instances> PIS </branch-process-instances>
                           <branch-rulestatus> RULESTATUS </branch-rulestatus>
                       </branch>)
              ...
          </branches>
+         <ee> @DirectExecution </ee>
+
+    // algebraic variant
+    rule <current-pattern> @more-of { EL } NEXT
+                                       => @seq {
+                                              @one-of { EL }
+                                              @optional {
+                                                  @more-of { EL }
+                                                  .EntryList
+                                              }
+                                              NEXT
+                                          }
+                                          .EntryList
+         </current-pattern>
+         <ee> @AlgebraicExecution </ee>
 
 
 
     // MANY-OF ----------------------------------------------------------------
+    // ------------------------------------------------------------------------
     rule <current-pattern> @many-of { EL } NEXT
                                        => @one-of { EL } @many-of { EL } NEXT </current-pattern>
          <current-stream> SEQUENCE </current-stream>
+         <current-process-instances> PIS </current-process-instances>
          <rulestatus> RULESTATUS </rulestatus>
          <branches>
              (.Bag => <branch>
                           <branch-pattern> NEXT </branch-pattern>
                           <branch-stream> SEQUENCE </branch-stream>
+                          <branch-process-instances> PIS </branch-process-instances>
                           <branch-rulestatus> RULESTATUS </branch-rulestatus>
                       </branch>)
              ...
          </branches>
+         <ee> @DirectExecution </ee>
+
+
+    // algebraic variant
+    rule <current-pattern> @many-of { EL } NEXT
+                                       => @seq {
+                                              @optional {
+                                                  @seq {
+                                                      @one-of { EL }
+                                                      @many-of { EL }
+                                                      .EntryList
+                                                  }
+                                                  .EntryList
+                                              }
+                                              NEXT
+                                          }
+                                          .EntryList
+         </current-pattern>
+         <ee> @AlgebraicExecution </ee>
+
+
 
 
     // OPTIONAL ---------------------------------------------------------------
+    // ------------------------------------------------------------------------
+
     rule <current-pattern> @optional { EL } NEXT
                                        => NEXT </current-pattern>
          <current-stream> SEQUENCE </current-stream>
+         <current-process-instances> PIS </current-process-instances>
          <rulestatus> RULESTATUS </rulestatus>
          <branches>
              (.Bag => <branch>
                           <branch-pattern> appendEL(EL, NEXT) </branch-pattern>
                           <branch-stream> SEQUENCE </branch-stream>
+                          <branch-process-instances> PIS </branch-process-instances>
                           <branch-rulestatus> RULESTATUS </branch-rulestatus>
                       </branch>)
              ...
          </branches>
+         <ee> @DirectExecution </ee>
+
+
+    // algebraic variant
+    rule <current-pattern> @optional { EL } NEXT
+                                       => @one-of {
+                                              @seq { appendEL(EL, NEXT) }
+                                              @seq { NEXT }
+                                              .EntryList
+                                          }
+                                          .EntryList
+         </current-pattern>
+         <ee> @AlgebraicExecution </ee>
 
 
 
     // MESSAGE ----------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
 
     rule <current-pattern> MSG1 ES     => boundMSGVariables ( MSG2 , MSG1 , MSG1 ES) </current-pattern>
@@ -279,17 +368,29 @@ module PDC-RULE-SEMANTICS
 
     rule <current-pattern> MSG1 ES     => ES </current-pattern>
          <current-stream> MSG2 MS      => MS </current-stream>
+         <current-process-instances> PIS => insertIdsOfMsg(MSG1, PIS) </current-process-instances>
                                                            when MSG1 ==PDCMSG MSG2 andBool ( notContainProcessVariable ( MSG1 ) )
+
+
+    // drop a msg from stream if it is independent from the system
+    rule <current-pattern> MSG1 ES </current-pattern>
+         <current-stream> MSG2 MS      => MS </current-stream>
+         <current-process-instances> PIS </current-process-instances>
+                                                           when MSG1 =/=PDCMSG MSG2
+                                                                andBool (containProcessVariable(MSG1) impliesBool (notBool(MSG1 ==PDCMSGPartial MSG2)))
+                                                                andBool (notBool (dependentMSG(MSG2, PIS)))
 
 
     // current branch failed, activate anoter one
     rule <current-pattern> MSG1 ES     => EL </current-pattern>
          <current-stream> MSG2 MS      => SL </current-stream>
+         <current-process-instances> _ => PIS </current-process-instances>
          <rulestatus> X                => RULESTATUS </rulestatus>
          <branches>
              (<branch>
                  <branch-pattern> EL </branch-pattern>
                  <branch-stream> SL </branch-stream>
+                 <branch-process-instances> PIS </branch-process-instances>
                  <branch-rulestatus> RULESTATUS </branch-rulestatus>
              </branch>
              => .Bag)
@@ -297,36 +398,59 @@ module PDC-RULE-SEMANTICS
          </branches>
                                                            when MSG1 =/=PDCMSG MSG2
                                                                 andBool (containProcessVariable(MSG1) impliesBool (notBool(MSG1 ==PDCMSGPartial MSG2)))
+                                                                andBool (dependentMSG (MSG2, PIS))
+
+    // current branch failed and haven't more -> @Failed
+    rule <current-pattern> MSG1 ES </current-pattern>
+         <current-stream> MSG2 MS </current-stream>
+         <current-process-instances> PIS </current-process-instances>
+         <rulestatus> X                => @Failed </rulestatus>
+         <branches> .Bag </branches>
+                                                           when MSG1 =/=PDCMSG MSG2
+                                                                andBool (X =/=RuleStatus @Failed)
+                                                                andBool (containProcessVariable(MSG1) impliesBool (notBool(MSG1 ==PDCMSGPartial MSG2)))
+                                                                andBool (dependentMSG (MSG2, PIS))
+
     // Message list empty
     rule <current-pattern> MSG:PDCMSG ES
                                        => EL </current-pattern>
          <current-stream> .PDCMSGList  => SEQUENCE </current-stream>
+         <current-process-instances> _ => PIS </current-process-instances>
          <rulestatus> X                => RULESTATUS </rulestatus>
          <branches>
              (<branch>
                  <branch-pattern> EL </branch-pattern>
                  <branch-stream> SEQUENCE </branch-stream>
+                 <branch-process-instances> PIS </branch-process-instances>
                  <branch-rulestatus> RULESTATUS </branch-rulestatus>
              </branch>
              => .Bag)
              ...
          </branches>
 
-    // one-of empty
+    // one-of empty, but have branch
     rule <current-pattern> @one-of { .EntryList } ES
                                        => EL </current-pattern>
          <current-stream> _            => SEQUENCE </current-stream>
+         <current-process-instances> _ => PIS </current-process-instances>
          <rulestatus> _                => RULESTATUS </rulestatus>
          <branches>
              (<branch>
                  <branch-pattern> EL </branch-pattern>
                  <branch-stream> SEQUENCE </branch-stream>
+                 <branch-process-instances> PIS </branch-process-instances>
                  <branch-rulestatus> RULESTATUS </branch-rulestatus>
              </branch>
              => .Bag)
              ...
          </branches>
 
+    // one-of empty, but not have branch
+
+    rule <current-pattern> @one-of { .EntryList } NEXT </current-pattern>
+         <rulestatus> RULESTATUS       => @Failed </rulestatus>
+         <branches> .Bag </branches>
+                                                           when RULESTATUS =/=RuleStatus @Failed
 
 
     // helpers
@@ -372,60 +496,44 @@ module PDC-SETUP
   imports PDC-RULE-STATUS
 
   syntax KResult ::= PDCRule
-  // syntax KResult ::= "@Success" // RuleStatus
-  // syntax KResult ::= Entry
-  // syntax KResult ::= EntityList
 
-//  syntax PDCMSG ::= ".MSG"
+  syntax ExecutionEngine ::= "@DirectExecution"
+                           | "@AlgebraicExecution"
 
 
   configuration <T>
                     // Original Program
-                    <k>
-                        $PGM
-                    </k>
+                    <k> $PGM </k>
                     // original preparated entry list
-                    <orig>
-                        .EntryList
-                    </orig>
+                    <orig> .EntryList </orig>
                     // Entries
-                    <current-pattern>
-                        .EntryList
-                    </current-pattern>
+                    <current-pattern> .EntryList </current-pattern>
                     // Msg list
-                    <current-stream>
-                        .PDCMSGList
-                    </current-stream>
+                    <current-stream> .PDCMSGList </current-stream>
+                    // List of accepted process instances
+                    <current-process-instances> .PDCIdList </current-process-instances>
                     // temp field for non-activated entities without start
-                    <after-start>
-                        .EntryList
-                    </after-start>
+                    <after-start> .EntryList </after-start>
                     <branches>
                         <branch multiplicity="*">
-                            <branch-pattern>
-                                .EntryList
-                            </branch-pattern>
-                            <branch-stream>
-                                .PDCMSGList
-                            </branch-stream>
-                            <branch-rulestatus>
-                                @InitInclude
-                            </branch-rulestatus>
+                            <branch-pattern> .EntryList </branch-pattern>
+                            <branch-stream> .PDCMSGList </branch-stream>
+                            <branch-rulestatus> @InitInclude </branch-rulestatus>
+                            <branch-process-instances> .PDCIdList </branch-process-instances>
                         </branch>
                     </branches>
                     // Parameters
-                    <params>
-                        .PDCParamList
-                    </params>
+                    <params> .PDCParamList </params>
                     // Metadata
                     <metadata>
                         <name> .K </name>
                     </metadata>
-                    <rulestatus>
-                        @InitInclude
-                    </rulestatus>
+                    // <ee> @AlgebraicExecution </ee>
+                    <ee> @DirectExecution </ee>
+                    <rulestatus> @InitInclude </rulestatus>
                 </T>
-
+// reachability logic k-ban
+// cikk
   rule <current-stream> .PDCMSGList =>
            &include& msglist
            .PDCMSGList

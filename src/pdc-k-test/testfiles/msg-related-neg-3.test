@@ -1,0 +1,23 @@
+
+#> expose msg-related-neg-3.pdc ---------------------------------
+
+rule msg-related-neg-3 (A, B, c) {
+	start instantly
+	A -> B : MSG1
+	B -> c : MSG2
+	c -> A : MSG3
+}
+
+
+
+#> expose msg-related-neg-3-msglist.txt -------------------------
+
+A -> B : MSG1
+B -> C : MSG2
+G -> C : AFTER_BOUNDING
+C -> A : MSG3
+
+
+#> expose msg-related-neg-3-res.txt -----------------------------
+
+<rulestatus> @Failed </rulestatus>

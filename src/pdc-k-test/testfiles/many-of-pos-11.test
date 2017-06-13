@@ -1,0 +1,28 @@
+
+#> expose many-of-pos-11.pdc -------------------------------
+
+rule many-of-pos-11 (A, b) {
+	start instantly
+	many-of {
+	    many-of {
+			A -> B : MSG
+			B -> A : MSG
+		}
+	}
+}
+
+
+
+#> expose many-of-pos-11-msglist.txt -----------------------
+
+A -> B : MSG
+B -> A : MSG
+A -> B : MSG
+B -> A : MSG
+A -> B : MSG
+B -> A : MSG
+
+
+#> expose many-of-pos-11-res.txt ---------------------------
+
+<rulestatus> @Success </rulestatus>
