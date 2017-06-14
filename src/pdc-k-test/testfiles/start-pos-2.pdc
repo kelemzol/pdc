@@ -1,3 +1,5 @@
 rule start-pos-2 (A, B) {
 	start A -> B : REQ
 }
+
+main-rule start-pos-2

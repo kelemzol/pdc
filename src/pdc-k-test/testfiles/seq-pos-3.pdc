@@ -7,3 +7,5 @@ rule seq-pos-3 (A, B) {
     A -> B : REQ2
     B -> A : RES2
 }
+
+main-rule seq-pos-3

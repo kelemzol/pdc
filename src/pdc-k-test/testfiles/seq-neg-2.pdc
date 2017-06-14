@@ -4,3 +4,5 @@ rule seq-neg-2 (A, B) {
 	B -> A : RES
 	B -> A : RES2
 }
+
+main-rule seq-neg-2

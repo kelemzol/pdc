@@ -9,6 +9,8 @@ rule more-of-pos-3 (A, b) {
 	}
 }
 
+main-rule more-of-pos-3
+
 
 
 #> expose more-of-pos-3-msglist.txt -----------------------

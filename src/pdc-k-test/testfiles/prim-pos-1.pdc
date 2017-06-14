@@ -1,3 +1,5 @@
 rule prim-pos-1() {
 	start instantly
 }
+
+main-rule prim-pos-1

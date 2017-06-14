@@ -11,6 +11,8 @@ rule more-of-pos-12 (A, b) {
 	}
 }
 
+main-rule more-of-pos-12
+
 
 
 #> expose more-of-pos-12-msglist.txt -----------------------

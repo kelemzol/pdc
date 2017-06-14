@@ -5,3 +5,5 @@ rule one-of-pos-2 (A, B) {
 	    B -> A : MSG
 	}
 }
+
+main-rule one-of-pos-2

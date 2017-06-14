@@ -18,6 +18,7 @@ rule bounding-pos-5 (A, b, c) {
 	b -> A : RES
 }
 
+main-rule bounding-pos-5
 
 
 #> expose bounding-pos-5-msglist.txt ----------------------

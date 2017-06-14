@@ -5,3 +5,5 @@ rule many-of-pos-7 () {
 		B -> A : MSG
 	}
 }
+
+main-rule many-of-pos-7

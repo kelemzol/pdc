@@ -5,3 +5,5 @@ rule seq-pos-2 (A, B) {
 	    B -> A : RES
 	}
 }
+
+main-rule seq-pos-2

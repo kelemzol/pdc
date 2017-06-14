@@ -10,6 +10,7 @@ rule full-bounding-pos-1 (a, b) {
 	b -> a : RES
 }
 
+main-rule full-bounding-pos-1
 
 
 #> expose full-bounding-pos-1-msglist.txt ----------------------

@@ -1,0 +1,26 @@
+
+#> expose module-pos-4.pdc ---------------------------------
+
+main-rule module-pos-4
+
+rule module-pos-4 (A, B) {
+	start instantly
+	A -> B : MSG
+}
+
+rule other (A, B) {
+	start instantly
+	A -> B : OTHER_MSG
+}
+
+
+
+#> expose module-pos-4-msglist.txt -------------------------
+
+A -> B : MSG
+
+
+
+#> expose module-pos-4-res.txt -----------------------------
+
+<rulestatus> @Success </rulestatus>

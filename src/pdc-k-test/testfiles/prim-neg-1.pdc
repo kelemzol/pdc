@@ -2,3 +2,5 @@ rule prim-neg-1 (A, B) {
 	start instantly
 	A -> B : MESSAGE
 }
+
+main-rule prim-neg-1

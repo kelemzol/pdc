@@ -14,6 +14,7 @@ rule complex-pos-1 (A, B) {
 	A -> B : CLOSE
 }
 
+main-rule complex-pos-1
 
 
 #> expose complex-pos-1-msglist.txt -------------------------

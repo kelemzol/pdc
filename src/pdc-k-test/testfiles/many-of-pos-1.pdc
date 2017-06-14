@@ -2,3 +2,5 @@ rule many-of-pos-1 () {
     start instantly
 	many-of { }
 }
+
+main-rule many-of-pos-1

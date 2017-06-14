@@ -12,6 +12,8 @@ rule many-of-pos-10 (A, b) {
 }
 
 
+main-rule many-of-pos-10
+
 
 #> expose many-of-pos-10-msglist.txt -----------------------
 

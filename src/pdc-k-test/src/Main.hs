@@ -46,6 +46,7 @@ tests = testGroup "All unit test" [ primUnitTests
                                   , startUnitTests
                                   , boundingUnitTests
                                   , msgRelatedUnitTests
+                                  , moduleUnitTests
                                   , complexUnitTests
                                   ]
 
@@ -87,6 +88,7 @@ unitTests = testGroup "All unit tests"
     , startUnitTestsList
     , boundingUnitTestsList
     , msgRelatedUnitTestsList
+    , moduleUnitTestsList
     , complexUnitTestsList
     ]
 
@@ -99,6 +101,7 @@ manyOfUnitTests = testGroup "Many-of tests" manyOfUnitTestsList
 startUnitTests = testGroup "Start tests" startUnitTestsList
 boundingUnitTests = testGroup "Bounding tests" boundingUnitTestsList
 msgRelatedUnitTests = testGroup "Msg Related tests" msgRelatedUnitTestsList
+moduleUnitTests = testGroup "Module" moduleUnitTestsList
 complexUnitTests = testGroup "Complex tests" complexUnitTestsList
 
 primUnitTestsList =
@@ -193,6 +196,14 @@ msgRelatedUnitTestsList =
     , smarttest "msg-related-neg-1"
     , smarttest "msg-related-neg-2"
     , smarttest "msg-related-neg-3"
+    ]
+moduleUnitTestsList =
+    [ smarttest "module-pos-1"
+    , smarttest "module-pos-2"
+    , smarttest "module-pos-3"
+    , smarttest "module-pos-4"
+    , smarttest "module-pos-5"
+    , smarttest "module-neg-1"
     ]
 complexUnitTestsList =
     [ smarttest "complex-pos-1"

@@ -5,3 +5,5 @@ rule many-of-pos-6 () {
 		B -> A : MSG
 	}
 }
+
+main-rule many-of-pos-6

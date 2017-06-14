@@ -4,3 +4,5 @@ rule one-of-pos-1 (A, B) {
 	    A -> B : MSG
 	}
 }
+
+main-rule one-of-pos-1

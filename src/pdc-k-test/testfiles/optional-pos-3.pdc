@@ -2,3 +2,5 @@ rule optional-pos-3 (A,B) {
 	start instantly
 	optional A -> B : MSG
 }
+
+main-rule optional-pos-3

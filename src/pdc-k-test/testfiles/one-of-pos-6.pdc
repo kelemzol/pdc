@@ -9,3 +9,5 @@ rule one-of-pos-6 (A, B) {
 	    }
 	}
 }
+
+main-rule one-of-pos-6

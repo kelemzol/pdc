@@ -1,4 +1,6 @@
-rule prim-neg-2 (A, B) {
+rule prim-neg-3 (A, B) {
 	start instantly
 	A -> B : MESSAGE
 }
+
+main-rule prim-neg-3

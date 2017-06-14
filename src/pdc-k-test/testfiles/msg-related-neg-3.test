@@ -8,6 +8,7 @@ rule msg-related-neg-3 (A, B, c) {
 	c -> A : MSG3
 }
 
+main-rule msg-related-neg-3
 
 
 #> expose msg-related-neg-3-msglist.txt -------------------------

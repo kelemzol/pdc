@@ -10,6 +10,7 @@ rule bounding-pos-3 (A, b) {
 	b -> A : RES
 }
 
+main-rule bounding-pos-3
 
 
 #> expose bounding-pos-3-msglist.txt ----------------------

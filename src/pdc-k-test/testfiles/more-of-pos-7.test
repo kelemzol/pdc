@@ -11,6 +11,7 @@ rule more-of-pos-7 (A, b) {
 	}
 }
 
+main-rule more-of-pos-7
 
 
 #> expose more-of-pos-7-msglist.txt -----------------------

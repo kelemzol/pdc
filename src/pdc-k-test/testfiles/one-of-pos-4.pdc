@@ -6,3 +6,5 @@ rule one-of-pos-4 (A, B) {
 	    }
 	}
 }
+
+main-rule one-of-pos-4

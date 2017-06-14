@@ -9,6 +9,7 @@ rule start-pos-7 (A, B) {
 	B -> A : RES
 }
 
+main-rule start-pos-7
 
 
 #> expose start-pos-7-msglist.txt -------------------------

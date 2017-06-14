@@ -6,6 +6,7 @@ module PDC-ID-SEMANTICS
 
   rule @UC(A) ==PDCId @UC(B) => true                       when A ==K B
   rule @LC(A) ==PDCId @LC(B) => true                       when A ==K B
+  rule .PDCId ==PDCId .PDCId => true
   rule _ ==PDCId _           => false                      [owise]
 
   rule A =/=PDCId B => false                               when A ==PDCId B
@@ -94,19 +95,76 @@ module PDC-RULE-SEMANTICS
 
     
 
-// running:
-//   \pdc>pdc-krunner k\pdc-semantics.k examples\ex1.pdc msglist=examples\ex1_msglist.txt
-
-    // init rule
+    // init rules
     //-------------------------------------------------------------------------
 
 
+    rule <k> MEL </k>
+         <pdc-module> .PDCModule       => processModule ( MEL ) </pdc-module>
+         <rulestatus> @InitModule      => @InitPrepare </rulestatus>
+
+    rule <pdc-module> MOD </pdc-module>
+         <orig> .EntryList             => prepareEL ( prepareB ( ruleBody ( getMainRule ( MOD ) ) ) ) </orig>
+         <current-pattern> .EntryList  => prepareEL ( prepareB ( ruleBody ( getMainRule ( MOD ) ) ) ) </current-pattern>
+         <params> .PDCParamList        => ruleParams ( getMainRule ( MOD ) ) </params>
+         <metadata> <name> .K          => ruleId ( getMainRule ( MOD ) ) </name> </metadata>
+         <rulestatus> @InitPrepare     => @InitStart </rulestatus>
+                                                           when buildedModule ( MOD )
+
+    rule <pdc-module> .PDCModule </pdc-module>
+         <rulestatus> @InitPrepare     => @Failed </rulestatus>
+/*
     rule <k> @rule I ( PL ) B </k>
          <orig> .EntryList             => prepareEL ( prepareB ( B ) ) </orig>
          <current-pattern> .EntryList  => prepareEL ( prepareB ( B ) ) </current-pattern>         
          <params> .PDCParamList        => PL </params>
          <metadata> <name> .K          => I </name> </metadata>
          <rulestatus> @InitPrepare     => @InitStart </rulestatus>
+*/
+    // internal module building
+    // ------------------------------------------------------------------------
+
+    // syntax PDCModule ::= "@PDCModule" "(" PDCRule "," PDCRuleList ")"
+    // syntax PDCModule ::= "processModule" "(" PDCModuleEntryList ")"
+    // syntax PDCId     ::= "findMainRuleId" "(" PDCModuleEntryList ")"
+    // syntax PDCRule   ::= "findMainRule" "(" PDCId "," PDCModuleEntryList ")"
+    // syntax PDCRuleList ::= "filterRules" "(" PDCModuleEntryList ")"
+    // syntax PDCId       ::= "ruleId" "(" PDCRule ")"
+    // syntax RuleBody    ::= "ruleBody" "(" PDCRule ")"
+    // syntax PDCParamList ::= "ruleParams" "(" PDCRule ")"
+    // syntax PDCRule ::= "getMainRule" "(" PDCModule ")"       [function]
+    // syntax PDCRuleList ::= "getRules" "(" PDCModule ")"      [function]
+    // syntax Bool ::= "buildedModule" "(" PDCModule ")"        [function]
+    // syntax PDCModule ::= "verifyModule" "(" PDCModule ")"
+
+    rule processModule ( MEL ) => verifyModule ( @PDCModule ( findMainRule ( findMainRuleId ( MEL ) , MEL ) , filterRules ( MEL ) ) )
+                                                           [owise]
+    rule verifyModule ( @PDCModule ( .PDCRule , _ ) ) => .PDCModule
+    rule verifyModule ( M ) => M                           [owise]
+
+    rule findMainRuleId ( ( @main-rule ID ) MEL ) => ID
+    rule findMainRuleId ( .PDCModuleEntryList ) => .PDCId
+    rule findMainRuleId ( _ MEL ) => findMainRuleId ( MEL )
+                                                           [owise]
+
+    rule findMainRule ( ID , ( @rule ID ( P ) B ) MEL ) => @rule ID ( P ) B
+    rule findMainRule ( .PDCId , _ ) => .PDCRule
+    rule findMainRule ( _ , .PDCModuleEntryList ) => .PDCRule
+    rule findMainRule ( ID , _ MEL ) => findMainRule ( ID , MEL )
+                                                           [owise]
+
+    rule filterRules ( ( @rule I ( P ) B ) MEL ) => ( @rule I ( P ) B ) filterRules ( MEL )
+    rule filterRules ( .PDCModuleEntryList ) => .PDCRuleList
+    rule filterRules ( _ MEL ) => filterRules ( MEL )      [owise]
+
+    rule ruleId ( @rule I ( P ) B ) => I                   [owise]
+    rule ruleBody ( @rule I ( P ) B ) => B                 [owise]
+    rule ruleParams ( @rule I ( P ) B ) => P               [owise]
+
+    rule getMainRule ( @PDCModule ( R , _ ) ) => R         [owise]
+    rule getRules ( @PDCModule ( _ , RL ) ) => RL          [owise]
+    rule buildedModule ( .PDCModule ) => false
+    rule buildedModule ( _ ) => true                       [owise]
 
     // preparating/restructuring helper rule-functions
     // ------------------------------------------------------------------------
@@ -476,6 +534,7 @@ module PDC-RULE-SEMANTICS
          <branches> .Bag </branches>
          <rulestatus> @Running         => @Failed </rulestatus>
 
+
 endmodule
 
 module PDC-SEMANTICS
@@ -495,7 +554,12 @@ module PDC-SETUP
   imports PDC-SYNTAX
   imports PDC-RULE-STATUS
 
+  // syntax KResult ::= PDCId
   syntax KResult ::= PDCRule
+  syntax KResult ::= PDCModuleEntryList
+  // syntax KResult ::= "@Success"
+  // syntax KResult ::= "@Failed"
+
 
   syntax ExecutionEngine ::= "@DirectExecution"
                            | "@AlgebraicExecution"
@@ -514,6 +578,7 @@ module PDC-SETUP
                     <current-process-instances> .PDCIdList </current-process-instances>
                     // temp field for non-activated entities without start
                     <after-start> .EntryList </after-start>
+                    <pdc-module> .PDCModule </pdc-module>
                     <branches>
                         <branch multiplicity="*">
                             <branch-pattern> .EntryList </branch-pattern>
@@ -538,7 +603,7 @@ module PDC-SETUP
            &include& msglist
            .PDCMSGList
        </current-stream>
-       <rulestatus> @InitInclude => @InitPrepare </rulestatus>
+       <rulestatus> @InitInclude => @InitModule </rulestatus>
 
 endmodule
 

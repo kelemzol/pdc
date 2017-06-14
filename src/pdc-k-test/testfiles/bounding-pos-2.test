@@ -8,6 +8,7 @@ rule bounding-pos-2 (A, b) {
 	b -> A : RES
 }
 
+main-rule bounding-pos-2
 
 
 #> expose bounding-pos-2-msglist.txt ----------------------

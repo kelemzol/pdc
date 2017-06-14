@@ -9,3 +9,5 @@ rule many-of-pos-9 () {
 		}
 	}
 }
+
+main-rule many-of-pos-9

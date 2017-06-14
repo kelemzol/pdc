@@ -7,13 +7,14 @@ module PDC.KFormat (kFormat, kFormatIO) where
 
 import Language.PDC.Parser
 
-kFormatIO :: FilePath -> FilePath -> IO ()
-kFormatIO i o = do
+kFormatIO :: Bool -> FilePath -> FilePath -> IO ()
+kFormatIO mod i o = do
     content <- readFile i
-    writeFile o (kFormat content)
+    writeFile o (kFormat mod content)
 
-kFormat :: String -> String
-kFormat = concat . (gen genKFormat) . tokenize
+kFormat :: Bool -> String -> String
+kFormat True = (++"\n.PDCModuleEntryList\n") . concat . (gen genKFormat) . tokenize
+kFormat False = concat . (gen genKFormat) . tokenize
 
 gen :: ([Token] -> ([Token], String)) -> [Token] -> [String]
 gen g [] = []
@@ -31,6 +32,7 @@ genKFormat ((TkOneOf {..}):o)          = (o, "@one-of")
 genKFormat ((TkMoreOf {..}):o)         = (o, "@more-of")
 genKFormat ((TkManyOf {..}):o)         = (o, "@many-of")
 genKFormat ((TkInstantly {..}):o)      = (o, "@instantly")
+genKFormat ((TkMainRule {..}):o)       = (o, "@main-rule")
 genKFormat (msg [] -> Just (o, [i,_,j,_,m])) = (o, "@MSG(" ++ idKF i ++ ", " ++ idKF j ++ ", " ++ idKF m ++ ")")
 genKFormat ((TkComma {..}):o)          = (o, ",")
 genKFormat ((TkBraceOpen {..}):o)      = (o, "{")

@@ -8,6 +8,7 @@ rule msg-related-pos-4 (A, B, c) {
 	c -> A : MSG3
 }
 
+main-rule msg-related-pos-4
 
 
 #> expose msg-related-pos-4-msglist.txt -------------------------

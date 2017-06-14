@@ -1,7 +1,9 @@
-rule one-of-neg-1 (A, B) {
+rule one-of-neg-2 (A, B) {
 	start instantly
     one-of {
         A -> B : MSG
         B -> A : MSG
     }
 }
+
+main-rule one-of-neg-2

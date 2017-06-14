@@ -2,3 +2,5 @@ rule optional-pos-6 (A,B) {
 	start instantly
 	optional { optional A -> B : RES }
 }
+
+main-rule optional-pos-6

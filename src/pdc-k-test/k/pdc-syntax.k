@@ -3,6 +3,7 @@ module PDC-ID-SYNTAX
 
   syntax PDCId ::= "@UC" "(" Id ")"
                  | "@LC" "(" Id ")"
+                 | ".PDCId"
 
   syntax Bool ::= PDCId "==PDCId" PDCId                    [function, left]
   syntax Bool ::= PDCId "=/=PDCId" PDCId                   [function, left]
@@ -64,7 +65,14 @@ module PDC-RULE-SYNTAX
   imports PDC-MSG-SYNTAX
   imports PDC-ID-SYNTAX
 
-  syntax PDCParamList ::= List {PDCId, ","}
+  syntax PDCModuleEntryList
+                   ::= PDCModuleEntry PDCModuleEntryList   [right, strict(2)]
+                    | ".PDCModuleEntryList"
+
+  syntax PDCModuleEntry
+                   ::= PDCRule
+                     | "@main-rule" PDCId
+
 
   syntax PDCRule   ::= "@rule" PDCId "(" PDCParamList ")" RuleBody
                      | ".PDCRule"
@@ -85,14 +93,56 @@ module PDC-RULE-SYNTAX
                      | "@optional" Entry
                      | PDCMSG
 
-  syntax Bool ::= "isEntryList" "(" EntryList ")"        [function]
+  syntax PDCParamList ::= List {PDCId, ","}
+
+
+  // interal syntax element
+  syntax PDCRuleList
+                   ::= PDCRule PDCRuleList                 [right, strict(2)]
+                     | ".PDCRuleList"
+
+  // interal syntax element
+  syntax Bool      ::= "isEntryList" "(" EntryList ")"     [function]
+
+  // interal syntax element
+  syntax PDCModule ::= "@PDCModule" "(" PDCRule "," PDCRuleList ")"
+                     | ".PDCModule"
+
+  // interal syntax element
+  syntax PDCModule ::= "processModule" "(" PDCModuleEntryList ")"
+                                                           [function]
+  // interal syntax element
+  syntax PDCModule ::= "verifyModule" "(" PDCModule ")"
+                                                           [function]
+  // interal syntax element
+  syntax PDCId     ::= "findMainRuleId" "(" PDCModuleEntryList ")"
+                                                           [function]
+  // interal syntax element
+  syntax PDCRule   ::= "findMainRule" "(" PDCId "," PDCModuleEntryList ")"
+                                                           [function]
+  // interal syntax element
+  syntax PDCRuleList ::= "filterRules" "(" PDCModuleEntryList ")"
+                                                           [function]
+  // interal syntax element
+  syntax PDCId     ::= "ruleId" "(" PDCRule ")"            [function]
+  // interal syntax element
+  syntax RuleBody  ::= "ruleBody" "(" PDCRule ")"          [function]
+  // interal syntax element
+  syntax PDCParamList ::= "ruleParams" "(" PDCRule ")"     [function]
+  // interal syntax element
+  syntax Bool ::= "buildedModule" "(" PDCModule ")"        [function]
+  // interal syntax element
+  syntax PDCRule ::= "getMainRule" "(" PDCModule ")"       [function]
+  // interal syntax element
+  syntax PDCRuleList ::= "getRules" "(" PDCModule ")"      [function]
 
 endmodule
 
 module PDC-RULE-STATUS
 
-  syntax RuleStatus ::= "@InitInclude"
-                      | "@InitPrepare"
+  syntax RuleStatus ::= "@InitInclude" // definitly init, include the msglist
+                      | "@InitModule"  // preprocess rules, build the module
+                      | "@InitPrepare" // prapare phase, ast correction, fille configuration cells
                       | "@InitStart"
                       | "@Passive"
                       | "@Running"

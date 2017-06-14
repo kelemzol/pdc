@@ -8,6 +8,8 @@ rule msg-related-neg-1 (A, B) {
 }
 
 
+main-rule msg-related-neg-1
+
 
 #> expose msg-related-neg-1-msglist.txt -------------------------
 

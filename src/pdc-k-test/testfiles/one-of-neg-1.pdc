@@ -2,3 +2,5 @@ rule one-of-neg-1 (A, B) {
 	start instantly
     one-of { }
 }
+
+main-rule one-of-neg-1

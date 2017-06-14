@@ -30,6 +30,7 @@ tokens :-
     "more-of"                          { tok TkMoreOf }
     "many-of"                          { tok TkManyOf }
     "instantly"                        { tok TkInstantly }
+    "main-rule"                        { tok TkMainRule }
     "->"                               { tok TkArrow }
     ":"                                { tok TkColon }
     ","                                { tok TkComma }
@@ -69,6 +70,7 @@ data Token
   | TkMoreOf       { pos :: Pos }
   | TkManyOf       { pos :: Pos }
   | TkInstantly    { pos :: Pos }
+  | TkMainRule     { pos :: Pos }
   | TkArrow        { pos :: Pos }
   | TkColon        { pos :: Pos }
   | TkComma        { pos :: Pos }

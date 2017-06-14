@@ -9,3 +9,5 @@ rule one-of-pos-5 (A, B) {
 	    }
 	}
 }
+
+main-rule one-of-pos-5

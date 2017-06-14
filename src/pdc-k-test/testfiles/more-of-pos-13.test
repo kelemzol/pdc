@@ -13,6 +13,7 @@ rule more-of-pos-13 (A, b) {
 	}
 }
 
+main-rule more-of-pos-13
 
 
 #> expose more-of-pos-13-msglist.txt -----------------------

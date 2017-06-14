@@ -7,3 +7,5 @@ rule many-of-pos-8 () {
 		}
 	}
 }
+
+main-rule many-of-pos-8

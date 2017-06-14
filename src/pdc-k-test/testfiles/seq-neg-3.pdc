@@ -1,6 +1,8 @@
-rule seq-neg-2 (A, B) {
+rule seq-neg-3 (A, B) {
 	start instantly
 	A -> B : REQ
 	B -> A : RES
 	B -> A : RES2
 }
+
+main-rule seq-neg-3

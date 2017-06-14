@@ -18,6 +18,7 @@ rule full-bounding-pos-2 (a, b, c) {
 	b -> a : RES
 }
 
+main-rule full-bounding-pos-2
 
 
 

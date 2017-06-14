@@ -13,3 +13,5 @@ rule seq-pos-4 (A, B) {
     }
     B -> A : RES2
 }
+
+main-rule seq-pos-4

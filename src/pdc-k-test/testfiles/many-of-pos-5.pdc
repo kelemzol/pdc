@@ -4,3 +4,5 @@ rule many-of-pos-5 () {
 		A -> B : MSG
 	}
 }
+
+main-rule many-of-pos-5

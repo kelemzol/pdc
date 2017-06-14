@@ -9,6 +9,8 @@ rule start-pos-8 (A, B) {
 	B -> A : RES
 }
 
+main-rule start-pos-8
+
 
 
 #> expose start-pos-8-msglist.txt -------------------------

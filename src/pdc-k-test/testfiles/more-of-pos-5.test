@@ -9,6 +9,7 @@ rule more-of-pos-5 (A, b) {
 	}
 }
 
+main-rule more-of-pos-5
 
 
 #> expose more-of-pos-5-msglist.txt -----------------------

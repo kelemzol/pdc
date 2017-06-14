@@ -4,3 +4,5 @@ rule start-pos-3 (A, B) {
 	}
 	B -> A : RES
 }
+
+main-rule start-pos-3

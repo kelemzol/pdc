@@ -97,7 +97,7 @@ dowork k' f' del confs = do
     run conf ("[5/1] generate " ++ genKFile) $ do
         writeFile genKFile kfile'
     run conf ("[5/2] generate " ++ genPDCFile) $ do
-        kFormatIO f genPDCFile
+        kFormatIO True f genPDCFile
     (success, _, kompile_stdout, kompile_stderr) <- runCmd conf TextFormat "[5/3] " $ "kompile " ++ genKFile ++ " --syntax-module PDC-SYNTAX --main-module PDC-SEMANTICS"
     (xmlres, krun_stdout, _, krun_stderr) <- if success
         then runCmd conf XMLFormat "[5/4] " $ "krun " ++ genPDCFile ++ " --directory " ++ (takeDirectory  k) ++ (if run_k_debug conf then " --debug" else "")
@@ -192,7 +192,7 @@ preproc = map partition . lines
     partition a = if isInfixOf "&include&" a then Left a else Right a
 
 readIncludes :: [(String, String)] -> IO [(String, String)]
-readIncludes = mapM (\(ik, iv) -> readFile iv >>= return . (ik,) . kFormat)
+readIncludes = mapM (\(ik, iv) -> readFile iv >>= return . (ik,) . kFormat False)
 
 includeValue :: String -> String
 includeValue (' ':val) = includeValue val

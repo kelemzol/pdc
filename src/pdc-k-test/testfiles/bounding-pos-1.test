@@ -6,6 +6,7 @@ rule bounding-pos-1 (A, b) {
 	a -> B : REQ
 }
 
+main-rule bounding-pos-1
 
 
 #> expose bounding-pos-1-msglist.txt ----------------------
