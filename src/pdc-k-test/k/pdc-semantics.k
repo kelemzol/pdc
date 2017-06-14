@@ -127,7 +127,7 @@ module PDC-RULE-SEMANTICS
     // syntax PDCModule ::= "@PDCModule" "(" PDCRule "," PDCRuleList ")"
     // syntax PDCModule ::= "processModule" "(" PDCModuleEntryList ")"
     // syntax PDCId     ::= "findMainRuleId" "(" PDCModuleEntryList ")"
-    // syntax PDCRule   ::= "findMainRule" "(" PDCId "," PDCModuleEntryList ")"
+    // syntax PDCRule   ::= "lookupRule" "(" PDCId "," PDCModuleEntryList ")"
     // syntax PDCRuleList ::= "filterRules" "(" PDCModuleEntryList ")"
     // syntax PDCId       ::= "ruleId" "(" PDCRule ")"
     // syntax RuleBody    ::= "ruleBody" "(" PDCRule ")"
@@ -137,7 +137,7 @@ module PDC-RULE-SEMANTICS
     // syntax Bool ::= "buildedModule" "(" PDCModule ")"        [function]
     // syntax PDCModule ::= "verifyModule" "(" PDCModule ")"
 
-    rule processModule ( MEL ) => verifyModule ( @PDCModule ( findMainRule ( findMainRuleId ( MEL ) , MEL ) , filterRules ( MEL ) ) )
+    rule processModule ( MEL ) => verifyModule ( @PDCModule ( lookupRule ( findMainRuleId ( MEL ) , MEL ) , MEL ) )
                                                            [owise]
     rule verifyModule ( @PDCModule ( .PDCRule , _ ) ) => .PDCModule
     rule verifyModule ( M ) => M                           [owise]
@@ -147,15 +147,11 @@ module PDC-RULE-SEMANTICS
     rule findMainRuleId ( _ MEL ) => findMainRuleId ( MEL )
                                                            [owise]
 
-    rule findMainRule ( ID , ( @rule ID ( P ) B ) MEL ) => @rule ID ( P ) B
-    rule findMainRule ( .PDCId , _ ) => .PDCRule
-    rule findMainRule ( _ , .PDCModuleEntryList ) => .PDCRule
-    rule findMainRule ( ID , _ MEL ) => findMainRule ( ID , MEL )
+    rule lookupRule ( ID , ( @rule ID ( P ) B ) MEL ) => @rule ID ( P ) B
+    rule lookupRule ( .PDCId , _ ) => .PDCRule
+    rule lookupRule ( _ , .PDCModuleEntryList ) => .PDCRule
+    rule lookupRule ( ID , _ MEL ) => lookupRule ( ID , MEL )
                                                            [owise]
-
-    rule filterRules ( ( @rule I ( P ) B ) MEL ) => ( @rule I ( P ) B ) filterRules ( MEL )
-    rule filterRules ( .PDCModuleEntryList ) => .PDCRuleList
-    rule filterRules ( _ MEL ) => filterRules ( MEL )      [owise]
 
     rule ruleId ( @rule I ( P ) B ) => I                   [owise]
     rule ruleBody ( @rule I ( P ) B ) => B                 [owise]

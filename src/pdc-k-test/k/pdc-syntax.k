@@ -97,15 +97,10 @@ module PDC-RULE-SYNTAX
 
 
   // interal syntax element
-  syntax PDCRuleList
-                   ::= PDCRule PDCRuleList                 [right, strict(2)]
-                     | ".PDCRuleList"
-
-  // interal syntax element
   syntax Bool      ::= "isEntryList" "(" EntryList ")"     [function]
 
   // interal syntax element
-  syntax PDCModule ::= "@PDCModule" "(" PDCRule "," PDCRuleList ")"
+  syntax PDCModule ::= "@PDCModule" "(" PDCRule "," PDCModuleEntryList ")"
                      | ".PDCModule"
 
   // interal syntax element
@@ -118,10 +113,7 @@ module PDC-RULE-SYNTAX
   syntax PDCId     ::= "findMainRuleId" "(" PDCModuleEntryList ")"
                                                            [function]
   // interal syntax element
-  syntax PDCRule   ::= "findMainRule" "(" PDCId "," PDCModuleEntryList ")"
-                                                           [function]
-  // interal syntax element
-  syntax PDCRuleList ::= "filterRules" "(" PDCModuleEntryList ")"
+  syntax PDCRule   ::= "lookupRule" "(" PDCId "," PDCModuleEntryList ")"
                                                            [function]
   // interal syntax element
   syntax PDCId     ::= "ruleId" "(" PDCRule ")"            [function]
