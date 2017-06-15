@@ -91,6 +91,7 @@ module PDC-RULE-SYNTAX
                      | "@many-of" RuleBody
                      | "@optional" RuleBody
                      | "@optional" Entry
+                     | PDCId
                      | PDCMSG
 
   syntax PDCParamList ::= List {PDCId, ","}
@@ -122,11 +123,18 @@ module PDC-RULE-SYNTAX
   // interal syntax element
   syntax PDCParamList ::= "ruleParams" "(" PDCRule ")"     [function]
   // interal syntax element
-  syntax Bool ::= "buildedModule" "(" PDCModule ")"        [function]
+  syntax Bool ::= "checkModule" "(" PDCModule ")"          [function]
   // interal syntax element
   syntax PDCRule ::= "getMainRule" "(" PDCModule ")"       [function]
   // interal syntax element
-  syntax PDCRuleList ::= "getRules" "(" PDCModule ")"      [function]
+  syntax PDCModuleEntryList ::= "getRules" "(" PDCModule ")"
+                                                           [function]
+  // interal syntax element
+  syntax Bool ::= "checkRule" "(" PDCRule ")"              [function]
+
+
+
+// prepareEL ( prepareB ( ruleBody ( lookupRule ( ID , getRules ( MOD ) ) ) ) )
 
 endmodule
 

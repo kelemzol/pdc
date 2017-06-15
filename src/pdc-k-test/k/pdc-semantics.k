@@ -109,7 +109,7 @@ module PDC-RULE-SEMANTICS
          <params> .PDCParamList        => ruleParams ( getMainRule ( MOD ) ) </params>
          <metadata> <name> .K          => ruleId ( getMainRule ( MOD ) ) </name> </metadata>
          <rulestatus> @InitPrepare     => @InitStart </rulestatus>
-                                                           when buildedModule ( MOD )
+                                                           when checkModule ( MOD )
 
     rule <pdc-module> .PDCModule </pdc-module>
          <rulestatus> @InitPrepare     => @Failed </rulestatus>
@@ -133,9 +133,9 @@ module PDC-RULE-SEMANTICS
     // syntax RuleBody    ::= "ruleBody" "(" PDCRule ")"
     // syntax PDCParamList ::= "ruleParams" "(" PDCRule ")"
     // syntax PDCRule ::= "getMainRule" "(" PDCModule ")"       [function]
-    // syntax PDCRuleList ::= "getRules" "(" PDCModule ")"      [function]
-    // syntax Bool ::= "buildedModule" "(" PDCModule ")"        [function]
+    // syntax Bool ::= "checkModule" "(" PDCModule ")"        [function]
     // syntax PDCModule ::= "verifyModule" "(" PDCModule ")"
+    // syntax Bool ::= "checkRule" "(" PDCRule ")"              [function]
 
     rule processModule ( MEL ) => verifyModule ( @PDCModule ( lookupRule ( findMainRuleId ( MEL ) , MEL ) , MEL ) )
                                                            [owise]
@@ -154,13 +154,20 @@ module PDC-RULE-SEMANTICS
                                                            [owise]
 
     rule ruleId ( @rule I ( P ) B ) => I                   [owise]
+
     rule ruleBody ( @rule I ( P ) B ) => B                 [owise]
+
     rule ruleParams ( @rule I ( P ) B ) => P               [owise]
 
     rule getMainRule ( @PDCModule ( R , _ ) ) => R         [owise]
+
     rule getRules ( @PDCModule ( _ , RL ) ) => RL          [owise]
-    rule buildedModule ( .PDCModule ) => false
-    rule buildedModule ( _ ) => true                       [owise]
+
+    rule checkModule ( .PDCModule ) => false
+    rule checkModule ( _ ) => true                         [owise]
+
+    rule checkRule ( .PDCRule ) => false
+    rule checkRule ( _ ) => true                           [owise]
 
     // preparating/restructuring helper rule-functions
     // ------------------------------------------------------------------------
@@ -410,6 +417,14 @@ module PDC-RULE-SEMANTICS
          </current-pattern>
          <ee> @AlgebraicExecution </ee>
 
+
+    // CALL -------------------------------------------------------------------
+    // ------------------------------------------------------------------------
+
+    rule <current-pattern> ( ID:PDCId NEXT )
+              => appendEL ( prepareEL ( prepareB ( ruleBody ( lookupRule ( ID , getRules ( MOD ) ) ) ) ) , NEXT ) </current-pattern>
+         <pdc-module> ( MOD:PDCModule ) </pdc-module>
+                                                           when checkRule ( lookupRule ( ID , getRules ( MOD ) ) )
 
 
     // MESSAGE ----------------------------------------------------------------

@@ -1,0 +1,25 @@
+
+#> expose call-pos-1.pdc ---------------------------------
+
+rule call-pos-1 (A, B) {
+	start instantly
+	request
+	B -> A : RES
+}
+
+rule request (A, B) {
+	A -> B : REQ
+}
+
+main-rule call-pos-1
+
+
+
+#> expose call-pos-1-msglist.txt -------------------------
+
+A -> B : REQ
+B -> A : RES
+
+#> expose call-pos-1-res.txt -----------------------------
+
+<rulestatus> @Success </rulestatus>

@@ -47,6 +47,7 @@ tests = testGroup "All unit test" [ primUnitTests
                                   , boundingUnitTests
                                   , msgRelatedUnitTests
                                   , moduleUnitTests
+                                  , callUnitTests
                                   , complexUnitTests
                                   ]
 
@@ -77,21 +78,6 @@ isSuccess :: RuleResult -> Bool
 isSuccess Success = True
 isSuccess _ = False
 
-unitTests = testGroup "All unit tests"
-    $ concat
-    [ primUnitTestsList
-    , seqUnitTestsList
-    , optionalUnitTestsList
-    , oneOfUnitTestsList
-    , manyOfUnitTestsList
-    , moreOfUnitTestsList
-    , startUnitTestsList
-    , boundingUnitTestsList
-    , msgRelatedUnitTestsList
-    , moduleUnitTestsList
-    , complexUnitTestsList
-    ]
-
 primUnitTests = testGroup "Prim tests" primUnitTestsList
 seqUnitTests = testGroup "Seq tests" seqUnitTestsList
 optionalUnitTests = testGroup "Optional tests" optionalUnitTestsList
@@ -102,6 +88,7 @@ startUnitTests = testGroup "Start tests" startUnitTestsList
 boundingUnitTests = testGroup "Bounding tests" boundingUnitTestsList
 msgRelatedUnitTests = testGroup "Msg Related tests" msgRelatedUnitTestsList
 moduleUnitTests = testGroup "Module" moduleUnitTestsList
+callUnitTests = testGroup "Call" callUnitTestsList
 complexUnitTests = testGroup "Complex tests" complexUnitTestsList
 
 primUnitTestsList =
@@ -204,6 +191,11 @@ moduleUnitTestsList =
     , smarttest "module-pos-4"
     , smarttest "module-pos-5"
     , smarttest "module-neg-1"
+    ]
+callUnitTestsList =
+    [ smarttest "call-pos-1"
+    , smarttest "call-pos-2"
+    , smarttest "call-pos-3"
     ]
 complexUnitTestsList =
     [ smarttest "complex-pos-1"
