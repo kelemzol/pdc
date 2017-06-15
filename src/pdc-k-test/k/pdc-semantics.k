@@ -113,6 +113,8 @@ module PDC-RULE-SEMANTICS
 
     rule <pdc-module> .PDCModule </pdc-module>
          <rulestatus> @InitPrepare     => @Failed </rulestatus>
+         <k> MEL </k>
+         <error-code> @NoError         => errorCase ( findMainRuleId ( MEL ) ==PDCId .PDCId , @NoDeclaredMainRule , @NotFindMainRule ) </error-code>
 /*
     rule <k> @rule I ( PL ) B </k>
          <orig> .EntryList             => prepareEL ( prepareB ( B ) ) </orig>
@@ -136,6 +138,7 @@ module PDC-RULE-SEMANTICS
     // syntax Bool ::= "checkModule" "(" PDCModule ")"        [function]
     // syntax PDCModule ::= "verifyModule" "(" PDCModule ")"
     // syntax Bool ::= "checkRule" "(" PDCRule ")"              [function]
+    // syntax ErrorCode ::= "errorCase" "(" Bool "," ErrorCode "," ErrorCode ")"
 
     rule processModule ( MEL ) => verifyModule ( @PDCModule ( lookupRule ( findMainRuleId ( MEL ) , MEL ) , MEL ) )
                                                            [owise]
@@ -168,6 +171,9 @@ module PDC-RULE-SEMANTICS
 
     rule checkRule ( .PDCRule ) => false
     rule checkRule ( _ ) => true                           [owise]
+
+    rule errorCase ( true , E , _ ) => E
+    rule errorCase ( _ , _ , E ) => E                      [owise]
 
     // preparating/restructuring helper rule-functions
     // ------------------------------------------------------------------------
@@ -475,6 +481,7 @@ module PDC-RULE-SEMANTICS
          <current-process-instances> PIS </current-process-instances>
          <rulestatus> X                => @Failed </rulestatus>
          <branches> .Bag </branches>
+         <error-code> _                => @SequenceMissmatch </error-code>
                                                            when MSG1 =/=PDCMSG MSG2
                                                                 andBool (X =/=RuleStatus @Failed)
                                                                 andBool (containProcessVariable(MSG1) impliesBool (notBool(MSG1 ==PDCMSGPartial MSG2)))
@@ -515,10 +522,10 @@ module PDC-RULE-SEMANTICS
          </branches>
 
     // one-of empty, but not have branch
-
     rule <current-pattern> @one-of { .EntryList } NEXT </current-pattern>
          <rulestatus> RULESTATUS       => @Failed </rulestatus>
          <branches> .Bag </branches>
+         <error-code> _                => @EmptyOneOf </error-code>
                                                            when RULESTATUS =/=RuleStatus @Failed
 
 
@@ -606,6 +613,7 @@ module PDC-SETUP
                     </metadata>
                     // <ee> @AlgebraicExecution </ee>
                     <ee> @DirectExecution </ee>
+                    <error-code> @NoError </error-code>
                     <rulestatus> @InitInclude </rulestatus>
                 </T>
 // reachability logic k-ban

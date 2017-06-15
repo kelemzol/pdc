@@ -14,6 +14,7 @@ import System.IO
 import Data.List
 import Data.Maybe
 import Control.Monad
+import Control.DeepSeq
 
 import Text.XML.Expat.Tree
 import Text.XML.Expat.Format
@@ -68,7 +69,7 @@ genericExpose work conf name = do
     doExpose path Nothing [] (lines content)
   where
     doExpose path Nothing   _ [] = return ()
-    doExpose path (Just fn) c [] = work (path++fn) (concat (reverse c))
+    doExpose path (Just fn) c [] = work (path++fn) (unlines (reverse c))
     doExpose path Nothing c ((words -> ("#>":"expose":fn':_)):xs) = do
         doExpose path (Just fn') [] xs
     doExpose path (Just fn) c ((words -> ("#>":"expose":fn':_)):xs) = do
@@ -154,12 +155,18 @@ runCmd conf f p m = do
     return (success, xmlres, out, err)
 
 
-getRunResult :: UNode String -> String
-getRunResult = textContent . fromJust . findElement "rulestatus"
+getRunResult :: UNode String -> Maybe String
+getRunResult = fmap textContent . findElement "rulestatus"
+
+getErrorCode :: UNode String -> Maybe String
+getErrorCode = fmap textContent . findElement "error-code"
+
 
 readXML :: FilePath -> IO XML
 readXML fn = do
-    content <- readFile fn
+    file <- openFile fn ReadMode
+    content <- hGetContents file
+    content `deepseq` hClose file
     let (xml, mErr) = parse defaultParseOptions (pack content) :: (UNode String, Maybe XMLParseError)
     return (XML xml)
 
@@ -167,6 +174,7 @@ getBy :: XML -> String -> Maybe String
 getBy (XML xml) name = fmap textContent (findElement name xml)
 
 newtype XML = XML (UNode String)
+  deriving (Eq, Show)
 
 run conf msg m = do
     outputStrLn conf msg

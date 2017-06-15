@@ -1,0 +1,26 @@
+
+#> expose module-neg-2.pdc ---------------------------------
+
+rule other (A, B) {
+	start instantly
+	A -> B : OTHER_MSG
+}
+
+rule and-another(A, B) {
+	start instantly
+	A -> B : OTHER_MSG
+}
+
+
+#> expose module-neg-2-msglist.txt -------------------------
+
+A -> B : MSG
+
+
+
+#> expose module-neg-2-res.txt -----------------------------
+
+<expected>
+    <rulestatus> @Failed </rulestatus>
+    <error-code> @NoDeclaredMainRule </error-code>
+</expected>

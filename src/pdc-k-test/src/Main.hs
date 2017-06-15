@@ -61,6 +61,14 @@ data RuleResult
   | Failed
   deriving (Eq, Show)
 
+data ErrorCode
+  = NoError
+  | NoDeclaredMainRule
+  | NotFindMainRule
+  | SequenceMissmatch
+  | EmptyOneOf
+  deriving (Eq, Show)
+
 (&.) c1 c2 = \ a -> (c1 a) && (c2 a)
 
 parseRuleResult :: String -> Maybe RuleResult
@@ -72,6 +80,15 @@ parseRuleResult str = case filter ((/= ' ')) str of
     "@Running" -> Just Running
     "@Success" -> Just Success
     "@Failed"  -> Just Failed
+    _ -> Nothing
+
+parseErrorCode :: String -> Maybe ErrorCode
+parseErrorCode str = case filter ((/= ' ')) str of
+    "@NoError" -> Just NoError
+    "@NoDeclaredMainRule" -> Just NoDeclaredMainRule
+    "@NotFindMainRule" -> Just NotFindMainRule
+    "@SequenceMissmatch" -> Just SequenceMissmatch
+    "@EmptyOneOf" -> Just EmptyOneOf
     _ -> Nothing
 
 isSuccess :: RuleResult -> Bool
@@ -191,6 +208,7 @@ moduleUnitTestsList =
     , smarttest "module-pos-4"
     , smarttest "module-pos-5"
     , smarttest "module-neg-1"
+    , smarttest "module-neg-2"
     ]
 callUnitTestsList =
     [ smarttest "call-pos-1"
@@ -206,7 +224,7 @@ gentest :: (RuleResult -> Bool) -> String -> TestTree
 gentest expect id = testCase id $ do
     conf <- parseconf <$> readFile "./.pdc_krunner"
     res <- dowork "pdc-semantics.k" (id ++ ".pdc") (Just True) ["msglist="++(id++"-msglist.txt")]
-    assertEqual "ruleresult" (fmap expect (parseRuleResult (getRunResult (krun_stdout res)))) (Just True)
+    assertEqual "ruleresult" (fmap expect (parseRuleResult (fromJust $ getRunResult (krun_stdout res)))) (Just True)
 
 positiveTest = gentest isSuccess
 negativeTest = gentest (not . isSuccess)
@@ -221,10 +239,12 @@ smarttest id = testCase id $ do
     xml <- readXML xmlpath
     workRres <- dowork "pdc-semantics.k" (id ++ ".pdc") (Just True) ["msglist="++(id++"-msglist.txt")]
     
-    let exceptedRuleresult = parseRuleResult $ fromJust $ xml `getBy` "rulestatus"
-        ruleresult = parseRuleResult $ getRunResult (krun_stdout workRres)
-    
-    eq <- assertEqual "ruleresult" exceptedRuleresult ruleresult
+    let exceptedRuleresult = join $ fmap parseRuleResult $ xml `getBy` "rulestatus"
+        exceptedErrorcode = join $ fmap parseErrorCode $ xml `getBy` "error-code"
+        ruleresult = join $ fmap parseRuleResult $ getRunResult (krun_stdout workRres)
+        errorcode = exceptedErrorcode >> (join $ (fmap parseErrorCode (getErrorCode (krun_stdout workRres))))
+
+    eq <- assertEqual "ruleresult" (exceptedRuleresult, exceptedErrorcode) (ruleresult, errorcode)
     deleteExposed conf id
     return eq
 

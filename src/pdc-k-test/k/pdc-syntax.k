@@ -98,6 +98,17 @@ module PDC-RULE-SYNTAX
 
 
   // interal syntax element
+  syntax ErrorCode ::= "@NoError"
+                     | "@NoDeclaredMainRule"
+                     | "@NotFindMainRule"
+                     | "@SequenceMissmatch"
+                     | "@EmptyOneOf"
+
+
+  syntax ErrorCode ::= "errorCase" "(" Bool "," ErrorCode "," ErrorCode ")"
+                                                           [function]
+
+  // interal syntax element
   syntax Bool      ::= "isEntryList" "(" EntryList ")"     [function]
 
   // interal syntax element

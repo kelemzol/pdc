@@ -22,4 +22,7 @@ A -> B : MSG
 
 #> expose module-neg-1-res.txt -----------------------------
 
-<rulestatus> @Failed </rulestatus>
+<expected>
+    <rulestatus> @Failed </rulestatus>
+    <error-code> @NotFindMainRule </error-code>
+</expected>
