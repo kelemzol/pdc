@@ -1,0 +1,24 @@
+
+#> expose seq-neg-4.pdc ---------------------------------
+
+rule seq-neg-4 (A, B) {
+	start instantly
+	A -> B : MSG2
+	A -> B : MSG3
+}
+
+main-rule seq-neg-4
+
+
+
+#> expose seq-neg-4-msglist.txt -------------------------
+
+A -> B : MSG1
+A -> B : MSG2
+A -> B : MSG3
+
+#> expose seq-neg-4-res.txt -----------------------------
+
+<expected>
+    <rulestatus> @Failed </rulestatus>
+</expected>

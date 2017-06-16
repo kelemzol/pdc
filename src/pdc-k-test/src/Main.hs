@@ -123,6 +123,7 @@ seqUnitTestsList =
     , negativeTest "seq-neg-1"
     , negativeTest "seq-neg-2"
     , negativeTest "seq-neg-3"
+    , smarttest "seq-neg-4"
     ]
 optionalUnitTestsList =
     [ positiveTest "optional-pos-1"
@@ -214,10 +215,15 @@ callUnitTestsList =
     [ smarttest "call-pos-1"
     , smarttest "call-pos-2"
     , smarttest "call-pos-3"
+    , smarttest "call-neg-1"
     ]
 complexUnitTestsList =
     [ smarttest "complex-pos-1"
     , smarttest "complex-pos-2"
+    , smarttest "complex-pos-3"
+    , smarttest "complex-pos-4"
+    , smarttest "complex-neg-1"
+    , smarttest "complex-neg-2"
     ]
 
 gentest :: (RuleResult -> Bool) -> String -> TestTree

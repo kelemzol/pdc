@@ -1,0 +1,25 @@
+
+#> expose call-neg-1.pdc ---------------------------------
+
+rule call-neg-1 (A, B) {
+	start instantly
+	call
+}
+
+rule call (A, B) {
+	A -> B : MSG
+}
+
+main-rule call-neg-1
+
+
+
+#> expose call-neg-1-msglist.txt -------------------------
+
+A -> B : OTHER
+
+#> expose call-neg-1-res.txt -----------------------------
+
+<expected>
+    <rulestatus> @Failed </rulestatus>
+</expected>

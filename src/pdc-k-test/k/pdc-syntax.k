@@ -74,7 +74,7 @@ module PDC-RULE-SYNTAX
                      | "@main-rule" PDCId
 
 
-  syntax PDCRule   ::= "@rule" PDCId "(" PDCParamList ")" RuleBody
+  syntax PDCRule   ::= "@rule" PDCId RuleParams RuleBody
                      | ".PDCRule"
                                                            
   syntax RuleBody  ::= "{" EntryList "}"
@@ -94,7 +94,15 @@ module PDC-RULE-SYNTAX
                      | PDCId
                      | PDCMSG
 
-  syntax PDCParamList ::= List {PDCId, ","}
+  syntax RuleParams ::= "(" RuleParamList ")"
+                     | "(" ")"
+
+  syntax RuleParamList
+                   ::= PDCId "," RuleParamList           [right, strict(2)]
+                     | PDCId
+                     | ".RuleParamList"
+  
+  // List {PDCId, ","}
 
 
   // interal syntax element
@@ -103,10 +111,13 @@ module PDC-RULE-SYNTAX
                      | "@NotFindMainRule"
                      | "@SequenceMissmatch"
                      | "@EmptyOneOf"
+                     | "@StructuralError"
 
 
   syntax ErrorCode ::= "errorCase" "(" Bool "," ErrorCode "," ErrorCode ")"
                                                            [function]
+
+
 
   // interal syntax element
   syntax Bool      ::= "isEntryList" "(" EntryList ")"     [function]
@@ -132,7 +143,7 @@ module PDC-RULE-SYNTAX
   // interal syntax element
   syntax RuleBody  ::= "ruleBody" "(" PDCRule ")"          [function]
   // interal syntax element
-  syntax PDCParamList ::= "ruleParams" "(" PDCRule ")"     [function]
+  syntax RuleParams ::= "ruleParams" "(" PDCRule ")"       [function]
   // interal syntax element
   syntax Bool ::= "checkModule" "(" PDCModule ")"          [function]
   // interal syntax element
@@ -142,10 +153,12 @@ module PDC-RULE-SYNTAX
                                                            [function]
   // interal syntax element
   syntax Bool ::= "checkRule" "(" PDCRule ")"              [function]
+  // interal syntax element
+  syntax Bool ::= "structuralCheck" "(" PDCModule ")"      [function]
+  // interal syntax element
+  syntax PDCIdList ::= "paramListToIdList" "(" RuleParams ")"
+                                                           [function]
 
-
-
-// prepareEL ( prepareB ( ruleBody ( lookupRule ( ID , getRules ( MOD ) ) ) ) )
 
 endmodule
 
@@ -153,6 +166,7 @@ module PDC-RULE-STATUS
 
   syntax RuleStatus ::= "@InitInclude" // definitly init, include the msglist
                       | "@InitModule"  // preprocess rules, build the module
+                      | "@InitStructuralCheck"
                       | "@InitPrepare" // prapare phase, ast correction, fille configuration cells
                       | "@InitStart"
                       | "@Passive"
@@ -162,6 +176,9 @@ module PDC-RULE-STATUS
 
   syntax Bool ::= RuleStatus "==RuleStatus" RuleStatus     [function]
   syntax Bool ::= RuleStatus "=/=RuleStatus" RuleStatus    [function]
+
+  syntax RuleStatus ::= "rulestatusCase" "(" Bool "," RuleStatus "," RuleStatus ")"
+                                                           [function]
 
 endmodule
 

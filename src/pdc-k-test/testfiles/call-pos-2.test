@@ -26,4 +26,6 @@ B -> A : RES
 
 #> expose call-pos-2-res.txt -----------------------------
 
-<rulestatus> @Success </rulestatus>
+<expected>
+    <rulestatus> @Success </rulestatus>
+</expected>

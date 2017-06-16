@@ -101,20 +101,29 @@ module PDC-RULE-SEMANTICS
 
     rule <k> MEL </k>
          <pdc-module> .PDCModule       => processModule ( MEL ) </pdc-module>
-         <rulestatus> @InitModule      => @InitPrepare </rulestatus>
+         <rulestatus> @InitModule      => @InitStructuralCheck </rulestatus>
+
+
+    rule <pdc-module> .PDCModule </pdc-module>
+         <rulestatus> @InitStructuralCheck
+                                       => @Failed </rulestatus>
+         <k> MEL </k>
+         <error-code> @NoError         => errorCase ( findMainRuleId ( MEL ) ==PDCId .PDCId , @NoDeclaredMainRule , @NotFindMainRule ) </error-code>
+
+    rule <pdc-module> MOD </pdc-module>
+         <rulestatus> @InitStructuralCheck
+                                       => rulestatusCase ( structuralCheck ( MOD ) , @InitPrepare , @Failed ) </rulestatus>
+                                                           when checkModule ( MOD )
 
     rule <pdc-module> MOD </pdc-module>
          <orig> .EntryList             => prepareEL ( prepareB ( ruleBody ( getMainRule ( MOD ) ) ) ) </orig>
          <current-pattern> .EntryList  => prepareEL ( prepareB ( ruleBody ( getMainRule ( MOD ) ) ) ) </current-pattern>
-         <params> .PDCParamList        => ruleParams ( getMainRule ( MOD ) ) </params>
+         <params> _                    => ruleParams ( getMainRule ( MOD ) ) </params>
+         <current-process-instances> .PDCIdList
+                                       => pis ( paramListToIdList ( ruleParams ( getMainRule ( MOD ) ) ) ) </current-process-instances>
          <metadata> <name> .K          => ruleId ( getMainRule ( MOD ) ) </name> </metadata>
          <rulestatus> @InitPrepare     => @InitStart </rulestatus>
                                                            when checkModule ( MOD )
-
-    rule <pdc-module> .PDCModule </pdc-module>
-         <rulestatus> @InitPrepare     => @Failed </rulestatus>
-         <k> MEL </k>
-         <error-code> @NoError         => errorCase ( findMainRuleId ( MEL ) ==PDCId .PDCId , @NoDeclaredMainRule , @NotFindMainRule ) </error-code>
 /*
     rule <k> @rule I ( PL ) B </k>
          <orig> .EntryList             => prepareEL ( prepareB ( B ) ) </orig>
@@ -126,20 +135,6 @@ module PDC-RULE-SEMANTICS
     // internal module building
     // ------------------------------------------------------------------------
 
-    // syntax PDCModule ::= "@PDCModule" "(" PDCRule "," PDCRuleList ")"
-    // syntax PDCModule ::= "processModule" "(" PDCModuleEntryList ")"
-    // syntax PDCId     ::= "findMainRuleId" "(" PDCModuleEntryList ")"
-    // syntax PDCRule   ::= "lookupRule" "(" PDCId "," PDCModuleEntryList ")"
-    // syntax PDCRuleList ::= "filterRules" "(" PDCModuleEntryList ")"
-    // syntax PDCId       ::= "ruleId" "(" PDCRule ")"
-    // syntax RuleBody    ::= "ruleBody" "(" PDCRule ")"
-    // syntax PDCParamList ::= "ruleParams" "(" PDCRule ")"
-    // syntax PDCRule ::= "getMainRule" "(" PDCModule ")"       [function]
-    // syntax Bool ::= "checkModule" "(" PDCModule ")"        [function]
-    // syntax PDCModule ::= "verifyModule" "(" PDCModule ")"
-    // syntax Bool ::= "checkRule" "(" PDCRule ")"              [function]
-    // syntax ErrorCode ::= "errorCase" "(" Bool "," ErrorCode "," ErrorCode ")"
-
     rule processModule ( MEL ) => verifyModule ( @PDCModule ( lookupRule ( findMainRuleId ( MEL ) , MEL ) , MEL ) )
                                                            [owise]
     rule verifyModule ( @PDCModule ( .PDCRule , _ ) ) => .PDCModule
@@ -150,17 +145,17 @@ module PDC-RULE-SEMANTICS
     rule findMainRuleId ( _ MEL ) => findMainRuleId ( MEL )
                                                            [owise]
 
-    rule lookupRule ( ID , ( @rule ID ( P ) B ) MEL ) => @rule ID ( P ) B
+    rule lookupRule ( ID , ( @rule ID P B ) MEL ) => @rule ID P B
     rule lookupRule ( .PDCId , _ ) => .PDCRule
     rule lookupRule ( _ , .PDCModuleEntryList ) => .PDCRule
     rule lookupRule ( ID , _ MEL ) => lookupRule ( ID , MEL )
                                                            [owise]
 
-    rule ruleId ( @rule I ( P ) B ) => I                   [owise]
+    rule ruleId ( @rule I P B ) => I                       [owise]
 
-    rule ruleBody ( @rule I ( P ) B ) => B                 [owise]
+    rule ruleBody ( @rule I P B ) => B                     [owise]
 
-    rule ruleParams ( @rule I ( P ) B ) => P               [owise]
+    rule ruleParams ( @rule I P B ) => P                   [owise]
 
     rule getMainRule ( @PDCModule ( R , _ ) ) => R         [owise]
 
@@ -174,6 +169,17 @@ module PDC-RULE-SEMANTICS
 
     rule errorCase ( true , E , _ ) => E
     rule errorCase ( _ , _ , E ) => E                      [owise]
+
+    rule rulestatusCase ( true , RS , _ ) => RS
+    rule rulestatusCase ( _ , _ , RS ) => RS               [owise]
+
+    rule paramListToIdList ( ( ) ) => .PDCIdList
+    rule paramListToIdList ( ( .RuleParamList ) ) => .PDCIdList
+    rule paramListToIdList ( ( I:PDCId)  ) => I .PDCIdList
+    rule paramListToIdList ( ( I , L:RuleParamList ) ) => I paramListToIdList ( ( L ) )
+
+
+    rule structuralCheck ( MOD ) => true
 
     // preparating/restructuring helper rule-functions
     // ------------------------------------------------------------------------
@@ -522,10 +528,11 @@ module PDC-RULE-SEMANTICS
          </branches>
 
     // one-of empty, but not have branch
+
     rule <current-pattern> @one-of { .EntryList } NEXT </current-pattern>
          <rulestatus> RULESTATUS       => @Failed </rulestatus>
          <branches> .Bag </branches>
-         <error-code> _                => @EmptyOneOf </error-code>
+         // <error-code> _                => @EmptyOneOf </error-code>
                                                            when RULESTATUS =/=RuleStatus @Failed
 
 
@@ -543,7 +550,6 @@ module PDC-RULE-SEMANTICS
     // ========================================================================
 
     rule <current-pattern> .EntryList </current-pattern>
-         // <current-stream> .PDCMSGList </current-stream>
          <rulestatus> @Running         => @Success </rulestatus>
          <branches> _                  => .Bag </branches>
 
@@ -606,13 +612,15 @@ module PDC-SETUP
                         </branch>
                     </branches>
                     // Parameters
-                    <params> .PDCParamList </params>
+                    <params> ( ) </params>
                     // Metadata
                     <metadata>
                         <name> .K </name>
                     </metadata>
-                    // <ee> @AlgebraicExecution </ee>
                     <ee> @DirectExecution </ee>
+                    /*
+                    <ee> @AlgebraicExecution </ee>
+                    */
                     <error-code> @NoError </error-code>
                     <rulestatus> @InitInclude </rulestatus>
                 </T>

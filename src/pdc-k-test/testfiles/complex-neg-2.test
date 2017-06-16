@@ -1,0 +1,41 @@
+
+#> expose complex-neg-2.pdc ---------------------------------
+
+rule complex-neg-2 (A, B) {
+	start instantly
+	session
+}
+
+main-rule complex-neg-2
+
+rule session (A, B) {
+	A -> B : REQ
+	one-of {
+		seq {
+			B -> A : RES
+		}
+		seq {
+			session
+			B -> A : RES
+		}
+		seq {
+			B -> A : RES
+			session
+		}
+	}
+	
+}
+
+
+#> expose complex-neg-2-msglist.txt -------------------------
+
+B -> A : RES
+A -> B : REQ
+B -> A : RES
+
+
+#> expose complex-neg-2-res.txt -----------------------------
+
+<expected>
+    <rulestatus> @Failed </rulestatus>
+</expected>

@@ -30,4 +30,6 @@ A -> B : CLOSE
 
 #> expose complex-pos-2-res.txt -----------------------------
 
-<rulestatus> @Success </rulestatus>
+<expected>
+    <rulestatus> @Success </rulestatus>
+</expected>
