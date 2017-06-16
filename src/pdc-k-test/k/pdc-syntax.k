@@ -98,11 +98,11 @@ module PDC-RULE-SYNTAX
                      | "(" ")"
 
   syntax RuleParamList
-                   ::= PDCId "," RuleParamList           [right, strict(2)]
+                   ::= PDCId "," RuleParamList             [right, strict(2)]
                      | PDCId
                      | ".RuleParamList"
-  
-  // List {PDCId, ","}
+
+//  syntax PDCParamList ::= List {PDCId, ","}
 
 
   // interal syntax element
@@ -116,8 +116,6 @@ module PDC-RULE-SYNTAX
 
   syntax ErrorCode ::= "errorCase" "(" Bool "," ErrorCode "," ErrorCode ")"
                                                            [function]
-
-
 
   // interal syntax element
   syntax Bool      ::= "isEntryList" "(" EntryList ")"     [function]
@@ -160,6 +158,9 @@ module PDC-RULE-SYNTAX
                                                            [function]
 
 
+
+// prepareEL ( prepareB ( ruleBody ( lookupRule ( ID , getRules ( MOD ) ) ) ) )
+
 endmodule
 
 module PDC-RULE-STATUS
@@ -179,6 +180,7 @@ module PDC-RULE-STATUS
 
   syntax RuleStatus ::= "rulestatusCase" "(" Bool "," RuleStatus "," RuleStatus ")"
                                                            [function]
+
 
 endmodule
 

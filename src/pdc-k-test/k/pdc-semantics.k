@@ -135,6 +135,20 @@ module PDC-RULE-SEMANTICS
     // internal module building
     // ------------------------------------------------------------------------
 
+    // syntax PDCModule ::= "@PDCModule" "(" PDCRule "," PDCRuleList ")"
+    // syntax PDCModule ::= "processModule" "(" PDCModuleEntryList ")"
+    // syntax PDCId     ::= "findMainRuleId" "(" PDCModuleEntryList ")"
+    // syntax PDCRule   ::= "lookupRule" "(" PDCId "," PDCModuleEntryList ")"
+    // syntax PDCRuleList ::= "filterRules" "(" PDCModuleEntryList ")"
+    // syntax PDCId       ::= "ruleId" "(" PDCRule ")"
+    // syntax RuleBody    ::= "ruleBody" "(" PDCRule ")"
+    // syntax PDCParamList ::= "ruleParams" "(" PDCRule ")"
+    // syntax PDCRule ::= "getMainRule" "(" PDCModule ")"       [function]
+    // syntax Bool ::= "checkModule" "(" PDCModule ")"        [function]
+    // syntax PDCModule ::= "verifyModule" "(" PDCModule ")"
+    // syntax Bool ::= "checkRule" "(" PDCRule ")"              [function]
+    // syntax ErrorCode ::= "errorCase" "(" Bool "," ErrorCode "," ErrorCode ")"
+
     rule processModule ( MEL ) => verifyModule ( @PDCModule ( lookupRule ( findMainRuleId ( MEL ) , MEL ) , MEL ) )
                                                            [owise]
     rule verifyModule ( @PDCModule ( .PDCRule , _ ) ) => .PDCModule
@@ -172,6 +186,7 @@ module PDC-RULE-SEMANTICS
 
     rule rulestatusCase ( true , RS , _ ) => RS
     rule rulestatusCase ( _ , _ , RS ) => RS               [owise]
+
 
     rule paramListToIdList ( ( ) ) => .PDCIdList
     rule paramListToIdList ( ( .RuleParamList ) ) => .PDCIdList
@@ -528,7 +543,6 @@ module PDC-RULE-SEMANTICS
          </branches>
 
     // one-of empty, but not have branch
-
     rule <current-pattern> @one-of { .EntryList } NEXT </current-pattern>
          <rulestatus> RULESTATUS       => @Failed </rulestatus>
          <branches> .Bag </branches>
@@ -550,6 +564,7 @@ module PDC-RULE-SEMANTICS
     // ========================================================================
 
     rule <current-pattern> .EntryList </current-pattern>
+         // <current-stream> .PDCMSGList </current-stream>
          <rulestatus> @Running         => @Success </rulestatus>
          <branches> _                  => .Bag </branches>
 
@@ -617,10 +632,8 @@ module PDC-SETUP
                     <metadata>
                         <name> .K </name>
                     </metadata>
+                    // <ee> @AlgebraicExecution </ee>
                     <ee> @DirectExecution </ee>
-                    /*
-                    <ee> @AlgebraicExecution </ee>
-                    */
                     <error-code> @NoError </error-code>
                     <rulestatus> @InitInclude </rulestatus>
                 </T>
