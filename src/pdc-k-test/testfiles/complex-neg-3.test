@@ -1,0 +1,40 @@
+
+#> expose complex-neg-3.pdc ---------------------------------
+
+rule complex-neg-3 (A, B, C) {
+	start instantly
+	session
+}
+
+main-rule complex-neg-3
+
+rule session (A, B, C) {
+	A -> B : REQ
+	optional session
+	B -> C : REQ
+	optional session
+	C -> B : RES
+	optional session
+	B -> A : RES
+}
+
+
+
+#> expose complex-neg-3-msglist.txt -------------------------
+
+A -> B : REQ
+B -> C : REQ
+A -> B : REQ
+C -> B : RES
+B -> C : REQ
+B -> A : RES
+C -> B : RES
+B -> A : RES
+
+
+
+#> expose complex-neg-3-res.txt -----------------------------
+
+<expected>
+    <rulestatus> @Failed </rulestatus>
+</expected>

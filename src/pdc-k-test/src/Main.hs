@@ -222,6 +222,8 @@ complexUnitTestsList =
     , smarttest "complex-pos-2"
     , smarttest "complex-pos-3"
     , smarttest "complex-pos-4"
+    , smarttest "complex-pos-5"
+    , smarttest "complex-pos-6"
     , smarttest "complex-neg-1"
     , smarttest "complex-neg-2"
     ]

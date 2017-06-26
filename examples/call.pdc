@@ -135,3 +135,22 @@ rule another <pattern pt> {
 }
 
 
+
+
+rule bq (A, B, C) {
+    start instantly
+    buffered-queue {
+        A -> B : REQ
+        B -> C : REQ
+        C -> B : RES
+        B -> A : RES
+    }
+    buffered {
+        A -> B : REQ
+        B -> C : REQ
+        C -> B : RES
+        B -> A : RES
+    }
+}
+
+

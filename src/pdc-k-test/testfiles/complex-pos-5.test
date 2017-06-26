@@ -1,0 +1,36 @@
+
+#> expose complex-pos-5.pdc ---------------------------------
+
+rule complex-pos-5 (A, B, C) {
+	start instantly
+	session
+}
+
+main-rule complex-pos-5
+
+rule session (A, B, C) {
+	A -> B : REQ
+	optional session
+	B -> C : REQ
+	optional session
+	C -> B : RES
+	optional session
+	B -> A : RES
+}
+
+
+
+#> expose complex-pos-5-msglist.txt -------------------------
+
+A -> B : REQ
+B -> C : REQ
+C -> B : RES
+B -> A : RES
+
+
+
+#> expose complex-pos-5-res.txt -----------------------------
+
+<expected>
+    <rulestatus> @Success </rulestatus>
+</expected>
