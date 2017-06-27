@@ -118,7 +118,7 @@ module PDC-RULE-SYNTAX
                                                            [function]
 
   // interal syntax element
-  syntax Bool      ::= "isEntryList" "(" EntryList ")"     [function]
+  syntax Bool      ::= "isEmptyEntryList" "(" EntryList ")"     [function]
 
   // interal syntax element
   syntax PDCModule ::= "@PDCModule" "(" PDCRule "," PDCModuleEntryList ")"

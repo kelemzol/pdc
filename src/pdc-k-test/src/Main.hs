@@ -72,7 +72,7 @@ data ErrorCode
 (&.) c1 c2 = \ a -> (c1 a) && (c2 a)
 
 parseRuleResult :: String -> Maybe RuleResult
-parseRuleResult str = case filter ((/= ' ')) str of
+parseRuleResult str = case filter ((/=' ') &. (/='\n') &. (/='\t')) str of
     "@InitInclude" -> Just InitInclude
     "@InitPrepare" -> Just InitPrepare
     "@InitStart" -> Just InitStart
@@ -83,7 +83,7 @@ parseRuleResult str = case filter ((/= ' ')) str of
     _ -> Nothing
 
 parseErrorCode :: String -> Maybe ErrorCode
-parseErrorCode str = case filter ((/= ' ')) str of
+parseErrorCode str = case filter ((/=' ') &. (/='\n') &. (/='\t')) str of
     "@NoError" -> Just NoError
     "@NoDeclaredMainRule" -> Just NoDeclaredMainRule
     "@NotFindMainRule" -> Just NotFindMainRule

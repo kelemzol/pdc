@@ -1,11 +1,11 @@
-rule many-of-pos-8 () {
+rule many-of-pos-8 (A, B) {
 	start instantly
 	many-of {
 	    many-of {
 			A -> B : MSG
-			B -> A : MSG
 		}
 	}
+	A -> B : END
 }
 
 main-rule many-of-pos-8

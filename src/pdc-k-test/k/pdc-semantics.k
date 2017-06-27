@@ -99,7 +99,7 @@ module PDC-RULE-SEMANTICS
     //-------------------------------------------------------------------------
 
 
-    rule <k> MEL </k>
+    rule <k> MEL:PDCModuleEntryList </k>
          <pdc-module> .PDCModule       => processModule ( MEL ) </pdc-module>
          <rulestatus> @InitModule      => @InitStructuralCheck </rulestatus>
 
@@ -107,7 +107,7 @@ module PDC-RULE-SEMANTICS
     rule <pdc-module> .PDCModule </pdc-module>
          <rulestatus> @InitStructuralCheck
                                        => @Failed </rulestatus>
-         <k> MEL </k>
+         <k> MEL:PDCModuleEntryList </k>
          <error-code> @NoError         => errorCase ( findMainRuleId ( MEL ) ==PDCId .PDCId , @NoDeclaredMainRule , @NotFindMainRule ) </error-code>
 
     rule <pdc-module> MOD </pdc-module>
@@ -196,6 +196,10 @@ module PDC-RULE-SEMANTICS
 
     rule structuralCheck ( MOD ) => true
 
+    rule isEmptyEntryList ( .EntryList ) => true
+    rule isEmptyEntryList ( _ )          => false               [owise]
+
+
     // preparating/restructuring helper rule-functions
     // ------------------------------------------------------------------------
     
@@ -267,8 +271,6 @@ module PDC-RULE-SEMANTICS
                                                            [owise]
 
 
-    rule isEntryList ( .EntryList ) => true
-    rule isEntryList ( _ )          => false               [owise]
 
 
     rule @Failed ==RuleStatus @Failed => true
@@ -394,6 +396,7 @@ module PDC-RULE-SEMANTICS
 
 
     // algebraic variant
+/*
     rule <current-pattern> @many-of { EL } NEXT
                                        => @seq {
                                               @optional {
@@ -405,11 +408,48 @@ module PDC-RULE-SEMANTICS
                                                   .EntryList
                                               }
                                               NEXT
+                                              .EntryList
                                           }
                                           .EntryList
          </current-pattern>
          <ee> @AlgebraicExecution </ee>
+*/
+/*
+    rule <current-pattern> @many-of { EL } NEXT
+                                       => @optional {
+                                              @seq {
+                                                  @one-of { EL }
+                                                  @many-of { EL }
+                                                  // @seq { .EntryList }
+                                                  .EntryList
+                                              }
+                                              .EntryList
+                                          }
+                                          NEXT
+                                          // .EntryList
+         </current-pattern>
+         <ee> @AlgebraicExecution </ee>
+*/
 
+
+
+    rule <current-pattern> @many-of { EL } NEXT
+                                       => @one-of {
+                                              @seq {
+                                                  @one-of { EL }
+                                                  @one-of {
+                                                      @seq { .EntryList }
+                                                      @many-of { EL }
+                                                      .EntryList
+                                                  }
+                                                  .EntryList
+                                              }
+                                              @seq { .EntryList }
+                                              .EntryList
+                                          }
+                                          NEXT
+         </current-pattern>
+         <ee> @AlgebraicExecution </ee>
 
 
 
@@ -436,13 +476,15 @@ module PDC-RULE-SEMANTICS
     // algebraic variant
     rule <current-pattern> @optional { EL } NEXT
                                        => @one-of {
-                                              @seq { appendEL(EL, NEXT) }
-                                              @seq { NEXT }
+                                              @seq { EL }
+                                              @seq { .EntryList }
                                               .EntryList
                                           }
+                                          @seq { NEXT }
                                           .EntryList
          </current-pattern>
          <ee> @AlgebraicExecution </ee>
+
 
 
     // CALL -------------------------------------------------------------------
@@ -606,7 +648,7 @@ module PDC-SETUP
 
   configuration <T>
                     // Original Program
-                    <k> $PGM </k>
+                    <k> $PGM:PDCModuleEntryList </k>
                     // original preparated entry list
                     <orig> .EntryList </orig>
                     // Entries
@@ -632,8 +674,8 @@ module PDC-SETUP
                     <metadata>
                         <name> .K </name>
                     </metadata>
-                    // <ee> @AlgebraicExecution </ee>
-                    <ee> @DirectExecution </ee>
+                    <ee> @AlgebraicExecution </ee>
+                    // <ee> @DirectExecution </ee>
                     <error-code> @NoError </error-code>
                     <rulestatus> @InitInclude </rulestatus>
                 </T>
