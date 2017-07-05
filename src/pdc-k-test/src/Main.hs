@@ -192,6 +192,8 @@ moreOfUnitTestsList =
     , smarttest "more-of-pos-11"
     , smarttest "more-of-pos-12"
     , smarttest "more-of-pos-13"
+    , smarttest "more-of-pos-15"
+    , smarttest "more-of-pos-14"
     ]
 msgRelatedUnitTestsList =
     [ smarttest "msg-related-pos-1"

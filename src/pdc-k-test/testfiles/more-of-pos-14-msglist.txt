@@ -1,0 +1,11 @@
+
+A -> B : MSG1
+A -> B : MSG4
+A -> B : MSG2
+A -> B : MSG3
+A -> B : MSG3
+A -> B : MSG2
+A -> B : MSG1
+A -> B : MSG4
+A -> B : END
+

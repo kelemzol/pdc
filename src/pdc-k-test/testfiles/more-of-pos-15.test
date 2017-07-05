@@ -1,0 +1,25 @@
+
+#> expose more-of-pos-15.pdc -------------------------------
+
+rule more-of-pos-15 (A, B) {
+	start instantly
+	more-of {
+	    optional A -> B : MSG1
+		A -> B : MSG2
+		
+	}
+	A -> B : END
+}
+
+main-rule more-of-pos-15
+
+
+#> expose more-of-pos-15-msglist.txt -----------------------
+
+A -> B : MSG1
+A -> B : MSG2
+A -> B : END
+
+#> expose more-of-pos-15-res.txt ---------------------------
+
+<rulestatus> @Success </rulestatus>

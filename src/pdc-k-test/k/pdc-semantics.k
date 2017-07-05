@@ -326,13 +326,13 @@ module PDC-RULE-SEMANTICS
     // ONE-OF -----------------------------------------------------------------
     // ------------------------------------------------------------------------
     rule <current-pattern> @one-of { E EL } NEXT
-                                       => E NEXT </current-pattern>
+                                       => @one-of { EL } NEXT /* E NEXT */ </current-pattern>
          <current-stream> SEQUENCE </current-stream>
          <current-process-instances> PIS </current-process-instances>
          <rulestatus> RULESTATUS </rulestatus>
          <branches>
              (.Bag => <branch>
-                          <branch-pattern> @one-of { EL } NEXT </branch-pattern>
+                          <branch-pattern> E NEXT /* @one-of { EL } NEXT */ </branch-pattern>
                           <branch-stream> SEQUENCE </branch-stream>
                           <branch-process-instances> PIS </branch-process-instances>
                           <branch-rulestatus> RULESTATUS </branch-rulestatus>
@@ -362,6 +362,20 @@ module PDC-RULE-SEMANTICS
 
     // algebraic variant
     rule <current-pattern> @more-of { EL } NEXT
+                                       => @one-of { EL }
+//                                          @one-of {
+//                                              @seq { .EntryList }
+//                                              @more-of { EL }
+//                                              .EntryList
+//                                          }
+                                          @optional { @more-of { EL } .EntryList }
+                                          NEXT
+         </current-pattern>
+         <ee> @AlgebraicExecution </ee>
+
+
+/*    
+    rule <current-pattern> @more-of { EL } NEXT
                                        => @seq {
                                               @one-of { EL }
                                               @optional {
@@ -373,7 +387,7 @@ module PDC-RULE-SEMANTICS
                                           .EntryList
          </current-pattern>
          <ee> @AlgebraicExecution </ee>
-
+*/
 
 
     // MANY-OF ----------------------------------------------------------------
@@ -396,43 +410,13 @@ module PDC-RULE-SEMANTICS
 
 
     // algebraic variant
-/*
+
     rule <current-pattern> @many-of { EL } NEXT
-                                       => @seq {
-                                              @optional {
-                                                  @seq {
-                                                      @one-of { EL }
-                                                      @many-of { EL }
-                                                      .EntryList
-                                                  }
-                                                  .EntryList
-                                              }
-                                              NEXT
-                                              .EntryList
-                                          }
-                                          .EntryList
+                                       => @optional { @more-of { EL } .EntryList } NEXT
          </current-pattern>
          <ee> @AlgebraicExecution </ee>
-*/
+
 /*
-    rule <current-pattern> @many-of { EL } NEXT
-                                       => @optional {
-                                              @seq {
-                                                  @one-of { EL }
-                                                  @many-of { EL }
-                                                  // @seq { .EntryList }
-                                                  .EntryList
-                                              }
-                                              .EntryList
-                                          }
-                                          NEXT
-                                          // .EntryList
-         </current-pattern>
-         <ee> @AlgebraicExecution </ee>
-*/
-
-
-
     rule <current-pattern> @many-of { EL } NEXT
                                        => @one-of {
                                               @seq {
@@ -450,7 +434,7 @@ module PDC-RULE-SEMANTICS
                                           NEXT
          </current-pattern>
          <ee> @AlgebraicExecution </ee>
-
+*/
 
 
     // OPTIONAL ---------------------------------------------------------------
@@ -480,8 +464,7 @@ module PDC-RULE-SEMANTICS
                                               @seq { .EntryList }
                                               .EntryList
                                           }
-                                          @seq { NEXT }
-                                          .EntryList
+                                          NEXT
          </current-pattern>
          <ee> @AlgebraicExecution </ee>
 
@@ -525,6 +508,7 @@ module PDC-RULE-SEMANTICS
          <current-process-instances> _ => PIS </current-process-instances>
          <rulestatus> X                => RULESTATUS </rulestatus>
          <branches>
+             // ...
              (<branch>
                  <branch-pattern> EL </branch-pattern>
                  <branch-stream> SL </branch-stream>
@@ -557,6 +541,7 @@ module PDC-RULE-SEMANTICS
          <current-process-instances> _ => PIS </current-process-instances>
          <rulestatus> X                => RULESTATUS </rulestatus>
          <branches>
+             // ...
              (<branch>
                  <branch-pattern> EL </branch-pattern>
                  <branch-stream> SEQUENCE </branch-stream>
@@ -574,6 +559,7 @@ module PDC-RULE-SEMANTICS
          <current-process-instances> _ => PIS </current-process-instances>
          <rulestatus> _                => RULESTATUS </rulestatus>
          <branches>
+             // ...
              (<branch>
                  <branch-pattern> EL </branch-pattern>
                  <branch-stream> SEQUENCE </branch-stream>

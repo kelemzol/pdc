@@ -1,0 +1,27 @@
+
+rule more-of-pos-14 (A, b) {
+	start instantly
+	more-of {
+	    optional more-of {
+	    	more-of {
+			    A -> B : MSG1
+		    }
+		    more-of {
+		    	more-of {
+		    		A -> B : MSG2
+		    	}
+		    }
+		}
+		more-of {
+			A -> B : MSG3
+			more-of {
+				A -> B : MSG4
+			}
+		}
+	}
+	A -> B : END
+}
+
+main-rule more-of-pos-14
+
+

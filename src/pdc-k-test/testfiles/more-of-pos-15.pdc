@@ -1,0 +1,14 @@
+
+rule more-of-pos-15 (A, B) {
+	start instantly
+	more-of {
+	    optional A -> B : MSG1
+		A -> B : MSG2
+		
+	}
+	A -> B : END
+}
+
+main-rule more-of-pos-15
+
+
