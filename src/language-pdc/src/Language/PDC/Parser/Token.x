@@ -10,6 +10,7 @@ module Language.PDC.Parser.Token ( Pos(..)
                                  , insertWs
                                  , isTkWs
                                  , isTkId
+                                 , tokeneq
                                  ) where
 }
 
@@ -22,6 +23,7 @@ $lc = [a-z]
 
 tokens :-
     $white+                            { vtok TkWs }
+    "module"                           { tok TkModule }
     "rule"                             { tok TkRule }
     "start"                            { tok TkStart }
     "seq"                              { tok TkSeq }
@@ -29,8 +31,10 @@ tokens :-
     "one-of"                           { tok TkOneOf }
     "more-of"                          { tok TkMoreOf }
     "many-of"                          { tok TkManyOf }
+    "interleave"                       { tok TkInterleave }
     "instantly"                        { tok TkInstantly }
     "main-rule"                        { tok TkMainRule }
+    "export"                           { tok TkExport }
     "->"                               { tok TkArrow }
     ":"                                { tok TkColon }
     ","                                { tok TkComma }
@@ -38,6 +42,10 @@ tokens :-
     "}"                                { tok TkBraceClose }
     "("                                { tok TkBracketOpen }
     ")"                                { tok TkBracketClose }
+    "<"                                { tok TkAngleOpen }
+    ">"                                { tok TkAngleClose }
+    "["                                { tok TkSquareOpen }
+    "]"                                { tok TkSquareClose }
     $uc [$alpha $digit \_ \']*         { vtok TkIdUC }
     $lc [$alpha $digit \_ \']*         { vtok TkIdLC }
 
@@ -62,6 +70,7 @@ apos2pos (AlexPn _ l c) s = Pos l c ("[l:" ++ show l ++ ",c:" ++ show c ++ "]") 
 
 data Token
   = TkWs           { pos :: Pos, tkws :: String }
+  | TkModule       { pos :: Pos }
   | TkRule         { pos :: Pos }
   | TkStart        { pos :: Pos }
   | TkSeq          { pos :: Pos }
@@ -69,8 +78,10 @@ data Token
   | TkOneOf        { pos :: Pos }
   | TkMoreOf       { pos :: Pos }
   | TkManyOf       { pos :: Pos }
+  | TkInterleave   { pos :: Pos }
   | TkInstantly    { pos :: Pos }
   | TkMainRule     { pos :: Pos }
+  | TkExport       { pos :: Pos }
   | TkArrow        { pos :: Pos }
   | TkColon        { pos :: Pos }
   | TkComma        { pos :: Pos }
@@ -78,14 +89,46 @@ data Token
   | TkBraceClose   { pos :: Pos }
   | TkBracketOpen  { pos :: Pos }
   | TkBracketClose { pos :: Pos }
+  | TkAngleOpen    { pos :: Pos }
+  | TkAngleClose   { pos :: Pos }
+  | TkSquareOpen   { pos :: Pos }
+  | TkSquareClose  { pos :: Pos }
   | TkIdLC         { pos :: Pos, tkid :: String }
   | TkIdUC         { pos :: Pos, tkid :: String }
   deriving (Eq, Ord, Show)
 
+tokeneq :: Token -> Token -> Bool
+tokeneq (TkWs _ _) (TkWs _ _) = True
+tokeneq (TkModule _) (TkModule _) = True
+tokeneq (TkRule _) (TkRule _) = True
+tokeneq (TkStart _) (TkStart _) = True
+tokeneq (TkSeq _) (TkSeq _) = True
+tokeneq (TkOptional _) (TkOptional _) = True
+tokeneq (TkOneOf _) (TkOneOf _) = True
+tokeneq (TkMoreOf _) (TkMoreOf _) = True
+tokeneq (TkManyOf _) (TkManyOf _) = True
+tokeneq (TkInstantly _) (TkInstantly _) = True
+tokeneq (TkMainRule _) (TkMainRule _) = True
+tokeneq (TkExport _) (TkExport _) = True
+tokeneq (TkArrow _) (TkArrow _) = True
+tokeneq (TkColon _) (TkColon _) = True
+tokeneq (TkComma _) (TkComma _) = True
+tokeneq (TkBraceOpen _) (TkBraceOpen _) = True
+tokeneq (TkBraceClose _) (TkBraceClose _) = True
+tokeneq (TkBracketOpen _) (TkBracketOpen _) = True
+tokeneq (TkBracketClose _) (TkBracketClose _) = True
+tokeneq (TkAngleOpen _) (TkAngleOpen _) = True
+tokeneq (TkAngleClose _) (TkAngleClose _) = True
+tokeneq (TkSquareOpen _) (TkSquareOpen _) = True
+tokeneq (TkSquareClose _) (TkSquareClose _) = True
+tokeneq (TkIdLC _ _) (TkIdLC _ _) = True
+tokeneq (TkIdUC _ _) (TkIdUC _ _) = True
+tokeneq _ _ = False
+
 prettyTokens :: [Token] -> String
 prettyTokens = concat . map (origSrc . pos)
 
-tokenize = alexScanTokens
+tokenize = filterWs . alexScanTokens
 
 printTokensWithPos = printTokensGen show
 printTokens = printTokensGen showTok

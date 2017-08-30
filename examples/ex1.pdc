@@ -1,3 +1,13 @@
+module example
+
+export simple-rule
+export missing
+export simple-rule
+
+rule simple-rule(A, B) {
+	A -> B : DD
+}
+
 rule simple-rule(A, B) {
     A -> B : REQ
     many-of {

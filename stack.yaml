@@ -1,6 +1,8 @@
-resolver: lts-8.8
+resolver: lts-9.2
 
 packages:
   - src/language-pdc
-  - src/pdc-krunner
-  - src/pdc-k-test
+  - src/interpreter-pdc
+  - src/pdc
+#  - src/pdc-krunner
+#  - src/pdc-k-test

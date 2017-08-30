@@ -1,0 +1,19 @@
+
+module Example
+
+export simple
+
+rule simple(A, B, C, x, y) {
+    A -> B : MSG
+    extPI <A, C>
+    extPV <x, y>
+}
+
+rule extPI <A, B> () {
+    A -> B : MSG
+}
+
+rule expPV <a, b> () {
+    a -> b : MSG
+}
+
