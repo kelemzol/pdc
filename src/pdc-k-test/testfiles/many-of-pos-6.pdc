@@ -1,9 +1,0 @@
-rule many-of-pos-6 () {
-	start instantly
-	many-of {
-		A -> B : MSG
-		B -> A : MSG
-	}
-}
-
-main-rule many-of-pos-6

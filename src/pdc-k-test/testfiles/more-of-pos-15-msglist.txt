@@ -1,5 +1,0 @@
-
-A -> B : MSG1
-A -> B : MSG2
-A -> B : END
-

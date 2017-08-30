@@ -1,6 +1,0 @@
-rule start-pos-1 (A, B) {
-	start A -> B : REQ
-    B -> A : RES
-}
-
-main-rule start-pos-1

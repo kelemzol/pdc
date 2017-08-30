@@ -1,8 +1,0 @@
-rule many-of-pos-4 () {
-	start instantly
-	many-of {
-		A -> B : MSG
-	}
-}
-
-main-rule many-of-pos-4

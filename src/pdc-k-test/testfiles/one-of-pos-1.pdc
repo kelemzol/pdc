@@ -1,8 +1,0 @@
-rule one-of-pos-1 (A, B) {
-	start instantly
-	one-of {
-	    A -> B : MSG
-	}
-}
-
-main-rule one-of-pos-1
