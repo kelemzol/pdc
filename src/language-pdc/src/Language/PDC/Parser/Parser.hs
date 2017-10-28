@@ -4,7 +4,11 @@
            #-}
 
 
-module Language.PDC.Parser.Parser (moduleParser, moduleParser') where
+module Language.PDC.Parser.Parser ( moduleParser
+                                  , moduleParserIO
+                                  , msgListParser
+                                  , msgListParserIO
+                                  ) where
 
 import Control.Monad
 
@@ -32,24 +36,38 @@ tpos2ppos (Pos {..}) = newPos "Language.PDC.Parser.Parser.<stream>" posLine posC
 
 type PDCParser = Parsec [Token] ()
 
-moduleParser' :: String -> String -> Either ParseError PDCModule
-moduleParser' fn = parse parseModule fn . tokenize
+type BasicParser a = String -> String -> Either ParseError a
 
-moduleParser :: String -> IO (Either String PDCModule)
-moduleParser fn = do
+
+rawParser :: PDCParser a -> BasicParser a
+rawParser rp fn = parse rp fn . tokenize
+
+moduleParser :: BasicParser PDCModule
+moduleParser = rawParser parseModule -- parse parseModule fn . tokenize
+
+msgListParser :: BasicParser [PDCMsgP]
+msgListParser = rawParser (many parseMsgP) -- parse (many parseMsgP) fn . tokenize
+
+
+parserIO :: BasicParser a -> String -> IO (Either String a)
+parserIO bp fn = do
     content <- readFile fn
-    case moduleParser' fn content of
+    case bp fn content of
         (Left e) -> return $ Left (show e)
         (Right m) -> return $ Right m
 
+moduleParserIO :: String -> IO (Either String PDCModule)
+moduleParserIO = parserIO moduleParser
 
+msgListParserIO :: String -> IO (Either String [PDCMsgP])
+msgListParserIO = parserIO msgListParser
 
 getSourceInfoP :: PDCParser SourceInfo
 getSourceInfoP = SourceInfo <$> getPosition
 
 
 tkUc, tkLc :: PDCParser String
-tkModule, tkRule, tkStart, tkSeq, tkOptional, tkOneOf, tkMoreOf, tkManyOf, tkInterleave, tkInstantly :: PDCParser ()
+tkModule, tkRule, tkStart, tkSeq, tkOptional, tkOneOf, tkMoreOf, tkManyOf, tkInterleave, tkInstantly, tkMerge :: PDCParser ()
 tkExport, tkArrow, tkColon, tkComma, tkBraceOpen, tkBraceClose, tkBracketOpen, tkBracketClose, tkAngleOpen, tkAngleClose, tkSquareOpen, tkSquareClose :: PDCParser ()
 brace, bracket, angle, square :: PDCParser a -> PDCParser a
 
@@ -65,6 +83,7 @@ tkMoreOf       = normTok TkMoreOf
 tkManyOf       = normTok TkManyOf
 tkInterleave   = normTok TkInterleave
 tkInstantly    = normTok TkInstantly
+tkMerge        = normTok TkMerge
 tkExport       = normTok TkExport
 tkArrow        = normTok TkArrow
 tkColon        = normTok TkColon
@@ -115,6 +134,7 @@ parsePDCRulePattern = (try (PDCSeqPattern <$> parsePDCSeqP))
                   <|> (try (PDCManyofPattern <$> parseManyOfP))
                   <|> (try (PDCInterleavePattern <$> parseInterleaveP))
                   <|> (try (PDCOptionalPattern <$> parseOptionalP))
+                  <|> (try (PDCMergePattern <$> parseMergeP))
                   <|> (try (PDCMsgPattern <$> parseMsgP))
                   <|>      (PDCCallPattern <$> parseCallP)
                   <?> "PDC-rule-pattern"
@@ -139,6 +159,7 @@ parseOneOfP = blockPatternConstructor PDCOneOfP tkOneOf
 parseMoreOfP = blockPatternConstructor PDCMoreOfP tkMoreOf
 parseManyOfP = blockPatternConstructor PDCManyOfP tkManyOf
 parseInterleaveP = blockPatternConstructor PDCInterleaveP tkInterleave
+parseMergeP = blockPatternConstructor PDCMergeP tkMerge
 parseOptionalP = PDCOptionalP <$> getSourceInfoP <*> (tkOptional *> blockOrSingleton)
 parseMsgP = PDCMsgP <$> getSourceInfoP <*> parsePDCId <*> (tkArrow *> parsePDCId) <*> (tkColon *> parsePDCId) <*> (pure ())
 parseCallP = PDCCallP <$> getSourceInfoP <*> parsePDCId

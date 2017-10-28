@@ -33,7 +33,7 @@ tokens :-
     "many-of"                          { tok TkManyOf }
     "interleave"                       { tok TkInterleave }
     "instantly"                        { tok TkInstantly }
-    "main-rule"                        { tok TkMainRule }
+    "merge"                            { tok TkMerge }
     "export"                           { tok TkExport }
     "->"                               { tok TkArrow }
     ":"                                { tok TkColon }
@@ -80,7 +80,7 @@ data Token
   | TkManyOf       { pos :: Pos }
   | TkInterleave   { pos :: Pos }
   | TkInstantly    { pos :: Pos }
-  | TkMainRule     { pos :: Pos }
+  | TkMerge       { pos :: Pos }
   | TkExport       { pos :: Pos }
   | TkArrow        { pos :: Pos }
   | TkColon        { pos :: Pos }
@@ -108,7 +108,7 @@ tokeneq (TkOneOf _) (TkOneOf _) = True
 tokeneq (TkMoreOf _) (TkMoreOf _) = True
 tokeneq (TkManyOf _) (TkManyOf _) = True
 tokeneq (TkInstantly _) (TkInstantly _) = True
-tokeneq (TkMainRule _) (TkMainRule _) = True
+tokeneq (TkMerge _) (TkMerge _) = True
 tokeneq (TkExport _) (TkExport _) = True
 tokeneq (TkArrow _) (TkArrow _) = True
 tokeneq (TkColon _) (TkColon _) = True

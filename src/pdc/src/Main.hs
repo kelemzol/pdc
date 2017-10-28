@@ -7,15 +7,21 @@ module Main where
 import Options.Applicative
 import Control.Monad
 import Data.Semigroup ((<>))
+import Data.List
 
 import Language.PDC.Parser
+import Language.PDC.Repr
 import Language.PDC.SemanticChecker
 import Language.PDC.PDCSemanticChecker
+
+import Language.PDC.Interpreter
+
 
 data Options
   = Options
     { inputRuleFile :: String
     , inputMsgListFile :: String
+    , mainRule :: String
     , msgfileParser :: String
     , debugMode :: Bool
     , showWarnings :: Bool
@@ -32,14 +38,24 @@ debug (Options {..}) sl a = when debugMode $ do
 work :: Options -> IO ()
 work options@(Options {..}) = do
     debug options "options" options
-    mod <- moduleParser inputRuleFile
-    case mod of
-        (Left e) -> putStrLn "Parser fail" >> putStrLn e
-        (Right mod) -> do
-            debug options "module" mod
-            issues <- runPDCSemanticChecker mod
-            debug options "issues" issues
-            putStrLn (unlines $ concat $ map showIssue $ selectIssues options issues)
+    modParseRes <- moduleParserIO inputRuleFile
+    msglistParseRes <- msgListParserIO inputMsgListFile
+    case (modParseRes, msglistParseRes) of
+        (Left r, Left m) -> do
+            putStrLn "Rule parsing fail" >> putStrLn r
+            putStrLn "Msg list parsing fail" >> putStrLn m
+        (Left r, _) -> putStrLn "Rule parsing fail" >> putStrLn r
+        (_, Left m) -> putStrLn "Msg list parsing fail" >> putStrLn m
+        (Right (PDCModule {..}), Right msglist) -> do
+            case find (\ re -> pdcid (pdcRuleName re) == mainRule) $ filterRuleEntries pdcModuleEntries of
+                Nothing -> putStrLn "not found main rule"
+                (Just re) -> putStrLn $ show $ eval re msglist
+            -- debug options "module" mod
+            -- issues <- runPDCSemanticChecker mod
+            -- debug options "issues" issues
+            -- putStrLn (unlines $ concat $ map showIssue $ selectIssues options issues)
+            return ()
+
     debug options "done." ()
 
 selectIssues :: Options -> [Issue a] -> [Issue a]
@@ -47,12 +63,10 @@ selectIssues (Options {..}) is = if showHints then filter isHint is else []
                               ++ if showWarnings then filter isWarning is else []
                               ++ (filter isError is)
 
-showIssue :: Issue PDCSlogen -> [String]
-showIssue (Hint sl desc) = ["\nHINT: " ++ showPDCSlogen sl, desc]
-showIssue (Warning sl desc) = ["\bWARNING: " ++ showPDCSlogen sl, desc]
-showIssue (Error sl desc) = ["\nERROR: " ++ showPDCSlogen sl, desc]
-
-
+showIssue :: (Message ms) => Issue ms -> [String]
+showIssue (Hint desc) = ["\nHINT: ", message2readable desc]
+showIssue (Warning desc) = ["\bWARNING: ", message2readable desc]
+showIssue (Error desc) = ["\nERROR: ", message2readable desc]
 
 
 
@@ -75,6 +89,10 @@ optParser = Options
         ( long "msg-list-file"
        <> metavar "FILE"
        <> help "input msg list file" )
+    <*> strOption
+        ( long "main-rule"
+       <> metavar "RULE-NAME"
+       <> help "name of runnable main rule")
     <*> option auto
         ( long "msg-parser"
        <> metavar "PARSERNAME"

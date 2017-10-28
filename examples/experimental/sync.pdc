@@ -1,0 +1,64 @@
+
+module sync-example
+
+rule sync-example (A, B, C) {
+    start instantly
+    many-of {
+        merge {
+            seq {
+                A -> B: REQ
+                B -> C: REQ
+                C -> A: RES
+            }
+            seq {
+                B -> C: REQ
+                C -> A: REQ
+                A -> B: RES
+            }
+        }
+    }
+}
+
+{---------------------------
+        merge {
+            seq {
+                sync p B
+                B -> A: REQ
+                A -> B: RES
+            }
+            seq {
+                sync p A
+                A -> B: REQ
+                B -> A: RES
+            }
+        }
+----------------------------}
+{-
+merge :: [cmd] -> [cmd] -> [[cmd]]
+merge [] cmd = cmd
+merge cmd [] = cmd
+merge (x:xs) (y:ys) = (x : merge xs (y:ys)) ++ (y : merge (x:xs) ys)
+-}
+merge :: [cmd] -> [cmd] -> [[cmd]]
+merge [] cmd = cmd
+merge cmd [] = cmd
+merge (sync p x: xs) (y:ys) = 
+merge (x:xs) (y:ys) = (x : merge xs (y:ys)) ++ (y : merge (x:xs) ys)
+{-
+
+
+-}
+
+rule sync-example (A, B) {
+    start instantly
+    many-of {
+        one-of {
+            B -> A: REQ
+            A -> B: RES
+        }
+        one-of {
+            A -> B: REQ
+            B -> A: RES
+        }
+    }
+}

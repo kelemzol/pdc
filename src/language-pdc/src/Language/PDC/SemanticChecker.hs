@@ -18,39 +18,34 @@ import Data.Maybe
 import Data.Traversable
 import Data.Foldable
 
-import Language.PDC.Repr
+import qualified Data.Aeson as JSON
+import qualified Data.ByteString.Lazy.Char8 as BL
 
-type SemanticChecker slogen level a = ReaderT level (WriterT [Issue slogen] IO) a
+type SemanticChecker ms level a = ReaderT level (WriterT [Issue ms] IO) a
 
 -- type PDCModuleSemanticChecker = SemanticChecker PDCModule
 
 runSemanticChecker :: SemanticChecker slogen level a -> level -> IO (a, [Issue slogen])
 runSemanticChecker sc level = runWriterT (runReaderT sc level)
 
-data Issue slogen
-  = Hint slogen String
-  | Warning slogen String
-  | Error slogen String
+data Issue ms
+  = Hint ms
+  | Warning ms
+  | Error ms
   deriving (Eq, Ord, Show)
 
 isHint :: Issue a -> Bool
-isHint (Hint _ _) = True
+isHint (Hint _) = True
 isHint _ = False
 
 isWarning :: Issue a -> Bool
-isWarning (Warning _ _) = True
+isWarning (Warning _) = True
 isWarning _ = False
 
 isError :: Issue a -> Bool
-isError (Error _ _) = True
+isError (Error _) = True
 isError _ = False
 
-
-data IssueEnv
-  = IssueEnv
-    { 
-    }
-  deriving (Eq, Ord, Show)
 
 {-
 hintAssert :: slogen -> Bool -> String -> SemanticChecker slogen level ()
@@ -78,34 +73,56 @@ instance Verdict (Maybe a) where
 may :: (a -> Bool) -> a -> Maybe a
 may c a = if not (c a) then Just a else Nothing
 
+class Message a where
+    message2readable :: a -> String
+    message2workable :: a -> JSON.Value
+    workable2message :: JSON.Value -> a
+
+    message2string :: a -> String
+    string2message :: String -> a
+
+    message2string = BL.unpack . JSON.encode . message2workable
+    string2message = workable2message . fromJust . JSON.decode . BL.pack
 
 
-errorAssert1 :: (Verdict v) => slogen -> (level -> v) -> (v -> String) -> SemanticChecker slogen level ()
-errorAssert1 slogen cond desc = ask >>= flip (assert Error slogen) desc . cond
+
+errorAssert1 :: (Verdict v, Message ms) => (level -> v) -> (v -> ms) -> SemanticChecker ms level ()
+errorAssert1 cond desc = ask >>= flip (assert Error) desc . cond
 --    lvl <- ask
 --    assert Error slogen (cond lvl) desc
 
 
-assert :: (Verdict v) => (slogen -> String -> Issue slogen) -> slogen -> v -> (v -> String) -> SemanticChecker slogen level ()
-assert i slogen (v@(verdict -> False)) descf = tell [i slogen (descf v)]
-assert i _ _ _ = return ()
+assert :: (Verdict v, Message ms) => (ms -> Issue ms) -> v -> (v -> ms) -> SemanticChecker ms level ()
+assert i (v@(verdict -> False)) descf = tell [i (descf v)]
+assert i _ _ = return ()
 
 
-down :: (level -> downLevel) -> SemanticChecker slogen downLevel a -> SemanticChecker slogen level a
+down :: (Message ms)
+     => (level -> downLevel)
+     -> SemanticChecker ms downLevel a
+     -> SemanticChecker ms level a
 down to sc = do
     lvl <- ask
     (a, is) <- liftIO $ runSemanticChecker sc (to lvl)
     tell is
     return a
 
-downA :: (level -> downLevel) -> (level -> info) -> (info -> SemanticChecker slogen downLevel a) -> SemanticChecker slogen level a
+downA :: (Message ms)
+      => (level -> downLevel)
+      -> (level -> info)
+      -> (info -> SemanticChecker ms downLevel a)
+      -> SemanticChecker ms level a
 downA to inf sc = do
     lvl <- ask
     (a, is) <- liftIO $ runSemanticChecker (sc (inf lvl)) (to lvl)
     tell is
     return a
 
-downTA :: (Traversable t, Monoid a) => (level -> t downLevel) -> (level -> info) -> (info -> SemanticChecker slogen downLevel a) -> SemanticChecker slogen level a
+downTA :: (Traversable t, Monoid a, Message ms)
+       => (level -> t downLevel)
+       -> (level -> info)
+       -> (info -> SemanticChecker ms downLevel a)
+       -> SemanticChecker ms level a
 downTA to inf sc = do
   lvl <- ask
   tt <- forM (to lvl) $ \ lvl' -> liftIO $ runSemanticChecker (sc (inf lvl)) lvl'
@@ -113,7 +130,7 @@ downTA to inf sc = do
   tell is
   return a
 
-downRA :: (Traversable t, Monoid a) => (level -> t level) -> (level -> info) -> (info -> SemanticChecker slogen level a) -> SemanticChecker slogen level a
+downRA :: (Traversable t, Monoid a, Message ms) => (level -> t level) -> (level -> info) -> (info -> SemanticChecker ms level a) -> SemanticChecker ms level a
 downRA to inf sc = do
   lvl <- ask
   tt <- forM (to lvl) $ \ lvl' -> liftIO $ runSemanticChecker (sc (inf lvl)) lvl'
