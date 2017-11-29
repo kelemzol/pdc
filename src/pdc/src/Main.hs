@@ -15,6 +15,7 @@ import Language.PDC.SemanticChecker
 import Language.PDC.PDCSemanticChecker
 
 import Language.PDC.Interpreter
+import Language.PDC.Interpreter.EvalRepr
 
 
 data Options
@@ -49,7 +50,8 @@ work options@(Options {..}) = do
         (Right (PDCModule {..}), Right msglist) -> do
             case find (\ re -> pdcid (pdcRuleName re) == mainRule) $ filterRuleEntries pdcModuleEntries of
                 Nothing -> putStrLn "not found main rule"
-                (Just re) -> putStrLn $ show $ eval re msglist
+                (Just re) -> cliNode $ ast2node (pdcRulePattern re)
+                    -- putStrLn $ prettyNode $ ast2node (pdcRulePattern re) -- show $ eval re msglist
             -- debug options "module" mod
             -- issues <- runPDCSemanticChecker mod
             -- debug options "issues" issues

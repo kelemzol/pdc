@@ -1,0 +1,68 @@
+
+rule atm(User, ATM) {
+    User -> ATM: Identifier
+    one-of {
+        seq {
+            ATM -> USER: Success
+            one-of {
+                seq {
+                    User -> ATM: Deposit
+                    User -> ATM: Amount
+                    ATM -> USer: Balance
+                }
+                seq {
+                    User -> ATM: Withdraw
+                    User -> ATM: Amount
+                    one-of {
+                        ATM -> User: Dispense
+                        ATM -> User: Overdraft
+                    }
+                }
+            }
+        }
+        ATM -> User: Failure
+    }
+}
+
+
+
+
+
+
+
+
+
+
+rule atm2(User, ATM) {
+    login <work>
+}
+
+rule login <proc C, proc S, rule(proc C, proc S) work> (C, S) {
+    C -> S: Identifier
+    one-of {
+        seq {
+            S -> C: Success
+            work
+        }
+        S -> C: Failure
+    }    
+}
+
+rule work (User, ATM) {
+    ATM -> USER: Success
+    one-of {
+        seq {
+            User -> ATM: Deposit
+            User -> ATM: Amount
+            ATM -> USer: Balance
+        }
+        seq {
+            User -> ATM: Withdraw
+            User -> ATM: Amount
+            one-of {
+                ATM -> User: Dispense
+                ATM -> User: Overdraft
+            }
+        }
+    }
+}

@@ -298,6 +298,16 @@ filterRuleEntries = catMaybes . map maybeRuleEntry
 filterExportEntries :: [PDCModuleEntry] -> [PDCExportE]
 filterExportEntries = catMaybes . map maybeExportEntry
 
-
-
-
+prettyPDCRulePattern :: PDCRulePattern -> String
+prettyPDCRulePattern  (PDCMsgPattern (PDCMsgP{..})) = "(" ++ (pdcid pdcMsgFrom) ++ "->" ++ (pdcid pdcMsgTo) ++ ":" ++ (pdcid pdcMsgType) ++ ")"
+prettyPDCRulePattern  (PDCSeqPattern (PDCSeqP{..})) = "seq{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsSeq) ++ "}"
+prettyPDCRulePattern  (PDCStartInstantlyPattern (PDCStartInstantlyP{..})) = "start instantly"
+prettyPDCRulePattern  (PDCOneOfPattern (PDCOneOfP{..})) = "one-of{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsOneOf) ++ "}"
+prettyPDCRulePattern  (PDCManyofPattern (PDCManyOfP{..})) = "many-of{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsManyOf) ++ "}"
+prettyPDCRulePattern  (PDCMergePattern (PDCMergeP{..})) = "merge{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsMerge) ++ "}"
+prettyPDCRulePattern  (PDCOptionalPattern (PDCOptionalP{..})) = "optinal{" ++ (prettyPDCRulePattern pdcRulePatternOptional) ++ "}"
+--prettyPDCRulePattern  (PDCStartPattern (PDCStartP{..}))
+--prettyPDCRulePattern  (PDCMoreOfPattern (PDCMoreOfP{..}))
+--prettyPDCRulePattern  (PDCManyofPattern (PDCManyOfP{..}))
+--prettyPDCRulePattern  (PDCInterleavePattern (PDCInterleaveP{..}))
+--prettyPDCRulePattern  (PDCCallPattern (PDCCallP{..}))

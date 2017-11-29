@@ -1,0 +1,37 @@
+
+
+rule attr-ex(A, B)
+    decl {
+        id : ID
+}
+{
+    start instantly
+    A -> B: REQ {
+        id = msg.id
+    }
+    B -> A: RES {
+        if msg.reqId /= id
+            then fail
+    }
+}
+
+
+rule attr-ex(A, B)
+    decl {
+        id : ID
+        custom-rule : rule (A, B)
+}
+{
+    start instantly
+    A -> B: REQ {
+        id = msg.id
+    }
+    B -> A: RES {
+        if msg.reqId /= id
+            then custom-rule = rule (A, B) {
+                B -> A: RES
+            }
+            else custom-rule = rule (A, B) { }
+    }
+    custom-rule
+}

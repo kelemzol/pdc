@@ -5,6 +5,38 @@ export good-rule2
 export bad-rule
 export simple-rule2
 
+rule opt1(A,B) {
+    optional A -> B: MSG
+}
+
+rule opt2(A,B) {
+    optional A -> B: MSG
+    A -> B: END
+}
+
+rule opt3(A,B) {
+    optional seq {
+        A -> B: MSG1
+        A -> B: MSG2
+    }
+    optional seq {
+        A -> B: MSG3
+        A -> B: MSG4
+    }
+}
+
+rule opt4(A,B) {
+    optional seq {
+        A -> B: MSG1
+        A -> B: MSG2
+    }
+    optional seq {
+        A -> B: MSG3
+        A -> B: MSG4
+    }
+    A -> B: END
+}
+
 rule good-rule(A, B) {
     A -> B : REQ
     B -> A : WHUT
@@ -17,6 +49,203 @@ rule good-rule2(A, B) {
     B -> A : WAWA
     B -> A : WHUT
     B -> A : RES
+}
+
+rule merge1 (A, B) {
+    merge {
+        A -> B: REQ
+        B -> A: WHUT
+    }
+}
+
+rule merge2 (A, B) {
+    merge {
+        A -> B: REQ
+        B -> A: WHUT
+    }
+}
+
+rule merge3 (A, B) {
+    merge {
+        seq {
+            A -> B: S1
+            B -> A: S2
+        }
+        seq {
+            B -> A: S3
+            B -> A: S4
+        }
+    }
+}
+
+rule merge4 (A, B) {
+    merge {
+        seq {
+            A -> B: REQ
+            B -> A : WHUT
+            B -> A : WAWA
+        }
+        seq {
+            B -> A : WHUT
+        }
+    }
+}
+
+rule merge5 (A, B) {
+    merge {
+        seq {
+            A -> B : REQ
+            B -> A : WHUT
+        }
+        seq {
+            B -> A : WHUT
+            B -> A : WAWA
+        }
+        seq {
+            B -> A : WHUT
+            B -> A : RES
+        }
+    }
+}
+
+rule merge6 (A, B) {
+    merge {
+        seq {
+            A -> B : REQ
+            B -> A : WHUT
+            B -> A : WAWA
+        }
+        seq {
+            B -> A : WHUT
+        }
+        B -> A : WHUT
+        B -> A : RES
+    }
+}
+
+rule merge7 (A, B) {
+    merge {
+        seq {
+            A -> B : REQ
+            B -> A : WHUT
+            B -> A : WHUT
+        }
+        seq {
+            B -> A : WAWA
+        }
+    }
+}
+
+rule merge8 (A, B) {
+    merge {
+        seq {
+            A -> B : AA
+            A -> B : BB
+            A -> B : CC
+        }
+        seq {
+            A -> B : DD
+        }
+    }
+}
+
+rule merge9 (A, B) {
+    merge {
+        seq {
+            A -> B : AA
+            A -> B : BB
+        }
+        seq {
+            A -> B : CC
+            A -> B : DD
+        }
+    }
+}
+
+
+rule merge10 (A, B) {
+    merge {
+        one-of {
+            A -> B: S1
+            A -> B: S2
+        }
+        A -> B: S3
+    }
+}
+
+rule bmerge1 (A, B) {
+    merge {
+        B -> A: WHUT
+        B -> A: R
+    }
+}
+
+rule bmerge2 (A, B) {
+    merge {
+        A -> B : REQ
+        A -> B : BAD
+    }
+}
+
+
+rule morule1 (A, B) {
+    many-of {
+        A -> B: REQ
+        B -> A: RES
+    }
+    A -> B: END
+}
+
+
+rule oorule1 (A, B) {
+    one-of {
+        A -> B: REQ
+        B -> A: REQ
+    }
+}
+
+rule oorule2 (A, B) {
+    one-of {
+        one-of {
+            B -> A: REQ
+        }
+        A -> B: REQ
+    }
+}
+
+rule oorule3 (A, B) {
+    one-of {
+        seq {
+            A -> B: REQ
+            B -> A: WHUT
+            B -> A: WHUT
+        }
+        seq {
+            B -> A: WHUT
+            A -> B: REQ
+            B -> A: WHUT
+        }
+    }
+}
+
+rule oorule4 (A, B) {
+    A -> B: REQ
+    one-of {
+        seq {
+            B -> A: WHUT
+        }
+        seq {
+            A -> B: REQ
+        }
+    }
+    B -> A: WHUT
+}
+
+rule bad-oorule1 (A, B) {
+    one-of {
+        A -> B: BAD
+        B -> A: BAD
+    }
 }
 
 rule bad-rule(A, B) {

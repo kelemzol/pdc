@@ -1,0 +1,36 @@
+
+
+
+fsm Producer (P) with c {
+    c -> P: GET_ITEM
+    P -> c: PUT_ITEM
+}
+
+fsm Customer (C) with p {
+    C -> p: GET_ITEM
+    p -> C: PUT_ITEM
+}
+
+rule work (P, C) fsm Producer(P)
+                   , Customer(C) {
+    many-of {
+        C -> P: GET_ITEM
+        P -> C: PUT_ITEM
+    }
+}
+
+
+fsm Query <proc Client, proc Serv, msg Req, msg Res> (Client, Server) {
+    Client -> Server: Req
+    Server -> Client: Res
+}
+
+rule work2(A,B) fsm Query <A, B, MREQ, MRES> (A, B) {
+    many-of {
+        A -> B: MREQ
+        B -> A: MRES
+    }
+}
+
+
+

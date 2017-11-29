@@ -1,12 +1,15 @@
 
 {-# LANGUAGE RecordWildCards
            , ViewPatterns
+           , TypeFamilies
+           , FlexibleContexts
            #-}
 
 module Language.PDC.Interpreter.Eval (eval) where
 
 import Data.Maybe
 import Data.Either
+import Data.List
 
 import Control.Monad
 
@@ -14,114 +17,280 @@ import Language.PDC.Repr
 import Language.PDC.Interpreter.Env
 import Language.PDC.Interpreter.Msg
 
+import Debug.Trace
 {-
-eval :: PDCRuleE -> [PDCMsgP] -> Bool
-eval PDCRuleE {..} msglist = let (be, res, remain) = evalPattern emptyBoundEnv pdcRulePattern msglist
-                             in res
--}
-{-
-evalPattern :: BoundEnv -> PDCRulePattern -> [PDCMsgP] -> (BoundEnv, Bool, [PDCMsgP])
-evalPattern be (PDCStartInstantlyPattern _) ml = (be, True, ml)
-evalPattern be (PDCSeqPattern seq) ml = evalSeqPattern be seq ml
-evalPattern be (PDCOneOfPattern one) ml = evalOneOfPattern be one ml
-evalPattern be (PDCMsgPattern msg) ml = evalMsgPattern be msg ml
+type Step c a = c a -> Either (PDCMsgP, PDCMsgP) (StepRes (c a))
 
-evalSeqPattern :: BoundEnv -> PDCSeqP -> [PDCMsgP] -> (BoundEnv, Bool, [PDCMsgP])
-evalSeqPattern be (PDCSeqP {..}) ml = foldl evalSeq (be, True, ml) pdcRulePatternsSeq
-  where
-    evalSeq :: (BoundEnv, Bool, [PDCMsgP]) -> PDCRulePattern -> (BoundEnv, Bool, [PDCMsgP])
-    evalSeq res@(_, False, _) _ = res
---    evalSeq _ (be, _, []) = (be, False, [])
-    evalSeq (be, _, remain) p = evalPattern be p remain
+type family StepRes a
+type instance StepRes (Configuration a) = Configuration a
+type instance StepRes (Branch a) = [Branch (ReturnType a)]
 
-evalOneOfPattern :: BoundEnv -> PDCSeqP -> [PDCMsgP] -> (BoundEnv, Bool, [PDCMsgP])
-evalOneOfPattern
+type family ReturnType a
+type instance ReturnType PDCMsgP = PDCMsgP
+type instance ReturnType PDCSeqP = PDCSeqP
+type instance ReturnType PDCMergeP = PDCMergeP
 
-evalMsgPattern :: BoundEnv -> PDCMsgP -> [PDCMsgP] -> (BoundEnv, Bool, [PDCMsgP])
-evalMsgPattern be msg remain@(x:xs) = maybe (be, False, remain) (\be' -> (be', True, xs)) (matchBounded be msg x)
+type instance ReturnType PDCOneOfP = PDCRulePattern
+type instance ReturnType PDCRulePattern = PDCRulePattern
+
+type CStep a = Step Configuration a
+type BStep a = PDCMsgP -> Step Branch a
 -}
 
-type Step a = Configuration a -> Either (PDCMsgP, PDCMsgP) (Configuration a)
+class (Eq (StatusType e)) => Status (e :: * -> *) where
+    isSuccess :: e a -> Bool
+    isRunning :: e a -> Bool
+    isFailed  :: e a -> Bool
+
+    type StatusType e
+    getStatus :: e a -> StatusType e
+    
+isSomeStatus :: (Status e) => [StatusType e] -> e a -> Bool
+isSomeStatus es e = or $ map (\ a -> a == (getStatus e)) es
+
+type family ReducedPatternType a
+type instance ReducedPatternType PDCRulePattern = PDCRulePattern
+type instance ReducedPatternType PDCMsgP = PDCMsgP
+type instance ReducedPatternType PDCSeqP = PDCSeqP
+type instance ReducedPatternType PDCOneOfP = PDCRulePattern
+type instance ReducedPatternType PDCMergeP = PDCRulePattern
+
+type BranchStep a = PDCMsgP -> Branch a -> [Branch (ReducedPatternType a)]
+
+data BranchStatus
+  = RunningBranch
+  | SuccessBranch
+  | FailedBranch
+  deriving (Eq, Show)
 
 data Branch a
   = Branch
-    { boundEnv' :: BoundEnv
-    , pattern'  :: a
+    { boundEnv :: BoundEnv
+    , pattern  :: a
+    , status   :: BranchStatus
     }
   deriving (Eq, Show)
+
+instance Status Branch where
+    isSuccess = isSomeStatus [SuccessBranch] -- (==) Success . status
+    isRunning = isSomeStatus [RunningBranch] -- (==) Running . status
+    isFailed  = isSomeStatus [FailedBranch] -- (==) Failed . status
+
+    type StatusType Branch = BranchStatus
+    getStatus = status
+
 
 data Configuration a
   = Configuration
-    { boundEnv :: BoundEnv
-    , pattern  :: a
+    { branches :: [Branch a]
     , msglist  :: [PDCMsgP]
-    , finished :: Bool
+    , configStatus :: ConfigStatus
     }
   deriving (Eq, Show)
 
+data ConfigStatus
+  = RunningConfig
+  | SuccessConfig
+  | MsgNotEnough
+  | FailedConfig
+  deriving (Eq, Show)
+
+instance Status Configuration where
+    isSuccess = isSomeStatus [SuccessConfig]
+    isRunning = isSomeStatus [RunningConfig]
+    isFailed  = isSomeStatus [MsgNotEnough, FailedConfig]
+
+    type StatusType Configuration = ConfigStatus
+    getStatus = configStatus
+
+prettyBranch :: Branch PDCRulePattern -> String
+prettyBranch (Branch {..}) = "[branch " ++ (show status) ++ " " ++ (prettyPDCRulePattern pattern) ++ "]"
+
+prettyConfiguration :: Configuration PDCRulePattern -> String
+prettyConfiguration (Configuration {..}) = "[conf " ++ (show configStatus) ++ " " ++ (concat $ map prettyBranch branches)
+    ++ "||" ++ (concat $ map (prettyPDCRulePattern . PDCMsgPattern) msglist) ++ "]"
+
+
+
 eval :: PDCRuleE -> [PDCMsgP] -> Bool
-eval PDCRuleE {..} msglist = isRight $ configRunner (Configuration emptyBoundEnv pdcRulePattern msglist False)
+eval PDCRuleE {..} msgs = getRes (configRunner conf)
+  where
+    getRes conf
+      | isSuccess conf = True
+      | isRunning conf = False
+      | isFailed  conf = False
+    conf = Configuration { branches = [Branch emptyBoundEnv pdcRulePattern RunningBranch]
+                         , msglist = msgs
+                         , configStatus = RunningConfig
+                         }
+
+configRunner :: Configuration PDCRulePattern -> Configuration PDCRulePattern
+configRunner conf 
+  | isRunning conf = let conf' = step $ trace ("state:"++(prettyConfiguration conf)) conf
+                     in maybe (configRunner conf')
+                              (const conf' {configStatus = SuccessConfig})
+                              (findSuccesBranch conf')
+  | otherwise      = conf
+
+step :: Configuration PDCRulePattern -> Configuration PDCRulePattern
+step conf@(Configuration {..})
+  | [] <- msglist     = conf { configStatus = MsgNotEnough }
+--  | [] <- branches    = conf { configStatus = FailedConfig }
+  | (m:ms) <- msglist = let brss = forM (filterFailed branches) (stepRulePattern m)
+                        in conf { msglist = ms
+                                , branches = concat brss
+                                , configStatus = if concat brss == [] then FailedConfig else configStatus
+                                }
+
+filterFailed :: [Branch a] -> [Branch a]
+filterFailed = filter (not . isFailed)
+
+findSuccesBranch :: Configuration a -> Maybe (Branch a)
+findSuccesBranch = find isSuccess . branches
+
+stepRulePattern :: BranchStep PDCRulePattern
+stepRulePattern m conf = case pattern conf of
+    (PDCMsgPattern msg) -> let brs = stepMsgPattern m conf { pattern = msg }
+                           in map (\ b -> b { pattern = PDCMsgPattern (pattern b) }) brs
+    (PDCSeqPattern seq) -> let brs = stepSeqPattern m conf { pattern = seq }
+                           in map (\ b -> b { pattern = PDCSeqPattern (pattern b) }) brs
+    (PDCOneOfPattern oneof) -> stepOneOfPattern m conf { pattern = oneof }
+    (PDCMergePattern mer) -> stepMergePattern m conf { pattern = mer }
+        -- let brs = stepMergePattern m conf { pattern = mer }
+           --                  in map (\ b -> b { pattern = PDCMergePattern (pattern b) }) brs
+
+tracebrss a = trace ("    brss:" ++ (show $ map prettyBranch a)) a
+
+traceMergeof a
+  = let tm (p, b) = trace ("  pattern: " ++ prettyPDCRulePattern p) (p, tracebrss b)
+    in map tm a
+
+stepMergePattern :: BranchStep PDCMergeP
+stepMergePattern m br 
+  | ps <- pdcRulePatternsMerge (pattern br)
+--    = let brss    = forM ps (\ p -> stepRulePattern m br { pattern = p })
+    = let brss    = map (\ p -> stepRulePattern m br { pattern = p }) ps
+          mergeof = traceMergeof $ zip ps brss :: [(PDCRulePattern, [Branch PDCRulePattern])]
+--      in undefined
+          
+          to :: (PDCRulePattern, [Branch PDCRulePattern]) -> [Branch PDCRulePattern]
+          to (p, brs)
+              = let newstatus
+--                      | and (map isSuccess brs) = SuccessBranch
+                      | and (map isFailed brs)  = FailedBranch
+                      | otherwise               = RunningBranch
+                in map (to' p newstatus) brs
+          to' :: PDCRulePattern -> BranchStatus -> Branch PDCRulePattern -> Branch PDCRulePattern
+          to' p newstatus nbr
+              = let newentities =  to'' ps p (pattern nbr)
+                in nbr { pattern = PDCMergePattern (pattern br) { pdcRulePatternsMerge = newentities }
+                       , status = newstatus
+                       }
+          to'' :: [PDCRulePattern] -> PDCRulePattern -> PDCRulePattern -> [PDCRulePattern]
+          to'' orig from to = foldr (\ p pl -> if p == from then to:pl else p:pl ) [] orig
+      in concat $ map to mergeof
+
+
+stepOneOfPattern :: BranchStep PDCOneOfP
+stepOneOfPattern m br
+  | ps <- pdcRulePatternsOneOf (pattern br)
+    = let brss = forM ps (\ p -> stepRulePattern m br { pattern = p })
+      in (concat brss)
+
+
+stepMsgPattern :: BranchStep PDCMsgP
+stepMsgPattern m br@(Branch {..}) = case matchBounded boundEnv pattern m of
+    (Just be) -> [br { boundEnv = be, status = SuccessBranch }]
+    Nothing   -> [br { status = FailedBranch }]
+
+stepSeqPattern :: BranchStep PDCSeqP
+stepSeqPattern m br
+  | [] <- pdcRulePatternsSeq (pattern br) = [br { status = FailedBranch }]
+  | ((PDCStartInstantlyPattern _):ps) <- pdcRulePatternsSeq (pattern br)
+    = stepSeqPattern m br { pattern = (pattern br) { pdcRulePatternsSeq = ps } }
+  | (p:ps) <- pdcRulePatternsSeq (pattern br)
+    = let brs = stepRulePattern m br { pattern = p }
+          newStatus b [] = getStatus b
+          newStatus b _ = if isFailed b then FailedBranch else RunningBranch
+      in map (\ b -> b { pattern = (pattern br) { pdcRulePatternsSeq = if isSuccess b then ps else (pattern b):ps }
+                       , status = newStatus b ps 
+                       }) brs
+--      in map (\ b -> b { pattern = (pattern br) { pdcRulePatternsSeq = (pattern b):ps } }) brs
+
+class Stappable a where
+    stappable :: a -> Bool
+{-
+instance Stappable PDCSeqP where
+    stappable ()
+-}
+
+{-
+eval :: PDCRuleE -> [PDCMsgP] -> Bool
+eval PDCRuleE {..} msglist = isRight $ configRunner (Configuration [Branch emptyBoundEnv pdcRulePattern False] msglist)
 
 configRunner :: Configuration PDCRulePattern -> Either (PDCMsgP, PDCMsgP) [PDCMsgP]
-configRunner conf = case stepRulePattern conf of
-    (Left e) -> Left e
-    (Right c) -> if finished c then Right (msglist c) else configRunner c
-
-stepRulePattern :: Step PDCRulePattern
-stepRulePattern conf
-  | True <- finished conf = return conf
-  --  | [] <- pattern = return conf
-  | (m:ms) <- msglist conf = do
-    case pattern conf of
-        (PDCStartInstantlyPattern _) -> return conf { finished = True }
-        (PDCMsgPattern msg) -> do
-            conf' <- stepMsgPattern conf { pattern = msg }
-            return conf' { pattern = PDCMsgPattern (pattern conf') }
-        (PDCSeqPattern seq) -> do
-            conf' <- stepSeqPattern conf { pattern = seq }
-            return conf' { pattern = PDCSeqPattern (pattern conf') }
-        (PDCOneOfPattern oneof) -> do
-            conf' <- stepOneOfPattern conf { pattern = oneof }
-            return conf' { pattern = PDCOneOfPattern (pattern conf') }
-        (PDCMergePattern mer) -> do
-            conf' <- stepMergePattern conf { pattern = mer }
-            return conf' { pattern = PDCMergePattern (pattern conf') }
-
-stepOneOfPattern :: Step PDCOneOfP
-stepOneOfPattern conf
-  | True <- finished conf = return conf
-  | ps <- pdcRulePatternsOneOf (pattern conf)
-  , (m:ms) <- msglist conf = do
-    return conf
+configRunner conf = case step conf of
+    (Left e)  -> Left e
+    (Right conf') -> maybe (configRunner conf') (const (Right $ msglist $ conf')) (findSuccesBranch conf')
 
 
-stepMergePattern :: Step PDCMergeP
-stepMergePattern conf
-  | True <- finished conf = return conf
-  | ps <- pdcRulePatternsMerge (pattern conf)
-  , (m:ms) <- msglist conf = do
-      confs <- forM ps (\ p -> stepRulePattern conf { pattern = p })
-      return conf
-
-stepSeqPattern :: Step PDCSeqP
-stepSeqPattern conf
-  | True <- finished conf = return conf
-  | (p:ps) <- pdcRulePatternsSeq (pattern conf)
-  , (m:ms) <- msglist conf = do
-      conf' <- stepRulePattern conf { pattern = p }
-      return conf' { pattern = (pattern conf) { pdcRulePatternsSeq = (pattern conf'):ps } }
-
-stepMsgPattern :: Step PDCMsgP
-stepMsgPattern conf@(Configuration {..})
-  | True <- finished = return conf
---  | [] <- pattern = return conf
+step :: Configuration PDCRulePattern -> Either (PDCMsgP, PDCMsgP) (Configuration PDCRulePattern)
+step conf@(Configuration {..})
+  | [] <- msglist     = return conf
   | (m:ms) <- msglist = do
+      brss <- forM branches (stepRulePattern m)
+      return conf { msglist = ms, branches = concat brss }
+
+stepRulePattern :: BStep PDCRulePattern
+stepRulePattern m conf = do
+    case pattern conf of
+        (PDCMsgPattern msg) -> do
+            brs <- stepMsgPattern m conf { pattern = msg }
+            return $ map (\ b -> b { pattern = PDCMsgPattern (pattern b) }) brs
+        (PDCSeqPattern seq) -> do
+            brs <- stepSeqPattern m conf { pattern = seq }
+            return $ map (\ b -> b { pattern = PDCSeqPattern (pattern b) }) brs
+        (PDCOneOfPattern oneof) -> do
+            -- brs <- stepOneOfPattern m conf { pattern = oneof }
+            -- return $ map (\ b -> b { pattern = PDCOneOfPattern (pattern b) }) brs
+            stepOneOfPattern m conf { pattern = oneof }
+        (PDCMergePattern mer) -> do
+            brs <- stepMergePattern m conf { pattern = mer }
+            return $ map (\ b -> b { pattern = PDCMergePattern (pattern b) }) brs
+
+stepOneOfPattern :: BStep PDCOneOfP
+stepOneOfPattern m br
+  | ps <- pdcRulePatternsOneOf (pattern br) = do
+      brss <- forM (trace'' "stepOneOfPattern.ps" ps) (\ p -> trace'' "p->" $ stepRulePattern m br { pattern = p })
+      -- return $ map tobr (concat brss)
+      return $ trace'' "stepOneOfPattern.return" (concat brss)
+      -- (\ b -> b { pattern = PDCOneOfPattern (PDCOneOfP (sourceInfoOneOf $ pattern br) [pattern b]) }) (concat brss)
+    where
+      tobr b = b { pattern = (PDCOneOfP (sourceInfoOneOf $ pattern br) [pattern b]) }
+
+stepMergePattern :: BStep PDCMergeP
+stepMergePattern m br
+  | ps <- pdcRulePatternsMerge (pattern br) = do
+      brs <- forM ps (\ p -> stepRulePattern m br { pattern = p })
+      return $ undefined
+      -- map (\ (mr, o) -> o {  } ) (zip brs ps)
+
+stepSeqPattern :: BStep PDCSeqP
+stepSeqPattern m conf
+  | ((PDCStartInstantlyPattern _):ps) <- pdcRulePatternsSeq (pattern conf)
+    = stepSeqPattern m conf { pattern = (pattern conf) { pdcRulePatternsSeq = ps } }
+  | (p:ps) <- pdcRulePatternsSeq (pattern conf) = do
+      brs <- stepRulePattern m conf { pattern = p }
+      return $ map (\ b -> b { pattern = (pattern conf) { pdcRulePatternsSeq = (pattern b):ps } }) brs
+
+stepMsgPattern :: BStep PDCMsgP
+stepMsgPattern m conf@(Branch {..}) = do
       boundEnv' <- case matchBounded boundEnv pattern m of
           (Just be) -> return be
           Nothing -> Left (pattern, m)
-      return conf { msglist = ms, boundEnv = boundEnv', finished = True }
+      return [conf { boundEnv = boundEnv', finished = True }]
 
-
+-}
 
 
 
