@@ -37,6 +37,23 @@ rule opt4(A,B) {
     A -> B: END
 }
 
+rule opt5(A,B) {
+    optional one-of {
+        A -> B: MSG1
+        seq {
+            A -> B: MSG2
+            A -> B: MSG3
+            optional A -> B: MSG4
+            A -> B: END2
+        }
+        optional seq {
+            A -> B: MSG5
+        }
+    }
+    A -> B: END
+}
+
+
 rule good-rule(A, B) {
     A -> B : REQ
     B -> A : WHUT

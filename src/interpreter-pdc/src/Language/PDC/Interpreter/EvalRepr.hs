@@ -97,7 +97,6 @@ manyof2node tl@(htl:ttl) o m@(PDCManyOfP {..})
       brs = concat $ catMaybes $ map (pattern2Branch ((PDCManyofPattern m):tl)) pdcRulePatternsManyOf
 
 
-
 optional2node :: [PDCRulePattern] -> PDCRulePattern -> PDCOptionalP -> Node
 optional2node tl@(htl:ttl) o m@(PDCOptionalP {..})
     | Nothing <- nullMatch = Leaf

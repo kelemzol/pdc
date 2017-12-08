@@ -27,11 +27,11 @@ tokens :-
     "rule"                             { tok TkRule }
     "start"                            { tok TkStart }
     "seq"                              { tok TkSeq }
+    "unseq"                            { tok TkUnSeq }
     "optional"                         { tok TkOptional }
     "one-of"                           { tok TkOneOf }
     "more-of"                          { tok TkMoreOf }
     "many-of"                          { tok TkManyOf }
-    "interleave"                       { tok TkInterleave }
     "instantly"                        { tok TkInstantly }
     "merge"                            { tok TkMerge }
     "export"                           { tok TkExport }
@@ -74,13 +74,13 @@ data Token
   | TkRule         { pos :: Pos }
   | TkStart        { pos :: Pos }
   | TkSeq          { pos :: Pos }
+  | TkUnSeq        { pos :: Pos }
   | TkOptional     { pos :: Pos }
   | TkOneOf        { pos :: Pos }
   | TkMoreOf       { pos :: Pos }
   | TkManyOf       { pos :: Pos }
-  | TkInterleave   { pos :: Pos }
   | TkInstantly    { pos :: Pos }
-  | TkMerge       { pos :: Pos }
+  | TkMerge        { pos :: Pos }
   | TkExport       { pos :: Pos }
   | TkArrow        { pos :: Pos }
   | TkColon        { pos :: Pos }
@@ -98,31 +98,32 @@ data Token
   deriving (Eq, Ord, Show)
 
 tokeneq :: Token -> Token -> Bool
-tokeneq (TkWs _ _) (TkWs _ _) = True
-tokeneq (TkModule _) (TkModule _) = True
-tokeneq (TkRule _) (TkRule _) = True
-tokeneq (TkStart _) (TkStart _) = True
-tokeneq (TkSeq _) (TkSeq _) = True
-tokeneq (TkOptional _) (TkOptional _) = True
-tokeneq (TkOneOf _) (TkOneOf _) = True
-tokeneq (TkMoreOf _) (TkMoreOf _) = True
-tokeneq (TkManyOf _) (TkManyOf _) = True
-tokeneq (TkInstantly _) (TkInstantly _) = True
-tokeneq (TkMerge _) (TkMerge _) = True
-tokeneq (TkExport _) (TkExport _) = True
-tokeneq (TkArrow _) (TkArrow _) = True
-tokeneq (TkColon _) (TkColon _) = True
-tokeneq (TkComma _) (TkComma _) = True
-tokeneq (TkBraceOpen _) (TkBraceOpen _) = True
-tokeneq (TkBraceClose _) (TkBraceClose _) = True
-tokeneq (TkBracketOpen _) (TkBracketOpen _) = True
+tokeneq (TkWs _ _)         (TkWs _ _)         = True
+tokeneq (TkModule _)       (TkModule _)       = True
+tokeneq (TkRule _)         (TkRule _)         = True
+tokeneq (TkStart _)        (TkStart _)        = True
+tokeneq (TkSeq _)          (TkSeq _)          = True
+tokeneq (TkUnSeq _)        (TkUnSeq _)        = True
+tokeneq (TkOptional _)     (TkOptional _)     = True
+tokeneq (TkOneOf _)        (TkOneOf _)        = True
+tokeneq (TkMoreOf _)       (TkMoreOf _)       = True
+tokeneq (TkManyOf _)       (TkManyOf _)       = True
+tokeneq (TkInstantly _)    (TkInstantly _)    = True
+tokeneq (TkMerge _)        (TkMerge _)        = True
+tokeneq (TkExport _)       (TkExport _)       = True
+tokeneq (TkArrow _)        (TkArrow _)        = True
+tokeneq (TkColon _)        (TkColon _)        = True
+tokeneq (TkComma _)        (TkComma _)        = True
+tokeneq (TkBraceOpen _)    (TkBraceOpen _)    = True
+tokeneq (TkBraceClose _)   (TkBraceClose _)   = True
+tokeneq (TkBracketOpen _)  (TkBracketOpen _)  = True
 tokeneq (TkBracketClose _) (TkBracketClose _) = True
-tokeneq (TkAngleOpen _) (TkAngleOpen _) = True
-tokeneq (TkAngleClose _) (TkAngleClose _) = True
-tokeneq (TkSquareOpen _) (TkSquareOpen _) = True
-tokeneq (TkSquareClose _) (TkSquareClose _) = True
-tokeneq (TkIdLC _ _) (TkIdLC _ _) = True
-tokeneq (TkIdUC _ _) (TkIdUC _ _) = True
+tokeneq (TkAngleOpen _)    (TkAngleOpen _)    = True
+tokeneq (TkAngleClose _)   (TkAngleClose _)   = True
+tokeneq (TkSquareOpen _)   (TkSquareOpen _)   = True
+tokeneq (TkSquareClose _)  (TkSquareClose _)  = True
+tokeneq (TkIdLC _ _)       (TkIdLC _ _)       = True
+tokeneq (TkIdUC _ _)       (TkIdUC _ _)       = True
 tokeneq _ _ = False
 
 prettyTokens :: [Token] -> String

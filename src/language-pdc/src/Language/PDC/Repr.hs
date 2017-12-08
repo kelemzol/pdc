@@ -94,12 +94,12 @@ instance JSON.FromJSON PDCProcParam
 
 data PDCRulePattern
   = PDCSeqPattern       PDCSeqP
+  | PDCUnSeqPattern     PDCUnSeqP
   | PDCStartPattern     PDCStartP
   | PDCStartInstantlyPattern PDCStartInstantlyP
   | PDCOneOfPattern     PDCOneOfP
   | PDCMoreOfPattern    PDCMoreOfP
   | PDCManyofPattern    PDCManyOfP
-  | PDCInterleavePattern PDCInterleaveP
   | PDCOptionalPattern  PDCOptionalP
   | PDCCallPattern      PDCCallP
   | PDCMergePattern     PDCMergeP
@@ -173,14 +173,14 @@ data PDCManyOfP
 instance JSON.ToJSON PDCManyOfP
 instance JSON.FromJSON PDCManyOfP
   
-data PDCInterleaveP
-  = PDCInterleaveP
-    { sourceInfoInterleave  :: SourceInfo
-    , pdcRulePatternsInterleaveOf :: [PDCRulePattern]
+data PDCUnSeqP
+  = PDCUnSeqP
+    { sourceInfoUnSeq  :: SourceInfo
+    , pdcRulePatternsUnSeqOf :: [PDCRulePattern]
     }
   deriving (Eq, Ord, Show, Generic)
-instance JSON.ToJSON PDCInterleaveP
-instance JSON.FromJSON PDCInterleaveP
+instance JSON.ToJSON PDCUnSeqP
+instance JSON.FromJSON PDCUnSeqP
   
 data PDCOptionalP
   = PDCOptionalP
@@ -270,8 +270,8 @@ instance GetSourceInfo PDCMoreOfP where
     getSourceInfo = sourceInfoMoreOf
 instance GetSourceInfo PDCManyOfP where 
     getSourceInfo = sourceInfoManyOf
-instance GetSourceInfo PDCInterleaveP where 
-    getSourceInfo = sourceInfoInterleave
+instance GetSourceInfo PDCUnSeqP where 
+    getSourceInfo = sourceInfoUnSeq
 instance GetSourceInfo PDCOptionalP where 
     getSourceInfo = sourceInfoOptional
 instance GetSourceInfo PDCCallP where 
@@ -301,13 +301,12 @@ filterExportEntries = catMaybes . map maybeExportEntry
 prettyPDCRulePattern :: PDCRulePattern -> String
 prettyPDCRulePattern  (PDCMsgPattern (PDCMsgP{..})) = "(" ++ (pdcid pdcMsgFrom) ++ "->" ++ (pdcid pdcMsgTo) ++ ":" ++ (pdcid pdcMsgType) ++ ")"
 prettyPDCRulePattern  (PDCSeqPattern (PDCSeqP{..})) = "seq{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsSeq) ++ "}"
+prettyPDCRulePattern  (PDCUnSeqPattern (PDCUnSeqP{..})) = "unseq{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsUnSeqOf) ++ "}"
 prettyPDCRulePattern  (PDCStartInstantlyPattern (PDCStartInstantlyP{..})) = "start instantly"
 prettyPDCRulePattern  (PDCOneOfPattern (PDCOneOfP{..})) = "one-of{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsOneOf) ++ "}"
 prettyPDCRulePattern  (PDCManyofPattern (PDCManyOfP{..})) = "many-of{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsManyOf) ++ "}"
+prettyPDCRulePattern  (PDCMoreOfPattern (PDCMoreOfP{..})) = "more-of{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsMoreOf) ++ "}"
 prettyPDCRulePattern  (PDCMergePattern (PDCMergeP{..})) = "merge{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsMerge) ++ "}"
 prettyPDCRulePattern  (PDCOptionalPattern (PDCOptionalP{..})) = "optinal{" ++ (prettyPDCRulePattern pdcRulePatternOptional) ++ "}"
---prettyPDCRulePattern  (PDCStartPattern (PDCStartP{..}))
---prettyPDCRulePattern  (PDCMoreOfPattern (PDCMoreOfP{..}))
---prettyPDCRulePattern  (PDCManyofPattern (PDCManyOfP{..}))
---prettyPDCRulePattern  (PDCInterleavePattern (PDCInterleaveP{..}))
+prettyPDCRulePattern  (PDCStartPattern (PDCStartP{..})) = "start{" ++ (prettyPDCRulePattern pdcRulePatternStart) ++ "}"
 --prettyPDCRulePattern  (PDCCallPattern (PDCCallP{..}))

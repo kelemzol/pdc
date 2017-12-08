@@ -67,7 +67,7 @@ getSourceInfoP = SourceInfo <$> getPosition
 
 
 tkUc, tkLc :: PDCParser String
-tkModule, tkRule, tkStart, tkSeq, tkOptional, tkOneOf, tkMoreOf, tkManyOf, tkInterleave, tkInstantly, tkMerge :: PDCParser ()
+tkModule, tkRule, tkStart, tkSeq, tkOptional, tkOneOf, tkMoreOf, tkManyOf, tkUnSeq, tkInstantly, tkMerge :: PDCParser ()
 tkExport, tkArrow, tkColon, tkComma, tkBraceOpen, tkBraceClose, tkBracketOpen, tkBracketClose, tkAngleOpen, tkAngleClose, tkSquareOpen, tkSquareClose :: PDCParser ()
 brace, bracket, angle, square :: PDCParser a -> PDCParser a
 
@@ -81,7 +81,7 @@ tkOptional     = normTok TkOptional
 tkOneOf        = normTok TkOneOf
 tkMoreOf       = normTok TkMoreOf
 tkManyOf       = normTok TkManyOf
-tkInterleave   = normTok TkInterleave
+tkUnSeq        = normTok TkUnSeq
 tkInstantly    = normTok TkInstantly
 tkMerge        = normTok TkMerge
 tkExport       = normTok TkExport
@@ -132,7 +132,7 @@ parsePDCRulePattern = (try (PDCSeqPattern <$> parsePDCSeqP))
                   <|> (try (PDCOneOfPattern <$> parseOneOfP))
                   <|> (try (PDCMoreOfPattern <$> parseMoreOfP))
                   <|> (try (PDCManyofPattern <$> parseManyOfP))
-                  <|> (try (PDCInterleavePattern <$> parseInterleaveP))
+                  <|> (try (PDCUnSeqPattern <$> parseUnSeqP))
                   <|> (try (PDCOptionalPattern <$> parseOptionalP))
                   <|> (try (PDCMergePattern <$> parseMergeP))
                   <|> (try (PDCMsgPattern <$> parseMsgP))
@@ -158,7 +158,7 @@ parseStartInstantlyP = PDCStartInstantlyP <$> (getSourceInfoP <* tkStart <* tkIn
 parseOneOfP = blockPatternConstructor PDCOneOfP tkOneOf
 parseMoreOfP = blockPatternConstructor PDCMoreOfP tkMoreOf
 parseManyOfP = blockPatternConstructor PDCManyOfP tkManyOf
-parseInterleaveP = blockPatternConstructor PDCInterleaveP tkInterleave
+parseUnSeqP = blockPatternConstructor PDCUnSeqP tkUnSeq
 parseMergeP = blockPatternConstructor PDCMergeP tkMerge
 parseOptionalP = PDCOptionalP <$> getSourceInfoP <*> (tkOptional *> blockOrSingleton)
 parseMsgP = PDCMsgP <$> getSourceInfoP <*> parsePDCId <*> (tkArrow *> parsePDCId) <*> (tkColon *> parsePDCId) <*> (pure ())

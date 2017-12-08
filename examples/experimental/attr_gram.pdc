@@ -35,3 +35,55 @@ rule attr-ex(A, B)
     }
     custom-rule
 }
+
+rule match1(A, B) 
+    decl {
+        id : ID
+        id2 : Maybe<ID> = Nothing
+}
+{
+    start instantly
+    A -> B: REQ {
+        id = msg.id
+    }
+    one-of {
+        msg.reqId /= id         => B -> A: RES
+        secondSource(msg.reqId) => B -> A: RES
+    }
+
+}
+
+
+rule matchfun(A, B) 
+    decl {
+        time  : Date
+        timeo : Date = { seq = 10 }
+}
+{
+    start instantly
+    A -> B: REQ {
+        time = msg.time
+    }
+    timeout (msg.time, time, timeo)
+        => B -> A: RES
+}
+fun timeout (t1, t2, to) = timeGE (timeDiff (t1, t2), to)
+
+
+
+rule matchfun2(A, B) 
+    decl {
+        timeB : Date
+        timeo : Date = { seq = 10 }
+        proc timeBase (t) { timeB = t}
+        fun timeout (t) = timeL (timeDiff (timeB, t), timeo)
+}
+{
+    start instantly
+    A -> B: REQ {
+        timeBase(msg.time)
+    }
+    not (timeout (msg.time))
+        => B -> A: RES
+}
+
