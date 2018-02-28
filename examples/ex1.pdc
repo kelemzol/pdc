@@ -5,6 +5,81 @@ export good-rule2
 export bad-rule
 export simple-rule2
 
+
+
+rule unseq1 (A, B) {
+    unseq {
+        A -> B: S1
+        A -> B: S2
+        A -> B: S3
+    }
+}
+
+rule unseq2 (A, B) {
+    unseq {
+        seq {
+            A -> B: S1
+            A -> B: S2
+        }
+        seq {
+            A -> B: S3
+            A -> B: S4
+        }
+    }
+}
+
+rule caller1(A, B) {
+    A -> B: S1
+    called1
+    A -> B: S3
+}
+
+rule called1(A, B) {
+    A -> B: S2
+}
+
+rule caller2(A, B) {
+    A -> B: S1
+    called2_1
+    A -> B: S4
+}
+
+rule called2_1(A, B) {
+    A -> B: S2
+    called2_2
+}
+rule called2_2(A, B) {
+    A -> B: S3
+}
+
+rule caller3(A, B) {
+    A -> B: S1
+    many-of {
+        called3_1
+        called3_2
+    }
+    A -> B: S4
+}
+
+rule called3_1(A, B) {
+    A -> B: S2
+}
+rule called3_2(A, B) {
+    A -> B: S3
+}
+
+rule caller4(A, B) {
+    A -> B: S1
+    many-of {
+        called4
+    }
+}
+
+rule called4(A, B) {
+    A -> B: S2
+}
+
+
 rule opt1(A,B) {
     optional A -> B: MSG
 }
@@ -111,18 +186,26 @@ rule merge4 (A, B) {
 rule merge5 (A, B) {
     merge {
         seq {
-            A -> B : REQ
-            B -> A : WHUT
+            A -> B : S1
+            B -> A : S2
         }
         seq {
-            B -> A : WHUT
-            B -> A : WAWA
+            B -> A : S3
+            B -> A : S4
         }
         seq {
-            B -> A : WHUT
-            B -> A : RES
+            B -> A : S5
+            B -> A : S6
         }
     }
+}
+
+rule merge51 (A,B) {
+    merge {
+            A -> B : S1
+            B -> A : S2
+            B -> A : S3
+    }    
 }
 
 rule merge6 (A, B) {
@@ -213,6 +296,14 @@ rule morule1 (A, B) {
     A -> B: END
 }
 
+
+rule moreof1 (A, B) {
+    more-of {
+        A -> B: REQ
+        B -> A: RES
+    }
+    A -> B: END
+}
 
 rule oorule1 (A, B) {
     one-of {

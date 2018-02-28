@@ -15,7 +15,11 @@ trace' a = trace (show a) a
 trace'' str a = trace ("\n" ++ str ++ ":" ++ (show a)) a
 
 directMatch :: PDCMsgP -> PDCMsgP -> Bool
-directMatch a b = and [ pdcid (pdcMsgFrom a) == pdcid (pdcMsgFrom b)
+directMatch a b = and [ (ulcase (pdcMsgFrom a)) == UC
+                      , (ulcase (pdcMsgFrom b)) == UC
+                      , (ulcase (pdcMsgTo a)) == UC
+                      , (ulcase (pdcMsgTo b)) == UC
+                      , pdcid (pdcMsgFrom a) == pdcid (pdcMsgFrom b)
                       , pdcid (pdcMsgTo a)   == pdcid (pdcMsgTo b)
                       , pdcid (pdcMsgType a) == pdcid (pdcMsgType b)
                       ]

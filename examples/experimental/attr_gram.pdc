@@ -71,14 +71,34 @@ fun timeout (t1, t2, to) = timeGE (timeDiff (t1, t2), to)
 
 
 
+
+rule timed(A, B)
+    decl {
+        time : Time
+        fun checkedTime (t) = timeGe (timeDiff (t, time), sec(1))
+    }
+    pattern {
+        A -> B: START @registTime
+        checkTime (msg.time) =>
+          B -> A: ACK @registTime
+        checkTime (msg.time) =>
+          A -> B: REQ @registTime
+        B -> A: RES
+        A -> B: REQ
+        B -> A: RES
+        A -> B: END
+        B -> A: END
+    }
+
+
+
 rule matchfun2(A, B) 
     decl {
         timeB : Date
         timeo : Date = { seq = 10 }
         proc timeBase (t) { timeB = t}
         fun timeout (t) = timeL (timeDiff (timeB, t), timeo)
-}
-{
+} {
     start instantly
     A -> B: REQ {
         timeBase(msg.time)
@@ -87,3 +107,46 @@ rule matchfun2(A, B)
         => B -> A: RES
 }
 
+
+record Date decl {
+    year : Integer
+    mon : Integer
+    day : Integer
+} where {
+    year <- 1..12
+    mon <- 1..12
+    day <- 1..31
+}
+
+record Time decl {
+    hour : Integer
+    min : Integer
+    sec : Integer
+}
+record PrecTime {
+    msec : Integer
+    usec : Integer
+    nsec : Integer
+}
+
+record FullTime extend {
+    Date
+    Time
+    PrecTime
+}
+
+rule matchfun2(A, B)
+    decl {
+        timeB : Date
+        timeo : Date = { seq = 10 }
+        proc timeBase (t) { timeB = t}
+        fun timeout (t) = timeL (timeDiff (timeB, t), timeo)
+    }
+    pattern {
+        start instantly
+        A -> B: REQ {
+            timeBase(msg.time)
+        }
+        not (timeout (msg.time))
+            => B -> A: RES
+}

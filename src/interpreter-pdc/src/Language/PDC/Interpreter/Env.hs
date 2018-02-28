@@ -9,15 +9,6 @@ import qualified Data.Map as M
 import Language.PDC.Repr
 
 
-{-
-[abcd] [hhtj] [fjjk] ------- MergeBranch
- | ,----´|     |   `-------- MergeThread
- | |   ,-´     |
- | | ,-+-------´
- | | | | 
- ˇ ˇ ˇ ˇ
->a h f h
--}
 
 data BoundEnv
   = BoundEnv
@@ -37,31 +28,4 @@ bound be@BoundEnv {..} i1 i2 = if isBounded be i1 then be else (be { bmap = M.in
 getBounded :: BoundEnv -> PDCId -> Maybe PDCId
 getBounded BoundEnv {..} k = fmap (\i -> k {pdcid = i, ulcase = UC}) (M.lookup (pdcid k) bmap)
 
-
-{-
-data Env
-  = Env
-    { mergeBranches :: [MergeBranch]
-    , rules         :: [PDCRuleE]
-    }
-  deriving (Eq, Show)
-
-data MergeBranch
-  = MergeBranch
-    { mergeThreads :: [MergeThread]
-    }
-  deriving (Eq, Show)
-
-data MergeThread
-  = MergeThread
-    { controlBranches :: [ControlBrach]
-    }
-  deriving (Eq, Show)
-
-data ControlBrach
-  = ControlBrach
-    { pattern :: PDCRulePattern
-    , msglist :: [PDCMsgP]
-    }
-  deriving (Eq, Show)
--}
+toList = M.toList . bmap

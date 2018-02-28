@@ -19,12 +19,13 @@ cabal-version:       >=1.10
 library
   exposed-modules:     Language.PDC.Interpreter
                      , Language.PDC.Interpreter.EvalRepr
-  other-modules:       Language.PDC.Interpreter.Msg
-                     , Language.PDC.Interpreter.Env
                      , Language.PDC.Interpreter.Eval
+                     , Language.PDC.Interpreter.Utils
+                     , Language.PDC.Interpreter.Msg
+                     , Language.PDC.Interpreter.Env
                      
   -- other-extensions:    
-  build-depends:       base >=4.9 && <4.10
+  build-depends:       base >=4.10 && <4.11
                      , containers >=0.5.7
                      , language-pdc >= 0.1.0
   hs-source-dirs:      src

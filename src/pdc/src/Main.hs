@@ -15,7 +15,9 @@ import Language.PDC.SemanticChecker
 import Language.PDC.PDCSemanticChecker
 
 import Language.PDC.Interpreter
+import Language.PDC.Interpreter.Utils
 import Language.PDC.Interpreter.EvalRepr
+import Language.PDC.Interpreter.Env
 
 
 data Options
@@ -47,10 +49,27 @@ work options@(Options {..}) = do
             putStrLn "Msg list parsing fail" >> putStrLn m
         (Left r, _) -> putStrLn "Rule parsing fail" >> putStrLn r
         (_, Left m) -> putStrLn "Msg list parsing fail" >> putStrLn m
-        (Right (PDCModule {..}), Right msglist) -> do
-            case find (\ re -> pdcid (pdcRuleName re) == mainRule) $ filterRuleEntries pdcModuleEntries of
+        (Right m@(PDCModule {..}), Right msglist) -> do
+            case findRuleEntry mainRule m of -- (\ re -> pdcid (pdcRuleName re) == mainRule) $ filterRuleEntries pdcModuleEntries of
                 Nothing -> putStrLn "not found main rule"
-                (Just re) -> cliNode $ ast2node (pdcRulePattern re)
+                (Just re) -> do
+                    let node = ast2node m (pdcRulePattern re)
+                        result = evalNode node msglist emptyBoundEnv
+                    case result of
+                        (EvalNodeSuccess {..}) -> do
+                            putStrLn "Success."
+                        (EvalNodeFail {..}) -> do
+                            putStrLn "Fail."
+                            putStrLn "\nFailed pattern:"
+                            putStrLn (prettyPDCRulePattern failedPattern)
+                            putStrLn "\nFailed msg:"
+                            putStrLn (show (fmap (prettyPDCRulePattern . PDCMsgPattern) failedMsg))
+                    putStrLn "\nBounded ids:"
+                    forM_ (toList (boundEnv result))  (\(a,b) -> putStrLn $ a ++ ": " ++ b)
+                    -- putStrLn (show result)
+                    -- cliNode node
+                    -- [PDCMsgP]
+
                     -- putStrLn $ prettyNode $ ast2node (pdcRulePattern re) -- show $ eval re msglist
             -- debug options "module" mod
             -- issues <- runPDCSemanticChecker mod
@@ -85,14 +104,17 @@ optParser :: Parser Options
 optParser = Options
     <$> strOption
         ( long "rule-file"
+       <> short 'r'
        <> metavar "FILE"
        <> help "input rule file" )
     <*> strOption
         ( long "msg-list-file"
+       <> short 'l'
        <> metavar "FILE"
        <> help "input msg list file" )
     <*> strOption
         ( long "main-rule"
+       <> short 'm'
        <> metavar "RULE-NAME"
        <> help "name of runnable main rule")
     <*> option auto

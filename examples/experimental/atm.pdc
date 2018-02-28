@@ -8,7 +8,7 @@ rule atm(User, ATM) {
                 seq {
                     User -> ATM: Deposit
                     User -> ATM: Amount
-                    ATM -> USer: Balance
+                    ATM -> User: Balance
                 }
                 seq {
                     User -> ATM: Withdraw

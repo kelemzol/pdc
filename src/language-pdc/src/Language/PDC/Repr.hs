@@ -1,7 +1,10 @@
 
 {-# LANGUAGE RecordWildCards
            , DeriveGeneric
-           , OverloadedStrings           
+           , OverloadedStrings
+           , TypeSynonymInstances
+           , FlexibleInstances
+--           , UndecidableInstances
            #-}
 
 module Language.PDC.Repr where
@@ -176,7 +179,7 @@ instance JSON.FromJSON PDCManyOfP
 data PDCUnSeqP
   = PDCUnSeqP
     { sourceInfoUnSeq  :: SourceInfo
-    , pdcRulePatternsUnSeqOf :: [PDCRulePattern]
+    , pdcRulePatternsUnSeq :: [PDCRulePattern]
     }
   deriving (Eq, Ord, Show, Generic)
 instance JSON.ToJSON PDCUnSeqP
@@ -231,6 +234,17 @@ instance JSON.FromJSON P.SourcePos where
   parseJSON _ = JSON.empty
 
 
+class GetId a where
+    getId :: a -> String
+
+instance GetId PDCId where
+    getId (PDCId {..}) = pdcid
+instance GetId String where
+    getId = id
+--instance (GetRuleName a) => GetId a where
+--    getId = pdcid . getRuleName
+
+
 
 class GetRuleName a where
     getRuleName :: a -> PDCId
@@ -242,6 +256,8 @@ instance GetRuleName PDCRuleE where
 instance GetRuleName PDCModuleEntry where
     getRuleName (PDCExportEntry e) = getRuleName e
     getRuleName (PDCRuleEntry e) = getRuleName e
+
+
 
 class GetSourceInfo a where
     getSourceInfo :: a -> SourceInfo
@@ -301,7 +317,7 @@ filterExportEntries = catMaybes . map maybeExportEntry
 prettyPDCRulePattern :: PDCRulePattern -> String
 prettyPDCRulePattern  (PDCMsgPattern (PDCMsgP{..})) = "(" ++ (pdcid pdcMsgFrom) ++ "->" ++ (pdcid pdcMsgTo) ++ ":" ++ (pdcid pdcMsgType) ++ ")"
 prettyPDCRulePattern  (PDCSeqPattern (PDCSeqP{..})) = "seq{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsSeq) ++ "}"
-prettyPDCRulePattern  (PDCUnSeqPattern (PDCUnSeqP{..})) = "unseq{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsUnSeqOf) ++ "}"
+prettyPDCRulePattern  (PDCUnSeqPattern (PDCUnSeqP{..})) = "unseq{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsUnSeq) ++ "}"
 prettyPDCRulePattern  (PDCStartInstantlyPattern (PDCStartInstantlyP{..})) = "start instantly"
 prettyPDCRulePattern  (PDCOneOfPattern (PDCOneOfP{..})) = "one-of{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsOneOf) ++ "}"
 prettyPDCRulePattern  (PDCManyofPattern (PDCManyOfP{..})) = "many-of{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsManyOf) ++ "}"
