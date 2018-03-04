@@ -1,0 +1,18 @@
+Simple test 3 - positive;
+
+module test-module
+
+rule test (A, B) {
+    A -> B: MSG
+    B -> A: MSG2
+}
+
+;
+
+A -> B: MSG
+B -> A: MSG2
+C -> D: MSG3
+
+;
+
+Success {env = "BoundEnv {bmap = fromList []}"}

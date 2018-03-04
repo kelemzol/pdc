@@ -1,0 +1,29 @@
+Merge test 4 - positive;
+
+module test-module
+
+rule test (A, B) {
+    merge {
+        seq {
+            A -> B: MSG
+            B -> A: MSG2
+        }
+        merge {
+            seq {
+                A -> B: MSG3
+                B -> A: MSG4
+            }
+        }
+    }
+}
+
+;
+
+A -> B: MSG3
+B -> A: MSG4
+A -> B: MSG
+B -> A: MSG2
+
+;
+
+Success {env = "BoundEnv {bmap = fromList []}"}

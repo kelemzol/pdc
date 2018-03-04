@@ -1,0 +1,19 @@
+Many-of test 3 - positive;
+
+module test-module
+
+rule test (A, B) {
+    many-of {
+        A -> B: MSG
+    }
+}
+
+;
+
+A -> B: MSG
+A -> B: MSG
+B -> A: MSG2
+
+;
+
+Success {env = "BoundEnv {bmap = fromList []}"}

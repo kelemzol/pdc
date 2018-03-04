@@ -71,6 +71,11 @@ ast2node' mod (o@(PDCMoreOfPattern p):tl) = moreof2node mod tl o p
 ast2node' mod (o@(PDCCallPattern p):tl) = call2node mod tl o p
 
 
+pattern2Branch :: PDCModule -> [PDCRulePattern] -> PDCRulePattern -> Maybe [(PDCMsgP, Node)]
+pattern2Branch mod tl p = case (ast2node' mod (p:tl)) of
+  (Node {..}) -> Just branches
+  Leaf -> Nothing
+
 
 msg2node :: PDCModule -> [PDCRulePattern] -> PDCRulePattern -> PDCMsgP -> Node
 msg2node _ [] o p = Node o [(p, Leaf)]
@@ -169,8 +174,4 @@ call2node mod tl o (PDCCallP {..}) = ast2node' mod ((pdcRulePattern ruleEntry):t
 
 
 
-pattern2Branch :: PDCModule -> [PDCRulePattern] -> PDCRulePattern -> Maybe [(PDCMsgP, Node)]
-pattern2Branch mod tl p = case (ast2node' mod (p:tl)) of
-  (Node {..}) -> Just branches
-  Leaf -> Nothing
 
