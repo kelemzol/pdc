@@ -1,0 +1,43 @@
+
+
+// the folowing is valid
+
+
+module test-module
+
+rule test (?a, B) {
+    more-of {
+        seq {
+            a -> B: MSG1
+            B -> a: MSG2
+        }
+    }
+    B -> B: END
+}
+
+// the scope of ?a is a branch
+// this is also not valid:
+
+rule test (?a, B) {
+    more-of {
+        seq {
+            a -> B: MSG1
+            B -> a: MSG2
+        }
+    }
+    a -> a: END
+}
+
+// but msg at a -> a: END the a is not bounded
+
+
+// general: the scope of ?a is the body of deepest more-of, many-of, one-of, rule
+
+;
+
+A1 -> B: MSG1
+B -> A1: MSG2
+A2 -> B: MSG1
+B -> A2: MSG2
+B -> B :END
+

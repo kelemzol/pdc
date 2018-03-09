@@ -1,0 +1,24 @@
+Bound test 8 - positive;
+
+module test-module
+
+rule test (a, B) {
+    more-of {
+        seq {
+            a -> B: MSG1
+            B -> a: MSG2
+        }
+    }
+    B -> B: END
+}
+
+;
+
+A1 -> B: MSG1
+B -> A1: MSG2
+A2 -> B: MSG1
+B -> A2: MSG2
+B -> B :END
+;
+
+Failed {failedMessage = Just "(A2->B:MSG1)", env = "BoundEnv {bmap = fromList [(\"a\",\"A1\")]}"}

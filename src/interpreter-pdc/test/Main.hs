@@ -1,6 +1,9 @@
 
 {-# LANGUAGE RecordWildCards
-           , StandaloneDeriving #-}
+           , StandaloneDeriving
+           , ViewPatterns
+           , ScopedTypeVariables
+           #-}
 
 module Main where
 
@@ -26,12 +29,18 @@ main :: IO ()
 main = do
     dirContext <- listDirectory "./test/units/"
     let units = sort dirContext
-    putStrLn "Found unit tests:"
-    forM_ (zip [1..] units) (\ (i,n) -> putStrLn ("  " ++ show i ++ ":\t" ++ n))
     putStrLn ""
     files <- forM (map ("./test/units/"++) units) readFile
     let unitTests = map processFileContent (zip files units)
-        tests = map unitTestTree unitTests
+        tests = map unitTestTree $ filter uactive unitTests
+        activity True = "active"
+        activity False = "NOT-active"
+    putStrLn "Found unit tests:"
+    forM_ (zip [1..] unitTests) $ \ (i,u) -> do
+        putStrLn ("  " ++ show i ++ ":\t" ++ (unitFn u) ++ " activity:" ++ (activity $ uactive u))
+        if uactive u
+            then return ()
+            else putStrLn $ "    " ++ (filter ('\n'/=) (comment u))
     defaultMain (testGroup "Unit Tests from files (./test/units/)" tests)
 
 
@@ -57,7 +66,7 @@ unitTestTree (PDCUnitTest {..}) =
                              in Right (res2res (evalNode node msglist emptyBoundEnv))
 
 res2res :: EvalNodeRes -> SimpleRes
-res2res EvalNodeFail {..} = Failed (fmap (prettyPDCRulePattern . PDCMsgPattern) failedMsg) (show boundEnv)
+res2res EvalNodeFail {..} = Failed (fmap (\m -> (prettyPDCRulePattern $ PDCMsgPattern m) {- ++ (show $ sourceInfoMsg m) -} ) failedMsg) (show boundEnv)
 res2res EvalNodeSuccess {..} = Success (show boundEnv)
 
 data SimpleRes
@@ -75,6 +84,8 @@ data PDCUnitTest
   = PDCUnitTest
     { unitFn  :: String
     , unitTId :: String
+    , uactive :: Bool
+    , comment :: String
     , pdcCode :: String
     , msgList :: String
     , tResult :: String
@@ -82,4 +93,7 @@ data PDCUnitTest
   deriving (Eq, Show)
 
 processFileContent :: (String,String) -> PDCUnitTest
-processFileContent (str, unitFn) = let [unitTId, pdcCode, msgList, tResult] = splitOn ";" str in PDCUnitTest {..}
+processFileContent (str, unitFn) = case splitOn ";" str of
+    [unitTId, pdcCode, msgList, tResult] ->  let uactive = True in let comment = "" in PDCUnitTest {..}
+    [unitTId, reads -> [(uactive,_::String)], comment, pdcCode, msgList, tResult] -> PDCUnitTest {..}
+

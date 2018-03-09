@@ -1,12 +1,10 @@
-Many-of test 4 - positive;
-False;
-bug: infinite cycle with many-of{many-of{..}} in eval-repr build;
+More-of test 4 - positive;
 
 module test-module
 
 rule test (A, B) {
-    many-of {
-        many-of {
+    more-of {
+        more-of {
             A -> B: MSG
         }
     }

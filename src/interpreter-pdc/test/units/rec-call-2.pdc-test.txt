@@ -1,0 +1,34 @@
+Rec Call test 2 - positive;
+False;
+bug: merge is strict;
+
+module test-module
+
+rule test (A, B, C, D) {
+    merge {
+        test2
+        A -> B:MSG
+    }
+    A -> B: ENDEND
+}
+
+rule test2 (A, B, C, D) {
+    A -> B: REC
+    optional test2
+    A -> B: END
+}
+
+;
+
+A -> B: REC
+A -> B: REC
+A -> B: REC
+A -> B: END
+A -> B: END
+A -> B: END
+A -> B:MSG
+A -> B: ENDEND
+
+;
+
+Success {env = "BoundEnv {bmap = fromList []}"}

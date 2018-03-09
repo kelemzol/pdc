@@ -1,0 +1,21 @@
+More-of test 2 - positive;
+
+module test-module
+
+rule test (A, B, C, D) {
+    more-of {
+        A -> B: MSG1
+        A -> B: MSG2
+    }
+    A -> B: END
+}
+
+;
+
+A -> B: MSG1
+A -> B: MSG2
+A -> B: END
+
+;
+
+Success {env = "BoundEnv {bmap = fromList []}"}

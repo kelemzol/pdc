@@ -1,0 +1,20 @@
+Bound test 3 - positive;
+
+module test-module
+
+rule test (a, B) {
+    one-of {
+        a -> B: MSG
+        B -> a: MSG
+    }
+    B -> a: MSG2
+}
+
+;
+
+A -> B: MSG
+B -> A: MSG2
+
+;
+
+Success {env = "BoundEnv {bmap = fromList [(\"a\",\"A\")]}"}

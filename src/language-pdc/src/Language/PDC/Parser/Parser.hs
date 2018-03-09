@@ -85,6 +85,7 @@ tkUnSeq        = normTok TkUnSeq
 tkInstantly    = normTok TkInstantly
 tkMerge        = normTok TkMerge
 tkExport       = normTok TkExport
+tkProc         = normTok TkProc
 tkArrow        = normTok TkArrow
 tkColon        = normTok TkColon
 tkComma        = normTok TkComma
@@ -122,8 +123,14 @@ parsePDCRuleE = PDCRuleE <$> getSourceInfoP <*> (tkRule *> parsePDCId) <*> parse
 
 parsePDCRuleType :: PDCParser PDCRuleType
 parsePDCRuleType = PDCRuleType <$> getSourceInfoP
-                               <*> (try (angle ((PDCTempParam <$> parsePDCId) `sepBy` tkComma)) <|> (pure []))
+                               <*> (try (angle (parsePDCRuleTemplParam `sepBy` tkComma)) <|> (pure []))
                                <*> (bracket ((PDCProcParam <$> parsePDCId) `sepBy` tkComma))
+
+parsePDCRuleTemplParam :: PDCParser PDCTemplParam
+parsePDCRuleTemplParam  = PDCTemplProcParam <$> parsePDCRuleTemplProcP
+
+parsePDCRuleTemplProcP :: PDCParser PDCTemplProcP
+parsePDCRuleTemplProcP = PDCTemplProcP <$> (tkProc *> parsePDCId)
 
 parsePDCRulePattern :: PDCParser PDCRulePattern
 parsePDCRulePattern = (try (PDCSeqPattern <$> parsePDCSeqP))
@@ -162,4 +169,6 @@ parseUnSeqP = blockPatternConstructor PDCUnSeqP tkUnSeq
 parseMergeP = blockPatternConstructor PDCMergeP tkMerge
 parseOptionalP = PDCOptionalP <$> getSourceInfoP <*> (tkOptional *> blockOrSingleton)
 parseMsgP = PDCMsgP <$> getSourceInfoP <*> parsePDCId <*> (tkArrow *> parsePDCId) <*> (tkColon *> parsePDCId) <*> (pure ())
-parseCallP = PDCCallP <$> getSourceInfoP <*> parsePDCId
+parseCallP = PDCCallP <$> getSourceInfoP <*> parsePDCId <*> (angle (parsePDCId `sepBy` tkComma))
+
+

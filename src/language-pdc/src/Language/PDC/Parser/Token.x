@@ -35,6 +35,7 @@ tokens :-
     "instantly"                        { tok TkInstantly }
     "merge"                            { tok TkMerge }
     "export"                           { tok TkExport }
+    "proc"                             { tok TkProc }
     "->"                               { tok TkArrow }
     ":"                                { tok TkColon }
     ","                                { tok TkComma }
@@ -82,6 +83,7 @@ data Token
   | TkInstantly    { pos :: Pos }
   | TkMerge        { pos :: Pos }
   | TkExport       { pos :: Pos }
+  | TkProc         { pos :: Pos }
   | TkArrow        { pos :: Pos }
   | TkColon        { pos :: Pos }
   | TkComma        { pos :: Pos }
@@ -111,6 +113,7 @@ tokeneq (TkManyOf _)       (TkManyOf _)       = True
 tokeneq (TkInstantly _)    (TkInstantly _)    = True
 tokeneq (TkMerge _)        (TkMerge _)        = True
 tokeneq (TkExport _)       (TkExport _)       = True
+tokeneq (TkProc _)         (TkProc _)         = True
 tokeneq (TkArrow _)        (TkArrow _)        = True
 tokeneq (TkColon _)        (TkColon _)        = True
 tokeneq (TkComma _)        (TkComma _)        = True

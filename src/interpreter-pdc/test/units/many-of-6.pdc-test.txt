@@ -1,13 +1,16 @@
-Many-of test 4 - positive;
-False;
-bug: infinite cycle with many-of{many-of{..}} in eval-repr build;
+Many-of test 6 - positive;
+True;
+not present: bug: infinite cycle with many-of{many-of{..}} in eval-repr build;
 
 module test-module
 
 rule test (A, B) {
     many-of {
-        many-of {
+        seq {
             A -> B: MSG
+            many-of {
+                A -> B: MSG
+            }
         }
     }
     B -> A: MSG2

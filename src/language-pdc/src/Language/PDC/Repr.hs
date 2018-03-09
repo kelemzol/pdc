@@ -72,20 +72,26 @@ instance JSON.FromJSON PDCRuleE
 data PDCRuleType
   = PDCRuleType
     { sourceInfoRuleType :: SourceInfo
-    , pdcRuleTempParams :: [PDCTempParam]
+    , pdcRuleTempParams :: [PDCTemplParam]
     , pdcRuleProcParams :: [PDCProcParam]
     }
   deriving (Eq, Ord, Show, Generic)
 instance JSON.ToJSON PDCRuleType
 instance JSON.FromJSON PDCRuleType
 
-data PDCTempParam
-  = PDCTempParam
+data PDCTemplParam
+  = PDCTemplProcParam PDCTemplProcP
+  deriving (Eq, Ord, Show, Generic)
+instance JSON.ToJSON PDCTemplParam
+instance JSON.FromJSON PDCTemplParam
+  
+data PDCTemplProcP
+  = PDCTemplProcP
     { pdcIdTempParam    :: PDCId
     }
   deriving (Eq, Ord, Show, Generic)
-instance JSON.ToJSON PDCTempParam
-instance JSON.FromJSON PDCTempParam
+instance JSON.ToJSON PDCTemplProcP
+instance JSON.FromJSON PDCTemplProcP
 
 data PDCProcParam
   = PDCProcParam
@@ -198,6 +204,7 @@ data PDCCallP
   = PDCCallP
     { sourceInfoCall    :: SourceInfo
     , pdcRuleId         :: PDCId
+    , pdcTmplPrmsCall   :: [PDCId]
     }
   deriving (Eq, Ord, Show, Generic)
 instance JSON.ToJSON PDCCallP

@@ -1,0 +1,19 @@
+Bound test 7 - negative;
+
+module test-module
+
+rule test (A, a, B) {
+    optional a -> B: MSG
+    a -> B: MSG
+    B -> a: MSG2
+}
+
+;
+
+A -> B: MSG
+C -> B: MSG
+B -> C: MSG2
+
+;
+
+Failed {failedMessage = Just "(C->B:MSG)", env = "BoundEnv {bmap = fromList [(\"a\",\"A\")]}"}

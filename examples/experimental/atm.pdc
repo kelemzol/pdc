@@ -26,8 +26,22 @@ rule atm(User, ATM) {
 
 
 
+type record Msg1Type {
+    id : ID
+    msg : String
+}
+
+message MSG1 : Msg1Type
 
 
+rule aa(..)
+  decl {
+
+  }
+  begin {
+
+
+  }
 
 
 

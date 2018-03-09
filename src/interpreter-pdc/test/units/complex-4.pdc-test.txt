@@ -1,0 +1,35 @@
+Complex test 4 - positive;
+
+module test-module
+
+rule test (A, B, C, D) {
+    merge {
+        seq {
+            A -> C: REQ1
+            C -> D: REQ2
+            D -> C: RES2
+            C -> A: RES1
+        }
+        seq {
+            B -> C: REQ1
+            C -> D: REQ2
+            D -> C: RES2
+            C -> B: RES1
+        }
+    }
+}
+
+;
+
+A -> C: REQ1
+B -> C: REQ1
+C -> D: REQ2
+C -> D: REQ2
+D -> C: RES2
+C -> A: RES1
+D -> C: RES2
+C -> B: RES1
+
+;
+
+Success {env = "BoundEnv {bmap = fromList []}"}

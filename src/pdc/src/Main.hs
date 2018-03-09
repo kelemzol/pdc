@@ -55,6 +55,8 @@ work options@(Options {..}) = do
                 (Just re) -> do
                     let node = ast2node m (pdcRulePattern re)
                         result = evalNode node msglist emptyBoundEnv
+                    writeFileNodeTree "out.txt" 16 node
+                    cliNode node
                     case result of
                         (EvalNodeSuccess {..}) -> do
                             putStrLn "Success."
