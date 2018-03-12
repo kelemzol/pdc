@@ -66,13 +66,15 @@ getSourceInfoP :: PDCParser SourceInfo
 getSourceInfoP = SourceInfo <$> getPosition
 
 
-tkUc, tkLc :: PDCParser String
+tkUc, tkLc, tkStringLit :: PDCParser String
 tkModule, tkRule, tkStart, tkSeq, tkOptional, tkOneOf, tkMoreOf, tkManyOf, tkUnSeq, tkInstantly, tkMerge :: PDCParser ()
 tkExport, tkArrow, tkColon, tkComma, tkBraceOpen, tkBraceClose, tkBracketOpen, tkBracketClose, tkAngleOpen, tkAngleClose, tkSquareOpen, tkSquareClose :: PDCParser ()
+tkType, tkRecord, tkMsg, tkDecl, tkBegin, tkAction, tkIf, tkWhile, tkDiscard, tkAt, tkEq, tkNEq, tkAssign :: PDCParser ()
 brace, bracket, angle, square :: PDCParser a -> PDCParser a
 
 tkUc           = idTok TkIdUC
 tkLc           = idTok TkIdLC
+tkStringLit    = idTok TkStringLit
 tkModule       = normTok TkModule
 tkRule         = normTok TkRule
 tkStart        = normTok TkStart
@@ -86,6 +88,19 @@ tkInstantly    = normTok TkInstantly
 tkMerge        = normTok TkMerge
 tkExport       = normTok TkExport
 tkProc         = normTok TkProc
+tkType         = normTok TkType      
+tkRecord       = normTok TkRecord    
+tkMsg          = normTok TkMsg       
+tkDecl         = normTok TkDecl      
+tkBegin        = normTok TkBegin     
+tkAction       = normTok TkAction    
+tkIf           = normTok TkIf        
+tkWhile        = normTok TkWhile     
+tkDiscard      = normTok TkDiscard   
+tkAt           = normTok TkAt        
+tkEq           = normTok TkEq        
+tkNEq          = normTok TkNEq       
+tkAssign       = normTok TkAssign    
 tkArrow        = normTok TkArrow
 tkColon        = normTok TkColon
 tkComma        = normTok TkComma

@@ -1,9 +1,43 @@
-rule simple-rule(A, B) {
-    start A -> B : REQ
-    B -> A : RES
-    optional B -> A : RES
-    optional {
-        A -> B : REQ
-        B -> A : RES
+
+module ex2
+
+type record StdMsg {
+    sessionId : ID
+}
+
+msg REQ StdMsg
+msg RES StdMsg
+
+rule simple-rule(A, B)
+decl {
+        sid : ID
+}
+begin {
+    A -> B : REQ {
+        sid = msg.sessionId
+    }
+    B -> A : RES {
+        if msg.sessionId /= sid {
+            discard "invalid session id!"
+        }
     }
 }
+
+rule simple-rule-2(A, B)
+decl {
+        sid : ID
+}
+begin {
+    A -> B : REQ @assign (sid, msg.sessionId)
+    B -> A : RES @check (sid, msg)
+}
+
+action check(id : ID, msg : StdMsg) {
+    if msg.sessionId /= sid {
+        discard "invalid session id!"
+    }
+}
+
+// new tokens: type record msg decl begin @ == /= action if discard ""
+
+

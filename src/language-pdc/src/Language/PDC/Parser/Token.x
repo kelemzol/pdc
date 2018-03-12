@@ -20,10 +20,14 @@ $digit = 0-9 -- digits
 $alpha = [a-zA-Z\-] -- alphabetic characters
 $uc = [A-Z]
 $lc = [a-z]
+$graphic = $printable # $white
+@string = \" ($graphic # \")* \"
+
 
 tokens :-
     $white+                            { vtok TkWs }
     "//" .*$                           { vtok TkWs }
+    @string                            { vtok TkStringLit }
     "module"                           { tok TkModule }
     "rule"                             { tok TkRule }
     "start"                            { tok TkStart }
@@ -37,6 +41,19 @@ tokens :-
     "merge"                            { tok TkMerge }
     "export"                           { tok TkExport }
     "proc"                             { tok TkProc }
+    "type"                             { tok TkType }
+    "record"                           { tok TkRecord }
+    "msg"                              { tok TkMsg }
+    "decl"                             { tok TkDecl }
+    "begin"                            { tok TkBegin }
+    "action"                           { tok TkAction }
+    "if"                               { tok TkIf }
+    "while"                            { tok TkWhile }
+    "discard"                          { tok TkDiscard }
+    "@"                                { tok TkAt }
+    "=="                               { tok TkEq }
+    "/="                               { tok TkNEq }
+    "="                                { tok TkAssign }
     "->"                               { tok TkArrow }
     ":"                                { tok TkColon }
     ","                                { tok TkComma }
@@ -72,6 +89,7 @@ apos2pos (AlexPn _ l c) s = Pos l c ("[l:" ++ show l ++ ",c:" ++ show c ++ "]") 
 
 data Token
   = TkWs           { pos :: Pos, tkws :: String }
+  | TkStringLit    { pos :: Pos, tkws :: String }
   | TkModule       { pos :: Pos }
   | TkRule         { pos :: Pos }
   | TkStart        { pos :: Pos }
@@ -85,6 +103,19 @@ data Token
   | TkMerge        { pos :: Pos }
   | TkExport       { pos :: Pos }
   | TkProc         { pos :: Pos }
+  | TkType         { pos :: Pos }
+  | TkRecord       { pos :: Pos }
+  | TkMsg          { pos :: Pos }
+  | TkDecl         { pos :: Pos }
+  | TkBegin        { pos :: Pos }
+  | TkAction       { pos :: Pos }
+  | TkIf           { pos :: Pos }
+  | TkWhile        { pos :: Pos }
+  | TkDiscard      { pos :: Pos }
+  | TkAt           { pos :: Pos }
+  | TkEq           { pos :: Pos }
+  | TkNEq          { pos :: Pos }
+  | TkAssign       { pos :: Pos }
   | TkArrow        { pos :: Pos }
   | TkColon        { pos :: Pos }
   | TkComma        { pos :: Pos }
@@ -102,6 +133,7 @@ data Token
 
 tokeneq :: Token -> Token -> Bool
 tokeneq (TkWs _ _)         (TkWs _ _)         = True
+tokeneq (TkStringLit _ _)  (TkStringLit _ _)  = True
 tokeneq (TkModule _)       (TkModule _)       = True
 tokeneq (TkRule _)         (TkRule _)         = True
 tokeneq (TkStart _)        (TkStart _)        = True
@@ -115,6 +147,19 @@ tokeneq (TkInstantly _)    (TkInstantly _)    = True
 tokeneq (TkMerge _)        (TkMerge _)        = True
 tokeneq (TkExport _)       (TkExport _)       = True
 tokeneq (TkProc _)         (TkProc _)         = True
+tokeneq (TkType    _)      (TkType    _)      = True
+tokeneq (TkRecord  _)      (TkRecord  _)      = True
+tokeneq (TkMsg     _)      (TkMsg     _)      = True
+tokeneq (TkDecl    _)      (TkDecl    _)      = True
+tokeneq (TkBegin   _)      (TkBegin   _)      = True
+tokeneq (TkAction  _)      (TkAction  _)      = True
+tokeneq (TkIf      _)      (TkIf      _)      = True
+tokeneq (TkWhile   _)      (TkWhile   _)      = True
+tokeneq (TkDiscard _)      (TkDiscard _)      = True
+tokeneq (TkAt      _)      (TkAt      _)      = True
+tokeneq (TkEq      _)      (TkEq      _)      = True
+tokeneq (TkNEq     _)      (TkNEq     _)      = True
+tokeneq (TkAssign  _)      (TkAssign  _)      = True
 tokeneq (TkArrow _)        (TkArrow _)        = True
 tokeneq (TkColon _)        (TkColon _)        = True
 tokeneq (TkComma _)        (TkComma _)        = True
