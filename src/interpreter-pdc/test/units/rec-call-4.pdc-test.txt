@@ -1,0 +1,31 @@
+Rec Call test 4 - positive;
+
+module test-module
+
+rule test (A, B, C, D) {
+    A -> B: REC
+    many-of {
+        test
+    }
+    A -> B: END
+}
+
+;
+
+A -> B: REC
+A -> B: REC
+A -> B: REC
+
+A -> B: REC
+A -> B: END
+A -> B: REC
+A -> B: END
+
+
+A -> B: END
+A -> B: END
+A -> B: END
+
+;
+
+Success {env = "BoundEnv {bmap = fromList []}"}

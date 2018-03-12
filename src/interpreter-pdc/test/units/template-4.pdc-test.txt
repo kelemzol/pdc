@@ -1,0 +1,23 @@
+Template test 4 - positive;
+
+module test-module
+
+rule test (a, B) {
+    bound <a, B>
+    a -> B: UseBoundding
+}
+
+
+rule bound <proc a, proc B> (a, B) {
+    a -> B: Bounder
+}
+
+;
+
+A -> B: Bounder
+A -> B: UseBoundding
+
+
+;
+
+Success {env = "BoundEnv {bmap = fromList [(\"a\",\"A\")]}"}

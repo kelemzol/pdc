@@ -1,0 +1,26 @@
+Template test 5 - positive;
+
+module test-module
+
+rule test (A, B) {
+    called <A, B>
+    A -> B: END
+}
+
+
+rule called <proc Q, proc W> (Q, W) {
+    Q -> W: MSG
+    optional called <Q, W>
+}
+
+;
+
+A -> B: MSG
+A -> B: MSG
+A -> B: MSG
+A -> B: END
+
+
+;
+
+Success {env = "BoundEnv {bmap = fromList []}"}

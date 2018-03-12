@@ -33,14 +33,13 @@ main = do
     files <- forM (map ("./test/units/"++) units) readFile
     let unitTests = map processFileContent (zip files units)
         tests = map unitTestTree $ filter uactive unitTests
-        activity True = "active"
-        activity False = "NOT-active"
     putStrLn "Found unit tests:"
     forM_ (zip [1..] unitTests) $ \ (i,u) -> do
-        putStrLn ("  " ++ show i ++ ":\t" ++ (unitFn u) ++ " activity:" ++ (activity $ uactive u))
+        let activityIcon = if uactive u then "[X]" else "[_]"
+        putStrLn ("  " ++ show i ++ ":\t" ++ activityIcon ++ " " ++ (unitFn u))
         if uactive u
             then return ()
-            else putStrLn $ "    " ++ (filter ('\n'/=) (comment u))
+            else putStrLn $ "\n    " ++ (filter ('\n'/=) (comment u)) ++ "\n"
     defaultMain (testGroup "Unit Tests from files (./test/units/)" tests)
 
 
