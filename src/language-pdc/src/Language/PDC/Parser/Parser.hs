@@ -119,7 +119,10 @@ parsePDCExportE :: PDCParser PDCExportE
 parsePDCExportE = PDCExportE <$> getSourceInfoP <*> (tkExport *> parsePDCId)
 
 parsePDCRuleE :: PDCParser PDCRuleE
-parsePDCRuleE = PDCRuleE <$> getSourceInfoP <*> (tkRule *> parsePDCId) <*> parsePDCRuleType <*> implicitSeqPattern
+parsePDCRuleE = PDCRuleE <$> getSourceInfoP <*> parsePDCRuleHeader <*> implicitSeqPattern
+
+parsePDCRuleHeader :: PDCParser PDCRuleHeader
+parsePDCRuleHeader = PDCRuleHeader <$> getSourceInfoP <*> (tkRule *> parsePDCId) <*> parsePDCRuleType
 
 parsePDCRuleType :: PDCParser PDCRuleType
 parsePDCRuleType = PDCRuleType <$> getSourceInfoP
@@ -127,10 +130,16 @@ parsePDCRuleType = PDCRuleType <$> getSourceInfoP
                                <*> (bracket ((PDCProcParam <$> parsePDCId) `sepBy` tkComma))
 
 parsePDCRuleTemplParam :: PDCParser PDCTemplParam
-parsePDCRuleTemplParam  = PDCTemplProcParam <$> parsePDCRuleTemplProcP
+parsePDCRuleTemplParam = (try (PDCTemplProcParam <$> parsePDCRuleTemplProcP))
+                     <|>      (PDCTemplRuleParam <$> parsePDCRuleHeader) -- parsePDCRuleTemplRuleP)
+                     <?> "PDC-rule-template-parameter"
 
 parsePDCRuleTemplProcP :: PDCParser PDCTemplProcP
-parsePDCRuleTemplProcP = PDCTemplProcP <$> (tkProc *> parsePDCId)
+parsePDCRuleTemplProcP = PDCTemplProcP <$> getSourceInfoP <*> (tkProc *> parsePDCId)
+
+-- parsePDCRuleTemplRuleP :: PDCParser PDCTemplRuleP
+-- parsePDCRuleTemplRuleP = PDCTemplRuleP <$> parsePDCRuleHeader
+
 
 parsePDCRulePattern :: PDCParser PDCRulePattern
 parsePDCRulePattern = (try (PDCSeqPattern <$> parsePDCSeqP))
@@ -169,6 +178,6 @@ parseUnSeqP = blockPatternConstructor PDCUnSeqP tkUnSeq
 parseMergeP = blockPatternConstructor PDCMergeP tkMerge
 parseOptionalP = PDCOptionalP <$> getSourceInfoP <*> (tkOptional *> blockOrSingleton)
 parseMsgP = PDCMsgP <$> getSourceInfoP <*> parsePDCId <*> (tkArrow *> parsePDCId) <*> (tkColon *> parsePDCId) <*> (pure ())
-parseCallP = PDCCallP <$> getSourceInfoP <*> parsePDCId <*> (angle (parsePDCId `sepBy` tkComma))
+parseCallP = PDCCallP <$> getSourceInfoP <*> parsePDCId <*> (try (angle (parsePDCId `sepBy` tkComma)) <|> (pure []))
 
 

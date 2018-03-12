@@ -1,0 +1,27 @@
+Template test 3 - positive;
+
+module test-module
+
+rule test (A, B) {
+    A -> B: MSG1
+    templ <A, B, tp>
+    A -> B: MSG2
+}
+
+rule templ <proc TSource, proc TDest, rule trule <proc TA, proc TB> (TA, TB)> (TSource, TDest) {
+    trule
+}
+
+rule tp (A, B) {
+    A -> B: TMSG
+}
+
+;
+
+A -> B: MSG1
+A -> B: TMSG
+A -> B: MSG2
+
+;
+
+Success {env = "BoundEnv {bmap = fromList []}"}

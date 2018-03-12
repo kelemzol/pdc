@@ -21,6 +21,8 @@ trace3 a = a -- Debug.trace (show a) a
 
 --mergeTrace = Debug.trace
 mergeTrace a b = b
+--callTrace = Debug.trace
+callTrace a b = b
 
 
 
@@ -265,8 +267,9 @@ mergeBr (m1, n1) (m2, n2)
         ]
 
 
+
 call2node :: PDCModule -> [PDCRulePattern] -> PDCRulePattern -> PDCCallP -> Node
-call2node mod tl o (PDCCallP {..}) = ast2node' mod ((pdcRulePattern ruleEntry):tl)
+call2node mod tl o cp@(PDCCallP {..}) = ast2node' mod ((pdcRulePattern (callTrace "instanceRuleEntry" $ instanceRuleEntry cp ruleEntry)):tl)
   where
     Just ruleEntry = findRuleEntry pdcRuleId mod
     

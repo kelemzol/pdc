@@ -21,4 +21,4 @@ B -> A2: MSG2
 B -> B :END
 ;
 
-Failed {failedMessage = Just "(A2->B:MSG1)", env = "BoundEnv {bmap = fromList [(\"a\",\"A1\")]}"}
+Failed {failedPattern_ = "(B->B:END)", failedMessage = Just "(A2->B:MSG1)", env = "BoundEnv {bmap = fromList [(\"a\",\"A1\")]}"}

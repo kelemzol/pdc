@@ -7,27 +7,32 @@ module Language.PDC.Interpreter.Utils where
 import Data.List(find)
 import Data.Data
 
+import Data.Generics.Uniplate.Data
 import Data.Generics.Uniplate.Operations
 
 import Language.PDC.Repr
 
+import Debug.Trace
 
 -- module utils
 ---------------
 
 
 findRuleEntry :: (GetId a) => a -> PDCModule -> Maybe PDCRuleE
-findRuleEntry name mod = find (\ re -> pdcid (pdcRuleName re) == (getId name)) $ filterRuleEntries (pdcModuleEntries mod)
+findRuleEntry name mod = find (\ re -> pdcid (pdcRuleName $ pdcRuleEntryHeader re) == (getId name)) $ filterRuleEntries (pdcModuleEntries mod)
 
 instanceRuleEntry :: PDCCallP -> PDCRuleE -> PDCRuleE
-instanceRuleEntry (PDCCallP {..}) r@(PDCRuleE {..}) = r { pdcRulePattern = rewriteBi rewrite pdcRulePattern }
+instanceRuleEntry (PDCCallP {..}) r@(PDCRuleE {..}) = r { pdcRulePattern = transformBi transform pdcRulePattern }
   where
-    rewrite :: PDCId -> Maybe PDCId
-    rewrite = undefined
+    transform :: PDCId -> PDCId
+    transform p = case find ((==) (pdcid p) . snd) templatePairs of
+        Nothing -> p
+        Just n -> p { pdcid = fst n }
     templatePairs :: [(String, String)]
-    templatePairs = zip (map pdcid pdcTmplPrmsCall) (map getTmplName (pdcRuleTempParams pdcRuleType))
+    templatePairs = zip (map pdcid pdcTmplPrmsCall) (map getTmplName (pdcRuleTempParams (pdcRuleType pdcRuleEntryHeader)))
     getTmplName :: PDCTemplParam -> String
-    getTmplName (PDCTemplProcParam (PDCTemplProcP {..})) = pdcid pdcIdTempParam
+    getTmplName (PDCTemplProcParam (PDCTemplProcP {..})) = pdcid pdcTemplProcParamId
+    getTmplName (PDCTemplRuleParam (PDCRuleHeader {..})) = pdcid pdcRuleName
 
 
 {-

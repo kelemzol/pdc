@@ -64,14 +64,23 @@ instance JSON.FromJSON PDCExportE
 data PDCRuleE
   = PDCRuleE
     { sourceInfoRuleEntry :: SourceInfo
-    , pdcRuleName       :: PDCId
-    , pdcRuleType       :: PDCRuleType
+    , pdcRuleEntryHeader :: PDCRuleHeader
     , pdcRulePattern    :: PDCRulePattern
     }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCRuleE
 instance JSON.FromJSON PDCRuleE
 
+data PDCRuleHeader
+  = PDCRuleHeader
+    { sourceInfoRuleHeader :: SourceInfo
+    , pdcRuleName       :: PDCId
+    , pdcRuleType       :: PDCRuleType
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCRuleHeader
+instance JSON.FromJSON PDCRuleHeader
+    
 data PDCRuleType
   = PDCRuleType
     { sourceInfoRuleType :: SourceInfo
@@ -84,17 +93,30 @@ instance JSON.FromJSON PDCRuleType
 
 data PDCTemplParam
   = PDCTemplProcParam PDCTemplProcP
+  | PDCTemplRuleParam PDCRuleHeader
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCTemplParam
 instance JSON.FromJSON PDCTemplParam
   
 data PDCTemplProcP
   = PDCTemplProcP
-    { pdcIdTempParam    :: PDCId
+    { sourceInfoTemplProcP :: SourceInfo
+    , pdcTemplProcParamId :: PDCId
     }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCTemplProcP
 instance JSON.FromJSON PDCTemplProcP
+
+{-
+data PDCTemplRuleP
+  = PDCTemplRuleP
+    { pdcTemplRuleParamId :: PDCId
+    , pdcTemplRuleParamType :: PDCRuleType
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCTemplRuleP
+instance JSON.FromJSON PDCTemplRuleP
+-}
 
 data PDCProcParam
   = PDCProcParam
@@ -262,6 +284,8 @@ class GetRuleName a where
 instance GetRuleName PDCExportE where
     getRuleName = pdcExportId
 instance GetRuleName PDCRuleE where
+    getRuleName = pdcRuleName . pdcRuleEntryHeader
+instance GetRuleName PDCRuleHeader where
     getRuleName = pdcRuleName
 instance GetRuleName PDCModuleEntry where
     getRuleName (PDCExportEntry e) = getRuleName e

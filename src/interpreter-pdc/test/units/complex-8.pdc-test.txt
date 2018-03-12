@@ -1,0 +1,59 @@
+Complex test 8 - positive;
+
+module test-module
+
+rule test (User, ATM) {
+    atm
+}
+
+
+rule atm(User, ATM) {
+    loginWithWork <User, ATM, work>
+}
+
+rule loginWithWork <proc C, proc S, rule work (C, S)> (C, S) {
+    C -> S: Identifier
+    one-of {
+        seq {
+            S -> C: Success
+            work
+        }
+        S -> C: Failure
+    }    
+}
+
+rule work (User, ATM) {
+    one-of {
+        seq {
+            User -> ATM: Deposit
+            User -> ATM: Amount
+            ATM -> USer: Balance
+        }
+        seq {
+            User -> ATM: Withdraw
+            User -> ATM: Amount
+            one-of {
+                ATM -> User: Dispense
+                ATM -> User: Overdraft
+            }
+        }
+    }
+}
+
+;
+
+User -> ATM: Identifier
+ATM -> User: Success
+User -> ATM: Withdraw
+User -> ATM: Amount
+ATM -> User: Overdraft
+
+;
+
+Success {env = "BoundEnv {bmap = fromList []}"}
+
+
+
+
+
+

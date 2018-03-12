@@ -66,12 +66,13 @@ unitTestTree (PDCUnitTest {..}) =
                              in Right (res2res (evalNode node msglist emptyBoundEnv))
 
 res2res :: EvalNodeRes -> SimpleRes
-res2res EvalNodeFail {..} = Failed (fmap (\m -> (prettyPDCRulePattern $ PDCMsgPattern m) {- ++ (show $ sourceInfoMsg m) -} ) failedMsg) (show boundEnv)
+res2res EvalNodeFail {..} = Failed (prettyPDCRulePattern failedPattern) (fmap (\m -> (prettyPDCRulePattern $ PDCMsgPattern m) {- ++ (show $ sourceInfoMsg m) -} ) failedMsg) (show boundEnv)
 res2res EvalNodeSuccess {..} = Success (show boundEnv)
 
 data SimpleRes
   = Failed
-    { failedMessage :: Maybe String
+    { failedPattern_ :: String
+    , failedMessage :: Maybe String
     , env :: String
     }
   | Success

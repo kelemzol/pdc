@@ -23,6 +23,7 @@ $lc = [a-z]
 
 tokens :-
     $white+                            { vtok TkWs }
+    "//" .*$                           { vtok TkWs }
     "module"                           { tok TkModule }
     "rule"                             { tok TkRule }
     "start"                            { tok TkStart }
