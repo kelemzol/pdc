@@ -4,12 +4,15 @@
            , OverloadedStrings
            , TypeSynonymInstances
            , FlexibleInstances
+           , DeriveDataTypeable
 --           , UndecidableInstances
            #-}
 
 module Language.PDC.Repr where
 
 import Data.Maybe
+import Data.Typeable
+import Data.Data
 import qualified Text.Parsec.Pos as P
 import qualified Data.Aeson as JSON
 import qualified Control.Applicative as JSON (empty)
@@ -23,7 +26,7 @@ data PDCModule
     , pdcModuleName     :: PDCId
     , pdcModuleEntries  :: [PDCModuleEntry]
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCModule
 instance JSON.FromJSON PDCModule
 
@@ -33,19 +36,19 @@ data PDCId
     , pdcid             :: String
     , ulcase            :: ULCase
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCId
 instance JSON.FromJSON PDCId
 
 data ULCase = UC | LC
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON ULCase
 instance JSON.FromJSON ULCase
 
 data PDCModuleEntry
   = PDCRuleEntry        PDCRuleE
   | PDCExportEntry      PDCExportE
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCModuleEntry
 instance JSON.FromJSON PDCModuleEntry
 
@@ -54,7 +57,7 @@ data PDCExportE
     { sourceInfoExport  :: SourceInfo
     , pdcExportId       :: PDCId
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCExportE
 instance JSON.FromJSON PDCExportE
 
@@ -65,7 +68,7 @@ data PDCRuleE
     , pdcRuleType       :: PDCRuleType
     , pdcRulePattern    :: PDCRulePattern
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCRuleE
 instance JSON.FromJSON PDCRuleE
 
@@ -75,13 +78,13 @@ data PDCRuleType
     , pdcRuleTempParams :: [PDCTemplParam]
     , pdcRuleProcParams :: [PDCProcParam]
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCRuleType
 instance JSON.FromJSON PDCRuleType
 
 data PDCTemplParam
   = PDCTemplProcParam PDCTemplProcP
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCTemplParam
 instance JSON.FromJSON PDCTemplParam
   
@@ -89,7 +92,7 @@ data PDCTemplProcP
   = PDCTemplProcP
     { pdcIdTempParam    :: PDCId
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCTemplProcP
 instance JSON.FromJSON PDCTemplProcP
 
@@ -97,7 +100,7 @@ data PDCProcParam
   = PDCProcParam
     { pdcIdProcParam    :: PDCId
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCProcParam
 instance JSON.FromJSON PDCProcParam
 
@@ -113,7 +116,7 @@ data PDCRulePattern
   | PDCCallPattern      PDCCallP
   | PDCMergePattern     PDCMergeP
   | PDCMsgPattern       PDCMsgP
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCRulePattern
 instance JSON.FromJSON PDCRulePattern
 
@@ -125,7 +128,7 @@ data PDCMsgP
     , pdcMsgType        :: PDCId
     , pdcMsgContent     :: ()
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCMsgP
 instance JSON.FromJSON PDCMsgP
 
@@ -133,7 +136,7 @@ data PDCStartInstantlyP
   = PDCStartInstantlyP
     { sourceInfoStartInstantly :: SourceInfo
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCStartInstantlyP
 instance JSON.FromJSON PDCStartInstantlyP
 
@@ -142,7 +145,7 @@ data PDCSeqP
     { sourceInfoSeq     :: SourceInfo
     , pdcRulePatternsSeq :: [PDCRulePattern]
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCSeqP
 instance JSON.FromJSON PDCSeqP
 
@@ -151,7 +154,7 @@ data PDCStartP
     { sourceInfoStart   :: SourceInfo
     , pdcRulePatternStart :: PDCRulePattern
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCStartP
 instance JSON.FromJSON PDCStartP
 
@@ -160,7 +163,7 @@ data PDCOneOfP
     { sourceInfoOneOf   :: SourceInfo
     , pdcRulePatternsOneOf :: [PDCRulePattern]
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCOneOfP
 instance JSON.FromJSON PDCOneOfP
 
@@ -169,7 +172,7 @@ data PDCMoreOfP
     { sourceInfoMoreOf  :: SourceInfo
     , pdcRulePatternsMoreOf :: [PDCRulePattern]
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCMoreOfP
 instance JSON.FromJSON PDCMoreOfP
 
@@ -178,7 +181,7 @@ data PDCManyOfP
     { sourceInfoManyOf  :: SourceInfo
     , pdcRulePatternsManyOf :: [PDCRulePattern]
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCManyOfP
 instance JSON.FromJSON PDCManyOfP
   
@@ -187,7 +190,7 @@ data PDCUnSeqP
     { sourceInfoUnSeq  :: SourceInfo
     , pdcRulePatternsUnSeq :: [PDCRulePattern]
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCUnSeqP
 instance JSON.FromJSON PDCUnSeqP
   
@@ -196,7 +199,7 @@ data PDCOptionalP
     { sourceInfoOptional :: SourceInfo
     , pdcRulePatternOptional :: PDCRulePattern
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCOptionalP
 instance JSON.FromJSON PDCOptionalP
   
@@ -206,7 +209,7 @@ data PDCCallP
     , pdcRuleId         :: PDCId
     , pdcTmplPrmsCall   :: [PDCId]
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCCallP
 instance JSON.FromJSON PDCCallP
   
@@ -215,7 +218,7 @@ data PDCMergeP
     { sourceInfoMerge    :: SourceInfo
     , pdcRulePatternsMerge :: [PDCRulePattern]
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCMergeP
 instance JSON.FromJSON PDCMergeP
 
@@ -223,7 +226,7 @@ data SourceInfo
   = SourceInfo
     { parsecSorceInfo :: P.SourcePos
     }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON SourceInfo
 instance JSON.FromJSON SourceInfo
 
