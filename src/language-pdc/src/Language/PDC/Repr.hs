@@ -45,12 +45,244 @@ data ULCase = UC | LC
 instance JSON.ToJSON ULCase
 instance JSON.FromJSON ULCase
 
+data UCId
+  = UCId
+    { sourceInfoUCId :: SourceInfo
+    , ucid :: String
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON UCId
+instance JSON.FromJSON UCId
+
+data LCId
+  = LCId
+    { sourceInfoLCId :: SourceInfo
+    , lcid :: String
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON LCId
+instance JSON.FromJSON LCId
+
+
 data PDCModuleEntry
   = PDCRuleEntry        PDCRuleE
   | PDCExportEntry      PDCExportE
+  | PDCDataTypeEntry    PDCDataTypeE
+  | PDCActionEntry      PDCActionE
+  | PDCFunctionEntry    PDCFunctionE
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCModuleEntry
 instance JSON.FromJSON PDCModuleEntry
+
+data PDCActionE
+  = PDCActionE
+    { sourceInfoActionEntry :: SourceInfo
+    , pdcActionHeader :: PDCActionHeader
+    , pdcActionBody :: PDCActionBody
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCActionE
+instance JSON.FromJSON PDCActionE
+    
+data PDCActionHeader
+  = PDCActionHeader
+    { sourceInfoActionHeader :: SourceInfo
+    , pdcActionName :: LCId
+    , pdcActionType :: PDCActionType
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCActionHeader
+instance JSON.FromJSON PDCActionHeader
+
+data PDCActionType
+  = PDCActionType
+   { sourceInfoActionType :: SourceInfo
+   , pdcActionTemplParams :: [PDCActionTemplParam]
+   , pdcActionCallPArams :: [PDCActionCallParam]
+   }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCActionType
+instance JSON.FromJSON PDCActionType
+
+data PDCActionTemplParam
+  = PDCActionTemplTypeParam PDCTemplTypeP
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCActionTemplParam
+instance JSON.FromJSON PDCActionTemplParam
+
+data PDCActionCallParam
+  = PDCActionCallParam
+    { sourceInfoActionCallParam :: SourceInfo
+    , pdcActionCallParamType :: UCId
+    , pdcActionCallParamVar :: LCId
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCActionCallParam
+instance JSON.FromJSON PDCActionCallParam
+
+data PDCActionBody
+  = PDCActionBody
+    { sourceInfoActionBody :: SourceInfo
+    , pdcActionStatements :: [PDCActionStatement]
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCActionBody
+instance JSON.FromJSON PDCActionBody
+
+data PDCActionStatement
+  = PDCAssignStatement PDCAssignS
+  | PDCIfStatement PDCIfS
+  | PDCWhileStatement PDCWhileS
+  | PDCDiscardStatement PDCDiscardS
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCActionStatement
+instance JSON.FromJSON PDCActionStatement
+
+data PDCAssignS
+  = PDCAssignS
+    { sourceInfoAssignStatement :: SourceInfo
+    , pdcAssignLeftExpr :: PDCExpression
+    , pdcAssignRightExpr :: PDCExpression
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCAssignS
+instance JSON.FromJSON PDCAssignS
+
+data PDCIfS
+  = PDCIfS
+    { sourceInfoIfStatement :: SourceInfo
+    , pdcIfCondition :: PDCExpression
+    , pdcIfBody :: PDCActionBody
+    , pdcIfElseStatement :: Maybe PDCIfS
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCIfS
+instance JSON.FromJSON PDCIfS
+
+data PDCWhileS
+  = PDCWhileS
+    { sourceInfoWhileStatement :: SourceInfo
+    , pdcWhileCondition :: PDCExpression
+    , pdcWhileBody :: PDCActionBody
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCWhileS
+instance JSON.FromJSON PDCWhileS
+
+data PDCDiscardS
+  = PDCDiscardS
+    { sourceInfoDiscardStatement :: SourceInfo
+    , pdcDiscardMessage :: PDCExpression
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCDiscardS
+instance JSON.FromJSON PDCDiscardS
+
+data PDCExpression
+  = PDCIdExpression LCId
+  | PDCStringLiteralExpression PDCStringLiteralE
+  | PDCIntegerLiteralExpression PDCIntegerLiteralE
+  | PDCBinOperatorExpression PDCBinOperatorE
+  | PDCUnOperatorExpression PDCUnOperatorE
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCExpression
+instance JSON.FromJSON PDCExpression
+
+data PDCStringLiteralE
+  = PDCStringLiteralE
+    { sourceInfoStringLiteralExpression :: SourceInfo
+    , pdcStringLiteralStr :: String
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCStringLiteralE
+instance JSON.FromJSON PDCStringLiteralE
+
+data PDCIntegerLiteralE
+  = PDCIntegerLiteralE
+    { sourceInfoIntegerLiteralExpression :: SourceInfo
+    , pdcIntegerLiteralInt :: Integer
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCIntegerLiteralE
+instance JSON.FromJSON PDCIntegerLiteralE
+
+data PDCBinOperatorE
+  = PDCBinOperatorE
+    { sourceInfoBinOperatorExpression :: SourceInfo
+    , pdcBinOpLeft :: PDCExpression
+    , pdcBinOpRight :: PDCExpression
+    , pdcBinOp :: PDCBinOperator
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCBinOperatorE
+instance JSON.FromJSON PDCBinOperatorE
+
+data PDCBinOperator
+  = PDCMemberBO
+  | PDCEqBO
+  | PDCNEqBO
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCBinOperator
+instance JSON.FromJSON PDCBinOperator
+
+data PDCUnOperatorE
+  = PDCUnOperatorE
+    { sourceInfoUnOperatorExpression :: SourceInfo
+    , pdcUnOpOperand :: PDCExpression
+    , pdcUnOp :: PDCUnOperator
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCUnOperatorE
+instance JSON.FromJSON PDCUnOperatorE
+
+data PDCUnOperator
+  = PDCNotUO
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCUnOperator
+instance JSON.FromJSON PDCUnOperator
+
+data PDCFunctionE
+  = PDCFunctionE
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCFunctionE
+instance JSON.FromJSON PDCFunctionE
+
+data PDCDataTypeE
+  = PDCRecordTypeEntry PDCRecordTypeE
+  | PDCMsgTypeEntry PDCMsgTypeE
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCDataTypeE
+instance JSON.FromJSON PDCDataTypeE
+
+data PDCRecordTypeE
+  = PDCRecordTypeE
+    { sourceInfoRecordTypeEntry :: SourceInfo
+    , pdcRecordTypeName :: PDCId
+    , pdcRecordEntries :: [PDCVarTypeBinding]
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCRecordTypeE
+instance JSON.FromJSON PDCRecordTypeE
+
+data PDCMsgTypeE
+  = PDCMsgTypeE
+    { sourceInfoMsgTypeEntry :: SourceInfo
+    , pdcMsgTypeMsg :: PDCId
+    , pdcMsgTypeType :: PDCId
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCMsgTypeE
+instance JSON.FromJSON PDCMsgTypeE
+
+data PDCVarTypeBinding
+  = PDCVarTypeBinding
+    { sourceInfoVarTypeBinding :: SourceInfo
+    , pdcVarTypeBindingVarName :: PDCId
+    , pdcVarTypeBindingTypeName :: PDCId
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCVarTypeBinding
+instance JSON.FromJSON PDCVarTypeBinding
 
 data PDCExportE
   = PDCExportE
@@ -84,19 +316,20 @@ instance JSON.FromJSON PDCRuleHeader
 data PDCRuleType
   = PDCRuleType
     { sourceInfoRuleType :: SourceInfo
-    , pdcRuleTempParams :: [PDCTemplParam]
+    , pdcRuleTempParams :: [PDCRuleTemplParam]
     , pdcRuleProcParams :: [PDCProcParam]
     }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCRuleType
 instance JSON.FromJSON PDCRuleType
 
-data PDCTemplParam
-  = PDCTemplProcParam PDCTemplProcP
-  | PDCTemplRuleParam PDCRuleHeader
+data PDCRuleTemplParam
+  = PDCRuleTemplProcParam PDCTemplProcP
+  | PDCRuleTemplRuleParam PDCRuleHeader
+  | PDCRuleTemplTypeParam PDCTemplTypeP
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
-instance JSON.ToJSON PDCTemplParam
-instance JSON.FromJSON PDCTemplParam
+instance JSON.ToJSON PDCRuleTemplParam
+instance JSON.FromJSON PDCRuleTemplParam
   
 data PDCTemplProcP
   = PDCTemplProcP
@@ -106,6 +339,15 @@ data PDCTemplProcP
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCTemplProcP
 instance JSON.FromJSON PDCTemplProcP
+
+data PDCTemplTypeP
+  = PDCTemplTypeP
+    { sourceInfoTemplTypeP :: SourceInfo
+    , pdcTemplTypeParamId :: UCId
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCTemplTypeP
+instance JSON.FromJSON PDCTemplTypeP
 
 {-
 data PDCTemplRuleP

@@ -5,14 +5,16 @@ type record StdMsg {
     sessionId : ID
 }
 
-msg REQ StdMsg
-msg RES StdMsg
+type msg REQ StdMsg
+type msg RES StdMsg
 
-rule simple-rule(A, B)
-decl {
-        sid : ID
+type record MainAttrSet {
+    sid : ID
 }
-begin {
+
+type attr simple-rule MainAttrSet
+
+rule simple-rule(A, B) {
     A -> B : REQ {
         sid = msg.sessionId
     }
@@ -28,15 +30,20 @@ decl {
         sid : ID
 }
 begin {
-    A -> B : REQ @assign (sid, msg.sessionId)
+    A -> B : REQ @assign <ID> (sid, msg.sessionId)
     B -> A : RES @check (sid, msg)
 }
 
-action check(id : ID, msg : StdMsg) {
+action check(id : ID, msg : StdMSg) {
     if msg.sessionId /= sid {
         discard "invalid session id!"
     }
 }
+
+action assign <type T> (left : T, right : T) {
+   left = right
+}
+
 
 // new tokens: type record msg decl begin @ == /= action if discard ""
 

@@ -30,9 +30,9 @@ instanceRuleEntry (PDCCallP {..}) r@(PDCRuleE {..}) = r { pdcRulePattern = trans
         Just n -> p { pdcid = fst n }
     templatePairs :: [(String, String)]
     templatePairs = zip (map pdcid pdcTmplPrmsCall) (map getTmplName (pdcRuleTempParams (pdcRuleType pdcRuleEntryHeader)))
-    getTmplName :: PDCTemplParam -> String
-    getTmplName (PDCTemplProcParam (PDCTemplProcP {..})) = pdcid pdcTemplProcParamId
-    getTmplName (PDCTemplRuleParam (PDCRuleHeader {..})) = pdcid pdcRuleName
+    getTmplName :: PDCRuleTemplParam -> String
+    getTmplName (PDCRuleTemplProcParam (PDCTemplProcP {..})) = pdcid pdcTemplProcParamId
+    getTmplName (PDCRuleTemplRuleParam (PDCRuleHeader {..})) = pdcid pdcRuleName
 
 
 {-

@@ -1,0 +1,31 @@
+
+
+
+attr gramamr example:
+
+  Expr1 -> Expr2 + Term [ Expr1.value = Expr2.value + Term.value ]
+  Expr -> Term [ Expr.value = Term.value ]
+
+generaly
+
+  A -> B C D
+    A - NonTerminal; B,C,D - Terminal or NonTerminal
+
+pdc
+
+  A -> B C D
+  rule A (..) { B C D }
+    B C D is msg or rule 
+
+
+  A -> B | C | D
+  rule A (..) { one-of { B C D } }
+
+  A -> (B|C) D ((EF)|G)
+  rule A(..) { one-of { A B } D one-of { seq { E F } G } }
+
+attr
+
+  A -> B C [ A.x := fn(B.value, C.value) ]
+  rule A (..) { B { A.tvalue := B.value } C { A.x := fn(A.tvalue, C.value) } }
+  experimental syntax: rule A (..) { B &first C &second  } { A.x := fn(first, second) }

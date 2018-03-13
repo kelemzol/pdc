@@ -17,17 +17,19 @@ module Language.PDC.Parser.Token ( Pos(..)
 %wrapper "posn"
 
 $digit = 0-9 -- digits
+$integer = [0-9\-]
 $alpha = [a-zA-Z\-] -- alphabetic characters
 $uc = [A-Z]
 $lc = [a-z]
 $graphic = $printable # $white
 @string = \" ($graphic # \")* \"
-
+@integer = [\-$digit] $digit*
 
 tokens :-
     $white+                            { vtok TkWs }
     "//" .*$                           { vtok TkWs }
     @string                            { vtok TkStringLit }
+    @integer                           { vtok TkIntegerLit }
     "module"                           { tok TkModule }
     "rule"                             { tok TkRule }
     "start"                            { tok TkStart }
@@ -44,7 +46,7 @@ tokens :-
     "type"                             { tok TkType }
     "record"                           { tok TkRecord }
     "msg"                              { tok TkMsg }
-    "decl"                             { tok TkDecl }
+    "attr"                             { tok TkAttr }
     "begin"                            { tok TkBegin }
     "action"                           { tok TkAction }
     "if"                               { tok TkIf }
@@ -53,6 +55,7 @@ tokens :-
     "@"                                { tok TkAt }
     "=="                               { tok TkEq }
     "/="                               { tok TkNEq }
+    "."                                { tok TkDot }
     "="                                { tok TkAssign }
     "->"                               { tok TkArrow }
     ":"                                { tok TkColon }
@@ -90,6 +93,7 @@ apos2pos (AlexPn _ l c) s = Pos l c ("[l:" ++ show l ++ ",c:" ++ show c ++ "]") 
 data Token
   = TkWs           { pos :: Pos, tkws :: String }
   | TkStringLit    { pos :: Pos, tkws :: String }
+  | TkIntegerLit   { pos :: Pos, tkws :: String }
   | TkModule       { pos :: Pos }
   | TkRule         { pos :: Pos }
   | TkStart        { pos :: Pos }
@@ -106,12 +110,13 @@ data Token
   | TkType         { pos :: Pos }
   | TkRecord       { pos :: Pos }
   | TkMsg          { pos :: Pos }
-  | TkDecl         { pos :: Pos }
+  | TkAttr         { pos :: Pos }
   | TkBegin        { pos :: Pos }
   | TkAction       { pos :: Pos }
   | TkIf           { pos :: Pos }
   | TkWhile        { pos :: Pos }
   | TkDiscard      { pos :: Pos }
+  | TkDot          { pos :: Pos }
   | TkAt           { pos :: Pos }
   | TkEq           { pos :: Pos }
   | TkNEq          { pos :: Pos }
@@ -134,6 +139,7 @@ data Token
 tokeneq :: Token -> Token -> Bool
 tokeneq (TkWs _ _)         (TkWs _ _)         = True
 tokeneq (TkStringLit _ _)  (TkStringLit _ _)  = True
+tokeneq (TkIntegerLit _ _) (TkIntegerLit _ _) = True
 tokeneq (TkModule _)       (TkModule _)       = True
 tokeneq (TkRule _)         (TkRule _)         = True
 tokeneq (TkStart _)        (TkStart _)        = True
@@ -150,12 +156,13 @@ tokeneq (TkProc _)         (TkProc _)         = True
 tokeneq (TkType    _)      (TkType    _)      = True
 tokeneq (TkRecord  _)      (TkRecord  _)      = True
 tokeneq (TkMsg     _)      (TkMsg     _)      = True
-tokeneq (TkDecl    _)      (TkDecl    _)      = True
+tokeneq (TkAttr    _)      (TkAttr    _)      = True
 tokeneq (TkBegin   _)      (TkBegin   _)      = True
 tokeneq (TkAction  _)      (TkAction  _)      = True
 tokeneq (TkIf      _)      (TkIf      _)      = True
 tokeneq (TkWhile   _)      (TkWhile   _)      = True
 tokeneq (TkDiscard _)      (TkDiscard _)      = True
+tokeneq (TkDot _)          (TkDot _)          = True
 tokeneq (TkAt      _)      (TkAt      _)      = True
 tokeneq (TkEq      _)      (TkEq      _)      = True
 tokeneq (TkNEq     _)      (TkNEq     _)      = True
