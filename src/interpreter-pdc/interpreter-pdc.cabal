@@ -23,6 +23,7 @@ library
                      , Language.PDC.Interpreter.Utils
                      , Language.PDC.Interpreter.Msg
                      , Language.PDC.Interpreter.Env
+                     , Language.PDC.Interpreter.Scope
                      
   -- other-extensions:    
   build-depends:       base >=4.10 && <4.11

@@ -1,0 +1,62 @@
+
+module ex2
+
+
+/// MSGs
+// ////////////////
+
+type record StdMsg {
+    sessionId : ID
+}
+
+type msg REQ StdMsg
+type msg RES StdMsg
+
+
+/// ATTR
+// ////////////////
+
+type record MainAttrSet {
+    sid : ID
+}
+
+
+/// RULES
+// ////////////////
+
+rule root (A1, A2, B) attr MainAttrSet {
+    one-of {
+        t1
+        t2
+    }
+}
+
+rule t1(A, B) from root {
+    A1 -> B: REQ @assign<ID>(sid, msg.sessionId)
+    t11
+}
+
+rule t2(A, B) from root {
+    A2 -> B: REQ @assign<ID>(sid, msg.sessionId)
+    B -> A2: RES @check
+}
+
+rule t11(A,B) from t1 {
+    B -> A1: RES @check
+}
+
+
+/// ACTIONS
+// ////////////////
+
+action check from root {
+    if msg.sessionId /= sid {
+        discard "invalid session id!"
+    }
+}
+
+action assign <type T> (left : T, right : T) {
+   left = right
+}
+
+

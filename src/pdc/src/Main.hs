@@ -51,7 +51,11 @@ work options@(Options {..}) = do
         (_, Left m) -> putStrLn "Msg list parsing fail" >> putStrLn m
         (Right m@(PDCModule {..}), Right msglist) -> do
             case findRuleEntry mainRule m of -- (\ re -> pdcid (pdcRuleName re) == mainRule) $ filterRuleEntries pdcModuleEntries of
-                Nothing -> putStrLn "not found main rule"
+                Nothing -> do putStrLn "not found main rule"
+                              putStrLn "rules:"
+                              forM_ (map (pdcid . pdcRuleName . pdcRuleEntryHeader) (filterRuleEntries $ pdcModuleEntries)) $ putStrLn . show
+                              putStrLn "module ast:"
+                              putStrLn (show m)
                 (Just re) -> do
                     let node = ast2node m (pdcRulePattern re)
                         result = evalNode node msglist emptyBoundEnv

@@ -32,6 +32,8 @@ idTok c = tok (c u u) tkid
 
 normTok c = tok (c u) (const ())
 
+emptyPos = newPos "empty" 0 0
+
 tpos2ppos :: Pos -> SourcePos
 tpos2ppos (Pos {..}) = newPos "Language.PDC.Parser.Parser.<stream>" posLine posColumn
 
@@ -163,20 +165,20 @@ parsePDCTemplTypeP :: PDCParser PDCTemplTypeP
 parsePDCTemplTypeP = PDCTemplTypeP <$> getSourceInfoP <*> (tkType *> parseUCId)
 
 parsePDCActionCallParam :: PDCParser PDCActionCallParam
-parsePDCActionCallParam = PDCActionCallParam <$> getSourceInfoP <*> parseUCId <*> parseLCId
+parsePDCActionCallParam = PDCActionCallParam <$> getSourceInfoP <*> parseLCId <*> (tkColon *> parseUCId)
 
 parsePDCActionBody :: PDCParser PDCActionBody
 parsePDCActionBody = PDCActionBody <$> getSourceInfoP <*> (brace (many parsePDCActionStatement))
 
 parsePDCActionStatement :: PDCParser PDCActionStatement
-parsePDCActionStatement = (try (PDCAssignStatement <$> parsePDCAssignS))
+parsePDCActionStatement = ((PDCAssignStatement <$> parsePDCAssignS))
                       <|> (try (PDCIfStatement <$> parsePDCIfS))
                       <|> (try (PDCWhileStatement <$> parsePDCWhileS))
                       <|>      (PDCDiscardStatement <$> parsePDCDiscardS)
                       <?> "PDC-action-statement"
 
 parsePDCAssignS :: PDCParser PDCAssignS
-parsePDCAssignS = PDCAssignS <$> getSourceInfoP <*> parsePDCExpression <*> (tkAssign *> parsePDCExpression)
+parsePDCAssignS = PDCAssignS <$> getSourceInfoP <*> parsePDCExpression <*> (tkAssign *> parsePDCExpression) <?> "assign"
 
 parsePDCIfS :: PDCParser PDCIfS
 parsePDCIfS = PDCIfS <$> getSourceInfoP <*> (tkIf *> parsePDCExpression) <*> parsePDCActionBody <*> (pure Nothing)
@@ -189,34 +191,22 @@ parsePDCDiscardS = PDCDiscardS <$> getSourceInfoP <*> (tkDiscard *> parsePDCExpr
 
 parsePDCExpression :: PDCParser PDCExpression
 parsePDCExpression = buildExpressionParser table term
+                 <?> "expression"
   where
     term = (try (bracket parsePDCExpression))
        <|> (try (PDCIdExpression <$> parseLCId))
        <|> (try (PDCStringLiteralExpression <$> parsePDCStringLiteralE))
        <|> ({-try-} (PDCIntegerLiteralExpression <$> parsePDCIntegerLiteralE))
-       <?> "PDC-expression"
+       <?> "term expression"
     table = [ [memberOp]
             , [eqOp, nEqOp]
             ]
-    binop tok op assoc = Infix (tok >> getSourceInfoP >>= \pos -> return (\ a b -> PDCBinOperatorExpression (PDCBinOperatorE pos a b op)) ) assoc
+    binop tok op assoc = Infix (getSourceInfoP >>= \pos ->  tok >> return (\ a b -> PDCBinOperatorExpression (PDCBinOperatorE pos a b op)) ) assoc
+    --binop tok op assoc = Infix (do {tok; return (\ a b -> PDCBinOperatorExpression (PDCBinOperatorE undefined a b op)) }) assoc
     eqOp = binop tkEq PDCEqBO AssocNone
     nEqOp = binop tkNEq PDCNEqBO AssocNone
     memberOp = binop tkDot PDCMemberBO AssocLeft
 
-
-
-
-{-
-parseBinop :: PDCParser PDCBinOperator
-parseBinop = (try (tkDot >> return PDCMemberBO))
-         <|> (try (tkEq >> return PDCEqBO))
-         <|> ({-try-} (tkNEq >> return PDCNeqBO))
-         <?> "binary operator"
--}
---         PDCBinOperator
--- = PDCMemberBO
--- | PDCEqBO
--- | PDCNeqBO
 
 parsePDCStringLiteralE :: PDCParser PDCStringLiteralE
 parsePDCStringLiteralE = PDCStringLiteralE <$> getSourceInfoP <*> tkStringLit
@@ -233,13 +223,13 @@ parsePDCDataTypeE = (try (PDCRecordTypeEntry <$> parsePDCRecordTypeE))
                 <?> "PDC-type-definition"
 
 parsePDCRecordTypeE :: PDCParser PDCRecordTypeE
-parsePDCRecordTypeE = PDCRecordTypeE <$> getSourceInfoP <*> (tkType *> tkRecord *> parsePDCId) <*> brace (many1 parseVarTypeBinding)
+parsePDCRecordTypeE = PDCRecordTypeE <$> getSourceInfoP <*> (tkType *> tkRecord *> parseUCId) <*> brace (many1 parseVarTypeBinding)
 
 parsePDCMsgTypeE :: PDCParser PDCMsgTypeE
-parsePDCMsgTypeE = PDCMsgTypeE <$> getSourceInfoP <*> (tkMsg *> parsePDCId) <*> parsePDCId
+parsePDCMsgTypeE = PDCMsgTypeE <$> getSourceInfoP <*> (tkType *> tkMsg *> parseUCId) <*> parseUCId
 
 parseVarTypeBinding :: PDCParser PDCVarTypeBinding
-parseVarTypeBinding = PDCVarTypeBinding <$> getSourceInfoP <*> parsePDCId <*> (tkColon *> parsePDCId)
+parseVarTypeBinding = PDCVarTypeBinding <$> getSourceInfoP <*> parseLCId <*> (tkColon *> parseUCId)
 
 parsePDCExportE :: PDCParser PDCExportE
 parsePDCExportE = PDCExportE <$> getSourceInfoP <*> (tkExport *> parsePDCId)
@@ -254,6 +244,7 @@ parsePDCRuleType :: PDCParser PDCRuleType
 parsePDCRuleType = PDCRuleType <$> getSourceInfoP
                                <*> (try (angle (parsePDCRuleTemplParam `sepBy` tkComma)) <|> (pure []))
                                <*> (bracket ((PDCProcParam <$> parsePDCId) `sepBy` tkComma))
+                               <*> ((try (tkAttr *> parseUCId)) <|> pure (UCId (SourceInfo emptyPos) "NullAttr"))
 
 parsePDCRuleTemplParam :: PDCParser PDCRuleTemplParam
 parsePDCRuleTemplParam = (try (PDCRuleTemplProcParam <$> parsePDCRuleTemplProcP))
@@ -268,24 +259,25 @@ parsePDCRuleTemplProcP = PDCTemplProcP <$> getSourceInfoP <*> (tkProc *> parsePD
 
 
 parsePDCRulePattern :: PDCParser PDCRulePattern
-parsePDCRulePattern = (try (PDCSeqPattern <$> parsePDCSeqP))
-                  <|> (try (PDCStartPattern <$> parseStartP))
-                  <|> (try (PDCStartInstantlyPattern <$> parseStartInstantlyP))
-                  <|> (try (PDCOneOfPattern <$> parseOneOfP))
-                  <|> (try (PDCMoreOfPattern <$> parseMoreOfP))
-                  <|> (try (PDCManyofPattern <$> parseManyOfP))
-                  <|> (try (PDCUnSeqPattern <$> parseUnSeqP))
-                  <|> (try (PDCOptionalPattern <$> parseOptionalP))
-                  <|> (try (PDCMergePattern <$> parseMergeP))
+parsePDCRulePattern = ({-try-} (PDCSeqPattern <$> parsePDCSeqP))
+                  <|> ({-try-} (PDCStartPattern <$> parseStartP))
+                  <|> ({-try-} (PDCStartInstantlyPattern <$> parseStartInstantlyP))
+                  <|> ({-try-} (PDCOneOfPattern <$> parseOneOfP))
+                  <|> ({-try-} (PDCMoreOfPattern <$> parseMoreOfP))
+                  <|> ({-try-} (PDCManyofPattern <$> parseManyOfP))
+                  <|> ({-try-} (PDCUnSeqPattern <$> parseUnSeqP))
+                  <|> ({-try-} (PDCOptionalPattern <$> parseOptionalP))
+                  <|> ({-try-} (PDCMergePattern <$> parseMergeP))
                   <|> (try (PDCMsgPattern <$> parseMsgP))
                   <|>      (PDCCallPattern <$> parseCallP)
+                  <|> ({-try-} (PDCActionPattern <$> (tkAction *> parsePDCAttrContent)))
                   <?> "PDC-rule-pattern"
 
 implicitSeqPattern :: PDCParser PDCRulePattern
 implicitSeqPattern = PDCSeqPattern <$> (PDCSeqP <$> getSourceInfoP <*> blockPattern)
 
 blockOrSingleton :: PDCParser PDCRulePattern
-blockOrSingleton = try implicitSeqPattern
+blockOrSingleton = (try implicitSeqPattern)
                    <|> parsePDCRulePattern
 
 blockPattern :: PDCParser [PDCRulePattern]
@@ -303,7 +295,16 @@ parseManyOfP = blockPatternConstructor PDCManyOfP tkManyOf
 parseUnSeqP = blockPatternConstructor PDCUnSeqP tkUnSeq
 parseMergeP = blockPatternConstructor PDCMergeP tkMerge
 parseOptionalP = PDCOptionalP <$> getSourceInfoP <*> (tkOptional *> blockOrSingleton)
-parseMsgP = PDCMsgP <$> getSourceInfoP <*> parsePDCId <*> (tkArrow *> parsePDCId) <*> (tkColon *> parsePDCId) <*> (pure ())
-parseCallP = PDCCallP <$> getSourceInfoP <*> parsePDCId <*> (try (angle (parsePDCId `sepBy` tkComma)) <|> (pure []))
+parseMsgP = PDCMsgP <$> getSourceInfoP <*> parsePDCId <*> (tkArrow *> parsePDCId) <*> (tkColon *> parsePDCId) <*> (optionMaybe parsePDCAttrContent) <?> "message pattern"
+parseCallP = PDCCallP <$> getSourceInfoP <*> parsePDCId <*> (try (angle (parsePDCId `sepBy` tkComma)) <|> (pure [])) <*> (optionMaybe parsePDCAttrContent) <?> "call pattern"
 
+parsePDCAttrContent :: PDCParser PDCAttrContent
+parsePDCAttrContent = ({-try-} (PDCAttrContentInlineAction <$> parsePDCActionBody))
+                 <|> ({-try-} (PDCAttrContentActionCall <$> parsePDCActionCall))
+                 <?> "attribute content"
+
+parsePDCActionCall :: PDCParser PDCActionCall
+parsePDCActionCall = PDCActionCall <$> getSourceInfoP <*> (tkAt *> parseLCId)
+                                                      <*> ((try (angle (parseUCId `sepBy` tkComma))) <|> (pure []))
+                                                      <*> ((try (bracket (parsePDCExpression `sepBy` tkComma))) <|> (pure []))
 

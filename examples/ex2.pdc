@@ -5,16 +5,23 @@ type record StdMsg {
     sessionId : ID
 }
 
-type msg REQ StdMsg
-type msg RES StdMsg
+type message REQ StdMsg
+type message RES StdMsg
 
 type record MainAttrSet {
     sid : ID
 }
 
-type attr simple-rule MainAttrSet
+type record Header {
+    source : String
+    dest : String
+    messageType : String
+}
 
-rule simple-rule(A, B) {
+rule simple-rule(A, B) attr MainAttrSet {
+    simple-rule-2 {
+        this.sid = sid
+    }
     A -> B : REQ {
         sid = msg.sessionId
     }
@@ -25,16 +32,12 @@ rule simple-rule(A, B) {
     }
 }
 
-rule simple-rule-2(A, B)
-decl {
-        sid : ID
-}
-begin {
+rule simple-rule-2(A, B) attr MainAttrSet {
     A -> B : REQ @assign <ID> (sid, msg.sessionId)
     B -> A : RES @check (sid, msg)
 }
 
-action check(id : ID, msg : StdMSg) {
+action check (id : ID, msg : StdMSg) {
     if msg.sessionId /= sid {
         discard "invalid session id!"
     }

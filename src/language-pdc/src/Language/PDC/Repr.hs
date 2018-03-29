@@ -113,8 +113,8 @@ instance JSON.FromJSON PDCActionTemplParam
 data PDCActionCallParam
   = PDCActionCallParam
     { sourceInfoActionCallParam :: SourceInfo
-    , pdcActionCallParamType :: UCId
     , pdcActionCallParamVar :: LCId
+    , pdcActionCallParamType :: UCId
     }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCActionCallParam
@@ -257,7 +257,7 @@ instance JSON.FromJSON PDCDataTypeE
 data PDCRecordTypeE
   = PDCRecordTypeE
     { sourceInfoRecordTypeEntry :: SourceInfo
-    , pdcRecordTypeName :: PDCId
+    , pdcRecordTypeName :: UCId
     , pdcRecordEntries :: [PDCVarTypeBinding]
     }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -267,8 +267,8 @@ instance JSON.FromJSON PDCRecordTypeE
 data PDCMsgTypeE
   = PDCMsgTypeE
     { sourceInfoMsgTypeEntry :: SourceInfo
-    , pdcMsgTypeMsg :: PDCId
-    , pdcMsgTypeType :: PDCId
+    , pdcMsgTypeMsg :: UCId
+    , pdcMsgTypeType :: UCId
     }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCMsgTypeE
@@ -277,8 +277,8 @@ instance JSON.FromJSON PDCMsgTypeE
 data PDCVarTypeBinding
   = PDCVarTypeBinding
     { sourceInfoVarTypeBinding :: SourceInfo
-    , pdcVarTypeBindingVarName :: PDCId
-    , pdcVarTypeBindingTypeName :: PDCId
+    , pdcVarTypeBindingVarName :: LCId
+    , pdcVarTypeBindingTypeName :: UCId
     }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCVarTypeBinding
@@ -318,6 +318,7 @@ data PDCRuleType
     { sourceInfoRuleType :: SourceInfo
     , pdcRuleTempParams :: [PDCRuleTemplParam]
     , pdcRuleProcParams :: [PDCProcParam]
+    , pdcRuleAttr       :: UCId
     }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCRuleType
@@ -380,9 +381,20 @@ data PDCRulePattern
   | PDCCallPattern      PDCCallP
   | PDCMergePattern     PDCMergeP
   | PDCMsgPattern       PDCMsgP
+  | PDCActionPattern    PDCAttrContent
+--  | PDCScopeAction      PDCScopeA
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCRulePattern
 instance JSON.FromJSON PDCRulePattern
+{-
+data PDCScopeA
+  = PDCScopeClose
+  | PDCScopeOpen
+  | PDCScopeThisBack
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCScopeA
+instance JSON.FromJSON PDCScopeA
+-}
 
 data PDCMsgP
   = PDCMsgP
@@ -390,11 +402,29 @@ data PDCMsgP
     , pdcMsgFrom        :: PDCId
     , pdcMsgTo          :: PDCId
     , pdcMsgType        :: PDCId
-    , pdcMsgContent     :: ()
+    , pdcMsgContent     :: Maybe PDCAttrContent
     }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCMsgP
 instance JSON.FromJSON PDCMsgP
+
+data PDCAttrContent
+  = PDCAttrContentActionCall PDCActionCall
+  | PDCAttrContentInlineAction PDCActionBody
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCAttrContent
+instance JSON.FromJSON PDCAttrContent
+
+data PDCActionCall
+  = PDCActionCall
+    { sourceInfoActionCall :: SourceInfo
+    , pdcActionCallName :: LCId
+    , pdcActionCallTmplParams :: [UCId]
+    , pdcActionCallParams :: [PDCExpression]
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCActionCall
+instance JSON.FromJSON PDCActionCall
 
 data PDCStartInstantlyP
   = PDCStartInstantlyP
@@ -472,6 +502,7 @@ data PDCCallP
     { sourceInfoCall    :: SourceInfo
     , pdcRuleId         :: PDCId
     , pdcTmplPrmsCall   :: [PDCId]
+    , pdcCallContent    :: Maybe PDCAttrContent
     }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCCallP
@@ -570,6 +601,35 @@ instance GetSourceInfo PDCCallP where
     getSourceInfo = sourceInfoCall
 
 
+class ToRulePattern a where
+    toRulePattern :: a -> PDCRulePattern
+
+instance ToRulePattern PDCSeqP where
+    toRulePattern = PDCSeqPattern
+instance ToRulePattern PDCUnSeqP where
+    toRulePattern = PDCUnSeqPattern
+instance ToRulePattern PDCStartP where
+    toRulePattern = PDCStartPattern
+instance ToRulePattern PDCStartInstantlyP where
+    toRulePattern = PDCStartInstantlyPattern
+instance ToRulePattern PDCOneOfP where
+    toRulePattern = PDCOneOfPattern
+instance ToRulePattern PDCMoreOfP where
+    toRulePattern = PDCMoreOfPattern
+instance ToRulePattern PDCManyOfP where
+    toRulePattern = PDCManyofPattern
+instance ToRulePattern PDCOptionalP where
+    toRulePattern = PDCOptionalPattern
+instance ToRulePattern PDCCallP where
+    toRulePattern = PDCCallPattern
+instance ToRulePattern PDCMergeP where
+    toRulePattern = PDCMergePattern
+instance ToRulePattern PDCMsgP where
+    toRulePattern = PDCMsgPattern
+instance ToRulePattern PDCAttrContent where
+    toRulePattern = PDCActionPattern
+
+
 
 stringSourceInfo :: (GetSourceInfo a) => a -> String
 stringSourceInfo = pretty . parsecSorceInfo . getSourceInfo
@@ -601,4 +661,8 @@ prettyPDCRulePattern  (PDCMoreOfPattern (PDCMoreOfP{..})) = "more-of{" ++ (conca
 prettyPDCRulePattern  (PDCMergePattern (PDCMergeP{..})) = "merge{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsMerge) ++ "}"
 prettyPDCRulePattern  (PDCOptionalPattern (PDCOptionalP{..})) = "optinal{" ++ (prettyPDCRulePattern pdcRulePatternOptional) ++ "}"
 prettyPDCRulePattern  (PDCStartPattern (PDCStartP{..})) = "start{" ++ (prettyPDCRulePattern pdcRulePatternStart) ++ "}"
+prettyPDCRulePattern  (PDCActionPattern _) = "action{..}"
+--prettyPDCRulePattern  (PDCScopeOut) = "end-call"
+
+
 --prettyPDCRulePattern  (PDCCallPattern (PDCCallP{..}))

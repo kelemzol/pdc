@@ -48,13 +48,24 @@ evalNode Node {..} (m:ms) benv = case findSucces ress of
   where
     ress = map (matcher benv m ms) branches
 
-matcher :: BoundEnv -> PDCMsgP -> [PDCMsgP] -> (PDCMsgP, Node) -> EvalNodeRes
+matcher :: BoundEnv -> PDCMsgP -> [PDCMsgP] -> (Edge, Node) -> EvalNodeRes
 matcher benv msg msglist (pattern, node)
-  | directMatch pattern msg = evalNode node msglist benv
-  | partialMatch pattern msg
-  , (Just benv') <- matchBounded benv pattern msg = evalNode node msglist benv'
-  | otherwise = EvalNodeFail { failedPattern = PDCMsgPattern pattern, failedMsg = Just msg, boundEnv = benv }
+  | [MsgEdgeE msgPattern] <- pattern
+  , directMatch msgPattern msg
+  = evalNode node msglist benv
 
+  | [MsgEdgeE msgPattern] <- pattern
+  , partialMatch msgPattern msg
+  , (Just benv') <- matchBounded benv msgPattern msg
+  = evalNode node msglist benv'
 
+  | [ActEdgeE actPattern] <- pattern
+  , Just () <- actionMatch actPattern
+  = evalNode node (msg:msglist) benv
+
+  | otherwise = EvalNodeFail { failedPattern = toRulePattern pattern, failedMsg = Just msg, boundEnv = benv }
+
+actionMatch :: PDCAttrContent -> Maybe ()
+actionMatch _ = Just ()
 
 

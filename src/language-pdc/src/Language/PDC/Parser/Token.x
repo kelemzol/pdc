@@ -21,13 +21,14 @@ $integer = [0-9\-]
 $alpha = [a-zA-Z\-] -- alphabetic characters
 $uc = [A-Z]
 $lc = [a-z]
-$graphic = $printable # $white
+$graphic = $printable
 @string = \" ($graphic # \")* \"
 @integer = [\-$digit] $digit*
 
 tokens :-
     $white+                            { vtok TkWs }
     "//" .*$                           { vtok TkWs }
+    <string> [^\"]                     { vtok TkStringLit }
     @string                            { vtok TkStringLit }
     @integer                           { vtok TkIntegerLit }
     "module"                           { tok TkModule }
@@ -45,7 +46,7 @@ tokens :-
     "proc"                             { tok TkProc }
     "type"                             { tok TkType }
     "record"                           { tok TkRecord }
-    "msg"                              { tok TkMsg }
+    "message"                          { tok TkMsg }
     "attr"                             { tok TkAttr }
     "begin"                            { tok TkBegin }
     "action"                           { tok TkAction }
