@@ -381,7 +381,7 @@ data PDCRulePattern
   | PDCCallPattern      PDCCallP
   | PDCMergePattern     PDCMergeP
   | PDCMsgPattern       PDCMsgP
-  | PDCActionPattern    PDCAttrContent
+--  | PDCActionPattern    PDCAttrContent
 --  | PDCScopeAction      PDCScopeA
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCRulePattern
@@ -626,8 +626,8 @@ instance ToRulePattern PDCMergeP where
     toRulePattern = PDCMergePattern
 instance ToRulePattern PDCMsgP where
     toRulePattern = PDCMsgPattern
-instance ToRulePattern PDCAttrContent where
-    toRulePattern = PDCActionPattern
+--instance ToRulePattern PDCAttrContent where
+--    toRulePattern = PDCActionPattern
 
 
 
@@ -661,7 +661,7 @@ prettyPDCRulePattern  (PDCMoreOfPattern (PDCMoreOfP{..})) = "more-of{" ++ (conca
 prettyPDCRulePattern  (PDCMergePattern (PDCMergeP{..})) = "merge{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsMerge) ++ "}"
 prettyPDCRulePattern  (PDCOptionalPattern (PDCOptionalP{..})) = "optinal{" ++ (prettyPDCRulePattern pdcRulePatternOptional) ++ "}"
 prettyPDCRulePattern  (PDCStartPattern (PDCStartP{..})) = "start{" ++ (prettyPDCRulePattern pdcRulePatternStart) ++ "}"
-prettyPDCRulePattern  (PDCActionPattern _) = "action{..}"
+--prettyPDCRulePattern  (PDCActionPattern _) = "action{..}"
 --prettyPDCRulePattern  (PDCScopeOut) = "end-call"
 
 

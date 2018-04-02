@@ -270,7 +270,7 @@ parsePDCRulePattern = ({-try-} (PDCSeqPattern <$> parsePDCSeqP))
                   <|> ({-try-} (PDCMergePattern <$> parseMergeP))
                   <|> (try (PDCMsgPattern <$> parseMsgP))
                   <|>      (PDCCallPattern <$> parseCallP)
-                  <|> ({-try-} (PDCActionPattern <$> (tkAction *> parsePDCAttrContent)))
+--                  <|> ({-try-} (PDCActionPattern <$> (tkAction *> parsePDCAttrContent)))
                   <?> "PDC-rule-pattern"
 
 implicitSeqPattern :: PDCParser PDCRulePattern
