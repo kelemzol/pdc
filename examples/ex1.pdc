@@ -6,6 +6,41 @@ export bad-rule
 export simple-rule2
 
 
+
+rule atm(User, ATM) {
+    loginWithWork <User, ATM, work>
+}
+
+rule loginWithWork <proc C, proc S, rule work (C, S)> (C, S) {
+    C -> S: Identifier
+    one-of {
+        seq {
+            S -> C: Success
+            work
+        }
+        S -> C: Failure
+    }    
+}
+
+rule work (User, ATM) {
+    one-of {
+        seq {
+            User -> ATM: Deposit
+//            User -> ATM: Amount
+//            ATM -> USer: Balance
+        }
+        seq {
+            User -> ATM: Withdraw
+//            User -> ATM: Amount
+//            one-of {
+//                ATM -> User: Dispense
+//                ATM -> User: Overdraft
+//            }
+        }
+    }
+}
+
+
 rule one-of-call-caller (A, B) {
     one-of-call <A>
 }
@@ -27,38 +62,6 @@ rule one-of-call-called (A, B) {
 }
 
 
-rule atm(User, ATM) {
-    loginWithWork <User, ATM, work>
-}
-
-rule loginWithWork <proc C, proc S, rule work (C, S)> (C, S) {
-    C -> S: Identifier
-    one-of {
-        seq {
-            S -> C: Success
-            work
-        }
-        S -> C: Failure
-    }    
-}
-
-rule work (User, ATM) {
-//    one-of {
-//        seq {
-//            User -> ATM: Deposit
-//            User -> ATM: Amount
-//            ATM -> USer: Balance
-//        }
-//        seq {
-//            User -> ATM: Withdraw
-//            User -> ATM: Amount
-//            one-of {
-//                ATM -> User: Dispense
-//                ATM -> User: Overdraft
-//            }
-//        }
-//    }
-}
 
 
 rule rec-call-2 (A, B, C, D) {

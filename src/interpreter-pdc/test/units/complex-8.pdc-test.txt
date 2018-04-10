@@ -26,16 +26,16 @@ rule work (User, ATM) {
     one-of {
         seq {
             User -> ATM: Deposit
-            User -> ATM: Amount
-            ATM -> USer: Balance
+//            User -> ATM: Amount
+//            ATM -> USer: Balance
         }
         seq {
             User -> ATM: Withdraw
-            User -> ATM: Amount
-            one-of {
-                ATM -> User: Dispense
-                ATM -> User: Overdraft
-            }
+//            User -> ATM: Amount
+//            one-of {
+//                ATM -> User: Dispense
+//                ATM -> User: Overdraft
+//            }
         }
     }
 }
@@ -45,8 +45,8 @@ rule work (User, ATM) {
 User -> ATM: Identifier
 ATM -> User: Success
 User -> ATM: Withdraw
-User -> ATM: Amount
-ATM -> User: Overdraft
+//User -> ATM: Amount
+//ATM -> User: Overdraft
 
 ;
 

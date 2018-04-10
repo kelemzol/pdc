@@ -1,0 +1,121 @@
+
+module nfs
+
+export NfsServerStartupAttr
+export NfsOpenFileAttr
+export NfsMountAttr
+
+export nfs-server-startup
+export nfs-mount
+export nfs-open-file
+export nfs-read-file
+export nfs-session
+
+// NFS Server startup
+// ////////////////////////////////////////////////////////////////////////////
+
+type record NfsServerStartupAttr {
+    mountDPN : Integer
+    nfsdDPN  : Integer
+}
+
+type record RegisterAttr {
+    portNumber : Integer
+}
+
+type message Register RegisterAttr
+
+rule nfs-server-startup(PortMapper, MountdDaemon, NFSDDaemon) attr NfsServerStartupAttr {
+    MountdDaemon -> PortMapper: Register {
+        mountDPN = portNumber
+    }
+    NFSDDaemon -> PortMapper: Register {
+        nfsdDPN = portNumber
+    }
+}
+
+
+
+// NFS Mount
+// ////////////////////////////////////////////////////////////////////////////
+
+type record NfsMountAttr {
+    getPortStatus : Boolean
+    mountStatus : Boolean
+}
+
+type record RPCGetAttr {
+    status : Boolean
+}
+
+type message RPC_get-port-reply RPCGetAttr
+type message RPC_mount-reply RPCGetAttr
+
+rule nfs-mount <proc client> (client, PortMapper, MountdDaemon) attr NfsMountAttr {
+    client -> PortMapper: RPC_get-port-request
+    PortMapper -> client: RPC_get-port-reply {
+        getPortStatus = status
+    }
+    client -> MountdDaemon: RPC_mount-request
+    MountdDaemon -> client: RPC_mount-reply {
+        mountStatus = status
+    }
+}
+
+// NFS Open File
+// ////////////////////////////////////////////////////////////////////////////
+
+type record NfsOpenFileAttr {
+    getPortStatus : Integer
+}
+
+rule nfs-open-file <proc client> (client, PortMapper, NFSDDaemon) attr NfsOpenFileAttr {
+    client -> PortMapper: RPC_get-port-request
+    PortMapper -> client: RPC_get-port-reply {
+        getPortStatus = status
+    }
+    many-of {
+        seq {
+            client -> NFSDDaemon: RPC_getattr-request
+            NFSDDaemon -> client: RPC_getattr-reply
+        }
+        seq {
+            client -> NFSDDaemon: RPC_lookup-request
+            NFSDDaemon -> client: RPC_lookup-reply
+        }
+    }
+    client -> NFSDDaemon: RPC_lookup-request
+    NFSDDaemon -> client: RPC_lookup-reply
+}
+
+// NFS Read Contents
+// ////////////////////////////////////////////////////////////////////////////
+
+rule nfs-read-file <proc client> (client, NFSDDaemon) {
+    more-of {
+        seq {
+            client -> NFSDDaemon: RPC_read-request
+            NFSDDaemon -> client: RPC_read-reply
+        }
+    }
+}
+
+
+// NFS Session
+// ////////////////////////////////////////////////////////////////////////////
+
+rule nfs-session(PortMapper, MountdDaemon, NFSDDaemon) {
+    nfs-server-startup
+    more-conc-client
+}
+
+rule more-conc-client (client, PortMapper, MountdDaemon, NFSDDaemon) {
+    merge {
+        optional more-conc-client
+        nfs-mount <client>
+        nfs-open-file <client>
+        nfs-read-file <client>
+    }
+}
+
+

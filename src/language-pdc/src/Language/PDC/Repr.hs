@@ -312,7 +312,7 @@ data PDCRuleHeader
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCRuleHeader
 instance JSON.FromJSON PDCRuleHeader
-    
+
 data PDCRuleType
   = PDCRuleType
     { sourceInfoRuleType :: SourceInfo
@@ -661,6 +661,7 @@ prettyPDCRulePattern  (PDCMoreOfPattern (PDCMoreOfP{..})) = "more-of{" ++ (conca
 prettyPDCRulePattern  (PDCMergePattern (PDCMergeP{..})) = "merge{" ++ (concat $ map prettyPDCRulePattern pdcRulePatternsMerge) ++ "}"
 prettyPDCRulePattern  (PDCOptionalPattern (PDCOptionalP{..})) = "optinal{" ++ (prettyPDCRulePattern pdcRulePatternOptional) ++ "}"
 prettyPDCRulePattern  (PDCStartPattern (PDCStartP{..})) = "start{" ++ (prettyPDCRulePattern pdcRulePatternStart) ++ "}"
+prettyPDCRulePattern  (PDCCallPattern (PDCCallP{..})) = "call{" ++ (pdcid pdcRuleId) ++ "}"
 --prettyPDCRulePattern  (PDCActionPattern _) = "action{..}"
 --prettyPDCRulePattern  (PDCScopeOut) = "end-call"
 
