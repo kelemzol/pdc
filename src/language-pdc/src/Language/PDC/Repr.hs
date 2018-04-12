@@ -546,7 +546,12 @@ instance GetId PDCId where
     getId (PDCId {..}) = pdcid
 instance GetId String where
     getId = id
---instance (GetRuleName a) => GetId a where
+instance GetId UCId where
+    getId (UCId {..}) = ucid
+instance GetId LCId where
+    getId (LCId {..}) = lcid
+
+    --instance (GetRuleName a) => GetId a where
 --    getId = pdcid . getRuleName
 
 
@@ -644,11 +649,36 @@ maybeExportEntry :: PDCModuleEntry -> Maybe PDCExportE
 maybeExportEntry (PDCExportEntry e) = Just e
 maybeExportEntry _ = Nothing
 
+maybeDataTypeEntry :: PDCModuleEntry -> Maybe PDCDataTypeE
+maybeDataTypeEntry (PDCDataTypeEntry e) = Just e
+maybeDataTypeEntry _ = Nothing
+
+maybeRecordDataTypeEntry :: PDCDataTypeE -> Maybe PDCRecordTypeE
+maybeRecordDataTypeEntry (PDCRecordTypeEntry e) = Just e
+maybeRecordDataTypeEntry _ = Nothing
+
+maybeMsgAttrTypeEntry :: PDCDataTypeE -> Maybe PDCMsgTypeE
+maybeMsgAttrTypeEntry (PDCMsgTypeEntry e) = Just e
+maybeMsgAttrTypeEntry _ = Nothing
+
+
+
 filterRuleEntries :: [PDCModuleEntry] -> [PDCRuleE]
 filterRuleEntries = catMaybes . map maybeRuleEntry
 
 filterExportEntries :: [PDCModuleEntry] -> [PDCExportE]
 filterExportEntries = catMaybes . map maybeExportEntry
+
+filterDataTypeEntries :: [PDCModuleEntry] -> [PDCDataTypeE]
+filterDataTypeEntries = catMaybes . map maybeDataTypeEntry
+
+filterRecordDataTypeEntries :: [PDCDataTypeE] -> [PDCRecordTypeE]
+filterRecordDataTypeEntries = catMaybes . map maybeRecordDataTypeEntry
+
+filterMsgAttrTypeEntries :: [PDCDataTypeE] -> [PDCMsgTypeE]
+filterMsgAttrTypeEntries = catMaybes . map maybeMsgAttrTypeEntry
+
+
 
 prettyPDCRulePattern :: PDCRulePattern -> String
 prettyPDCRulePattern  (PDCMsgPattern (PDCMsgP{..})) = "(" ++ (pdcid pdcMsgFrom) ++ "->" ++ (pdcid pdcMsgTo) ++ ":" ++ (pdcid pdcMsgType) ++ ")"

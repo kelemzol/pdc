@@ -3,6 +3,7 @@
            , ViewPatterns
            , TypeFamilies
            , FlexibleContexts
+--           , PartialTypeSignatures
            #-}
 
 module Language.PDC.Interpreter.Eval (evalNode, EvalNodeRes(..)) where
@@ -18,7 +19,8 @@ import Language.PDC.Interpreter.Env
 import Language.PDC.Interpreter.Msg
 import Language.PDC.Interpreter.EvalRepr
 import Language.PDC.Interpreter.Msg
-import Language.PDC.Interpreter.Env
+import qualified Language.PDC.Interpreter.Scope as Scope
+import Language.PDC.Interpreter.EvalAttrContent
 
 import qualified Debug.Trace as Trace
 
@@ -48,31 +50,33 @@ containMsgEdgeE = all (not . isMsgEdgeE)
 filterRunnableEdgesWithoutMsg :: [(Edge, Node)] -> [(Edge, Node)]
 filterRunnableEdgesWithoutMsg = filter (containMsgEdgeE . fst)
 
-evalNode :: Node -> [PDCMsgP] -> BoundEnv -> EvalNodeRes
-evalNode Leaf _ benv = EvalNodeSuccess { boundEnv = benv }
-evalNode Node {..} [] benv = case filterRunnableEdgesWithoutMsg branches of
+evalNode :: Node -> [PDCMsgP] -> BoundEnv -> ScopeEnv -> EvalNodeRes
+evalNode Leaf _ benv sce = EvalNodeSuccess { boundEnv = benv }
+evalNode Node {..} [] benv sce = case filterRunnableEdgesWithoutMsg branches of
     [] -> EvalNodeFail { failedPattern = pattern, failedMsg = Nothing, boundEnv = benv }
     branches' -> case findSucces ress of
         Nothing -> head ress
         (Just succ) -> succ
       where
-        ress = map (matcher benv (error "Language.PDC.Interpreter.Eval.evalNode: empty msglist, none msgEdgeE, msg") []) branches'
-evalNode Node {..} (m:ms) benv = case findSucces ress of
+        ress = map (matcher benv sce (error "Language.PDC.Interpreter.Eval.evalNode: empty msglist, none msgEdgeE, msg") []) branches'
+evalNode Node {..} (m:ms) benv sce = case findSucces ress of
     Nothing -> head ress
     (Just succ) -> succ
   where
-      ress = map (matcher benv m ms) branches
+      ress = map (matcher benv sce m ms) branches
 
-matcher :: BoundEnv -> PDCMsgP -> [PDCMsgP] -> (Edge, Node) -> EvalNodeRes
-matcher benv msg msglist (pattern, node)
+matcher :: BoundEnv -> ScopeEnv -> PDCMsgP -> [PDCMsgP] -> (Edge, Node) -> EvalNodeRes
+matcher benv sce msg msglist (pattern, node)
   | ((MsgEdgeE msgPattern):_) <- pattern
   , directMatch msgPattern msg
-  = evalNode node msglist benv
+  , Evaluated sce' <- evalMsgAction sce msg
+  = evalNode node msglist benv sce'
 
   | ((MsgEdgeE msgPattern):_) <- pattern
   , partialMatch msgPattern msg
   , (Just benv') <- matchBounded benv msgPattern msg
-  = evalNode node msglist benv'
+  , Evaluated sce' <- evalMsgAction sce msg
+  = evalNode node msglist benv' sce'
 
   | ((MsgEdgeE msgPattern):_) <- pattern
   = EvalNodeFail { failedPattern = toRulePattern pattern, failedMsg = Just msg, boundEnv = benv }
@@ -81,13 +85,27 @@ matcher benv msg msglist (pattern, node)
 --  , Just () <- actionMatch actPattern
 --  = evalNode node (msg:msglist) benv
 
-  | (_:tl) <- pattern = matcher benv msg msglist (tl, node)
-  | [] <- pattern = evalNode node msglist benv
+  | ((ScopeEdgeE ScopeClose):tl) <- pattern = matcher benv (Scope.popScope sce) msg msglist (tl, node)
+  | ((ScopeEdgeE ScopeThisBack):tl) <- pattern = matcher benv (Scope.thisBack sce) msg msglist (tl, node)
+  | ((ScopeEdgeE (ScopeOpen l)):tl) <- pattern = matcher benv (Scope.pushScope sce (createScope l)) msg msglist (tl, node)
+  | ((ActEdgeE action):tl) <- pattern = case evalAttrContent (sce) action of
+      (Evaluated sce') -> matcher benv sce' msg msglist (tl, node)
+      Discard -> EvalNodeFail { failedPattern = toRulePattern pattern, failedMsg = Just msg, boundEnv = benv }
+  | [] <- pattern = evalNode node msglist benv sce
 --  | otherwise = evalNode node msglist benv
 
   | otherwise = EvalNodeFail { failedPattern = toRulePattern pattern, failedMsg = Just msg, boundEnv = benv }
 
-actionMatch :: PDCAttrContent -> Maybe ()
-actionMatch _ = Just ()
+
+
+
+createScope :: [PDCVarTypeBinding] -> Scope.Scope ElemType
+createScope l = Scope.createScope (map to l)
+  where
+    to :: PDCVarTypeBinding -> (String, ElemType)
+    to (PDCVarTypeBinding {..}) = (lcid pdcVarTypeBindingVarName, value (ucid pdcVarTypeBindingTypeName))
+    value "Integer" = IntegerET 0
+    value "String" = StringET ""
+    value "Bool" = BoolET False
 
 

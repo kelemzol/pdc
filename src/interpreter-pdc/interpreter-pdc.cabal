@@ -20,6 +20,7 @@ library
   exposed-modules:     Language.PDC.Interpreter
                      , Language.PDC.Interpreter.EvalRepr
                      , Language.PDC.Interpreter.Eval
+                     , Language.PDC.Interpreter.EvalAttrContent
                      , Language.PDC.Interpreter.Utils
                      , Language.PDC.Interpreter.Msg
                      , Language.PDC.Interpreter.Env

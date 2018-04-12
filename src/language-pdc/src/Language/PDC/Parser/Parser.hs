@@ -28,7 +28,7 @@ tok t f = token (origSrc . pos) (tpos2ppos . pos) (\ t' -> if tokeneq t t' then 
 
 u = undefined
 
-idTok c = tok (c u u) tkid
+idTok c = tok (c u u) tkws
 
 normTok c = tok (c u) (const ())
 
@@ -205,7 +205,7 @@ parsePDCExpression = buildExpressionParser table term
     --binop tok op assoc = Infix (do {tok; return (\ a b -> PDCBinOperatorExpression (PDCBinOperatorE undefined a b op)) }) assoc
     eqOp = binop tkEq PDCEqBO AssocNone
     nEqOp = binop tkNEq PDCNEqBO AssocNone
-    memberOp = binop tkDot PDCMemberBO AssocLeft
+    memberOp = binop tkDot PDCMemberBO AssocRight
 
 
 parsePDCStringLiteralE :: PDCParser PDCStringLiteralE

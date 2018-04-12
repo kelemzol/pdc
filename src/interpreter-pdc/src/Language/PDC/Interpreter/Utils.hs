@@ -18,8 +18,16 @@ import Debug.Trace
 ---------------
 
 
+
 findRuleEntry :: (GetId a) => a -> PDCModule -> Maybe PDCRuleE
 findRuleEntry name mod = find (\ re -> pdcid (pdcRuleName $ pdcRuleEntryHeader re) == (getId name)) $ filterRuleEntries (pdcModuleEntries mod)
+
+findRecordDataTypeEntry :: (GetId a) => a -> PDCModule -> Maybe PDCRecordTypeE
+findRecordDataTypeEntry name mod = find (\ re -> ucid (pdcRecordTypeName re) == (getId name)) $ filterRecordDataTypeEntries $ filterDataTypeEntries (pdcModuleEntries mod)
+
+findMsgAttrTypeEntry :: (GetId a) => a -> PDCModule -> Maybe PDCMsgTypeE
+findMsgAttrTypeEntry name mod = find (\ re -> ucid (pdcMsgTypeMsg re) == (getId name)) $ filterMsgAttrTypeEntries $ filterDataTypeEntries $ pdcModuleEntries mod
+
 
 instanceRuleEntry :: PDCCallP -> PDCRuleE -> PDCRuleE
 instanceRuleEntry (PDCCallP {..}) r@(PDCRuleE {..}) = r { pdcRulePattern = transformBi transform pdcRulePattern }

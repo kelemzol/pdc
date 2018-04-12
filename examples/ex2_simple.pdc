@@ -1,0 +1,31 @@
+
+module ex2
+
+type record StdMsg {
+    sessionId : Integer
+}
+
+type message REQ StdMsg
+type message RES StdMsg
+
+type record MainAttrSet {
+    sid : Integer
+}
+
+rule ex2-simple (A, B) {
+    ex2-simple-main
+}
+
+rule ex2-simple-main(A, B) attr MainAttrSet {
+    A -> B : REQ {
+        sid = sessionId
+    }
+    B -> A : RES {
+        if sessionId /= sid {
+            discard "invalid session id!"
+        }
+    }
+}
+
+
+

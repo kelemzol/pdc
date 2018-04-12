@@ -133,8 +133,8 @@ data Token
   | TkAngleClose   { pos :: Pos }
   | TkSquareOpen   { pos :: Pos }
   | TkSquareClose  { pos :: Pos }
-  | TkIdLC         { pos :: Pos, tkid :: String }
-  | TkIdUC         { pos :: Pos, tkid :: String }
+  | TkIdLC         { pos :: Pos, tkws :: String }
+  | TkIdUC         { pos :: Pos, tkws :: String }
   deriving (Eq, Ord, Show)
 
 tokeneq :: Token -> Token -> Bool

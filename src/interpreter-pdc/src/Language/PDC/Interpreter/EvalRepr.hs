@@ -57,7 +57,7 @@ prettyEdge = show . map prettyEdgeEntry
 prettyEdgeEntry :: EdgeEntry -> String
 prettyEdgeEntry (MsgEdgeE e) = prettyPDCRulePattern (toRulePattern e)
 prettyEdgeEntry (ScopeEdgeE ScopeClose) = "scope-close"
-prettyEdgeEntry (ScopeEdgeE (ScopeOpen e)) = "scope-open{" ++ (pdcid $ getRuleName e) ++ "}"
+prettyEdgeEntry (ScopeEdgeE (ScopeOpen e)) = "scope-open{" ++ "TODO" {- (pdcid $ getRuleName e) -} ++ "}"
 prettyEdgeEntry (ScopeEdgeE ScopeThisBack) = "scope-this-back"
 prettyEdgeEntry (ActEdgeE _) = "action"
 
@@ -145,14 +145,15 @@ data EdgeEntry
 
 data ScopeAction
   = ScopeClose
-  | ScopeOpen PDCRuleE
+  | ScopeOpen [PDCVarTypeBinding]
   | ScopeThisBack
   deriving (Eq, Show)
 
 instance ToRulePattern Edge where
     toRulePattern ((MsgEdgeE a):_) = toRulePattern a
+    toRulePattern (_:es) = toRulePattern es
 --    toRulePattern ((ActEdgeE a):_) = toRulePattern a
-    toRulePattern _ = error $ "Language.PDC.Interpreter.EvalRepr.[ToRulePattern Edge]toRulePattern: non msg or action edge entry"
+    toRulePattern _ = error $ "Language.PDC.Interpreter.EvalRepr.[ToRulePattern Edge]toRulePattern: non msg pattern in edge"
 
 
 -- AST to EvalRepr
@@ -162,6 +163,7 @@ data Trans
   = PatternT PDCRulePattern
   | ScopeT ScopeAction
   | AttrContextT PDCAttrContent
+  | CutT
 
 trans2EE :: Trans -> EdgeEntry
 trans2EE (ScopeT sa) = ScopeEdgeE sa
@@ -195,11 +197,11 @@ ast2node' mod (tracedSplitOnPattern "split.error"         -> (pre, Nothing, tl))
 prettyTrans :: Trans -> String
 prettyTrans (PatternT p) = "pattern{" ++ (prettyPDCRulePattern p) ++ "}"
 prettyTrans (ScopeT ScopeClose) = "scope-close"
-prettyTrans (ScopeT (ScopeOpen e)) = "scope-open{" ++ (pdcid $ getRuleName e) ++ "}"
+prettyTrans (ScopeT (ScopeOpen e)) = "scope-open{" ++ "TODO" {-(pdcid $ getRuleName e)-} ++ "}"
 prettyTrans (ScopeT ScopeThisBack) = "scope-this-back"
 prettyTrans (AttrContextT _) = "attr-ctx"
 
--- splitTrace = Debug.trace
+--splitTrace = Debug.trace
 splitTrace _ = id
 tracedSplitOnPattern str l = let (a,b,c) = splitOnPattern l in splitTrace (
                                                                      str
@@ -230,8 +232,18 @@ pattern2Branch mod tl pre p = case (ast2node' mod (pre ++ ((PatternT p):tl))) of
 
 
 msg2node :: PDCModule -> [Trans] -> PDCRulePattern -> [Trans] -> PDCMsgP -> Node
-msg2node _ [] o pre p = Node o [((map trans2EE pre) ++ [MsgEdgeE p], Leaf)]
-msg2node mod tl o pre p = Node o [((map trans2EE pre) ++ [MsgEdgeE p], ast2node' mod tl)]
+msg2node mod tl o pre p = Node o [((map trans2EE pre) ++ [ScopeEdgeE (ScopeOpen selectors), MsgEdgeE p], remeaning tl)]
+  where
+    list
+      | Just ac <- pdcMsgContent p = [ScopeT ScopeThisBack, AttrContextT ac, ScopeT ScopeClose]
+      | otherwise                  = [                                       ScopeT ScopeClose]
+--    remeaning []
+--      | [] <- list = Leaf
+    remeaning tl = ast2node' mod (list ++ tl)
+    selectors = maybe [] id $ do
+        msgAttrTypeEntry <- findMsgAttrTypeEntry (pdcMsgType p) mod
+        msgDataTypeEntry <- findRecordDataTypeEntry (pdcMsgTypeType msgAttrTypeEntry) mod
+        return (pdcRecordEntries msgDataTypeEntry)
 
 
 seq2node :: PDCModule -> [Trans] -> PDCRulePattern -> [Trans] -> PDCSeqP -> Node
@@ -375,7 +387,7 @@ call2node mod tl o pre cp@(PDCCallP {..})
     | Just ac <- pdcCallContent
     = ast2node' mod
       (pre ++
-      ( (ScopeT (ScopeOpen ruleEntry))
+      ( (ScopeT (ScopeOpen selectors))
       : (PatternT (pdcRulePattern (callTrace "instanceRuleEntry" $ instanceRuleEntry cp ruleEntry)))
       : (ScopeT ScopeThisBack)
       : (AttrContextT ac)
@@ -384,12 +396,14 @@ call2node mod tl o pre cp@(PDCCallP {..})
       ))
     | otherwise = ast2node' mod
       (pre ++
-      ( (ScopeT (ScopeOpen ruleEntry))
+      ( (ScopeT (ScopeOpen selectors))
       : (PatternT (pdcRulePattern (callTrace "instanceRuleEntry" $ instanceRuleEntry cp ruleEntry)))
       : (ScopeT ScopeClose)
       : tl
       ))
   where
     Just ruleEntry = findRuleEntry pdcRuleId mod
+    id = pdcRuleAttr $ pdcRuleType $ pdcRuleEntryHeader ruleEntry
+    Just selectors = if ucid id == "NullAttr" then Just [] else fmap pdcRecordEntries $ findRecordDataTypeEntry id mod
 
 

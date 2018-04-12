@@ -18,6 +18,7 @@ import Language.PDC.Interpreter
 import Language.PDC.Interpreter.Utils
 import Language.PDC.Interpreter.EvalRepr
 import Language.PDC.Interpreter.Env
+import Language.PDC.Interpreter.Scope
 
 
 data Options
@@ -58,9 +59,9 @@ work options@(Options {..}) = do
                               putStrLn (show m)
                 (Just re) -> do
                     let node = ast2node m (pdcRulePattern re)
-                        result = evalNode node msglist emptyBoundEnv
+                        result = evalNode node msglist emptyBoundEnv emptyScopeH
                     writeFileNodeTree "out.txt" 16 node
-                    cliNode node
+                    -- cliNode node
                     case result of
                         (EvalNodeSuccess {..}) -> do
                             putStrLn "Success."

@@ -22,6 +22,7 @@ import Language.PDC.Interpreter
 import Language.PDC.Interpreter.Utils
 import Language.PDC.Interpreter.EvalRepr
 import Language.PDC.Interpreter.Env
+import Language.PDC.Interpreter.Scope
 
 
 
@@ -62,7 +63,7 @@ unitTestTree (PDCUnitTest {..}) =
             case findRuleEntry "test" m of
                 Nothing -> Left ("not found main rule: test")
                 (Just re) -> let node = ast2node m (pdcRulePattern re)
-                             in Right (res2res (evalNode node msglist emptyBoundEnv))
+                             in Right (res2res (evalNode node msglist emptyBoundEnv emptyScopeH))
 
 res2res :: EvalNodeRes -> SimpleRes
 res2res EvalNodeFail {..} = Failed (prettyPDCRulePattern failedPattern) (fmap (\m -> (prettyPDCRulePattern $ PDCMsgPattern m) {- ++ (show $ sourceInfoMsg m) -} ) failedMsg) (show boundEnv)

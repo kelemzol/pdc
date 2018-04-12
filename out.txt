@@ -1,13 +1,7 @@
-                                                      ROOT                                                      
-                                                       |                                                        
-                             ["scope-open{loginWithWork}","(User->ATM:Identifier)"]                             
-                                                       |                                                        
-                                            --------------------------------------------------------            
-                                           /                                                        \           
-                                ["(ATM->User:Success)"]                                  ["(ATM->User:Failure)"]
-                                           |                                                        |           
-                     --------------------------------------------                            ["scope-close"]    
-                    /                                            \                                              
-["scope-open{work}","(User->ATM:Deposit)"]  ["scope-open{work}","(User->ATM:Withdraw)"]                         
-                    |                                            |                                              
-      ["scope-close","scope-close"]                ["scope-close","scope-close"]                                
+                                   ROOT                                   
+                                    |                                     
+           ["scope-open{TODO}","scope-open{TODO}","(A->B:REQ)"]           
+                                    |                                     
+["scope-this-back","action","scope-close","scope-open{TODO}","(B->A:RES)"]
+                                    |                                     
+         ["scope-this-back","action","scope-close","scope-close"]         
