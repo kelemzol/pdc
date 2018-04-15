@@ -67,16 +67,16 @@ evalNode Node {..} (m:ms) benv sce = case findSucces ress of
 
 matcher :: BoundEnv -> ScopeEnv -> PDCMsgP -> [PDCMsgP] -> (Edge, Node) -> EvalNodeRes
 matcher benv sce msg msglist (pattern, node)
-  | ((MsgEdgeE msgPattern):_) <- pattern
+  | ((MsgEdgeE msgPattern):tl) <- pattern
   , directMatch msgPattern msg
   , Evaluated sce' <- evalMsgAction sce msg
-  = evalNode node msglist benv sce'
+  = matcher benv sce' (error "Language.PDC.Interpreter.Eval.matcher: more MsgEdge in Node") msglist (tl, node)  -- evalNode node msglist benv sce'
 
-  | ((MsgEdgeE msgPattern):_) <- pattern
+  | ((MsgEdgeE msgPattern):tl) <- pattern
   , partialMatch msgPattern msg
   , (Just benv') <- matchBounded benv msgPattern msg
   , Evaluated sce' <- evalMsgAction sce msg
-  = evalNode node msglist benv' sce'
+  = matcher benv' sce' (error "Language.PDC.Interpreter.Eval.matcher: more MsgEdge in Node") msglist (tl, node) -- evalNode node msglist benv' sce'
 
   | ((MsgEdgeE msgPattern):_) <- pattern
   = EvalNodeFail { failedPattern = toRulePattern pattern, failedMsg = Just msg, boundEnv = benv }

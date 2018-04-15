@@ -163,7 +163,6 @@ data Trans
   = PatternT PDCRulePattern
   | ScopeT ScopeAction
   | AttrContextT PDCAttrContent
-  | CutT
 
 trans2EE :: Trans -> EdgeEntry
 trans2EE (ScopeT sa) = ScopeEdgeE sa
@@ -232,14 +231,17 @@ pattern2Branch mod tl pre p = case (ast2node' mod (pre ++ ((PatternT p):tl))) of
 
 
 msg2node :: PDCModule -> [Trans] -> PDCRulePattern -> [Trans] -> PDCMsgP -> Node
-msg2node mod tl o pre p = Node o [((map trans2EE pre) ++ [ScopeEdgeE (ScopeOpen selectors), MsgEdgeE p], remeaning tl)]
+msg2node mod tl o pre p = Node o [((map trans2EE pre) ++ list, remeaning tl)]
   where
     list
-      | Just ac <- pdcMsgContent p = [ScopeT ScopeThisBack, AttrContextT ac, ScopeT ScopeClose]
-      | otherwise                  = [                                       ScopeT ScopeClose]
+      | Just ac <- pdcMsgContent p = [ ScopeEdgeE (ScopeOpen selectors), MsgEdgeE p, ScopeEdgeE ScopeThisBack, ActEdgeE ac, ScopeEdgeE ScopeClose ]
+      | otherwise                  = [ ScopeEdgeE (ScopeOpen selectors), MsgEdgeE p,                                        ScopeEdgeE ScopeClose ]
+--    list
+--      | Just ac <- pdcMsgContent p = [ScopeT ScopeThisBack, AttrContextT ac, ScopeT ScopeClose]
+--      | otherwise                  = [                                       ScopeT ScopeClose]
 --    remeaning []
 --      | [] <- list = Leaf
-    remeaning tl = ast2node' mod (list ++ tl)
+    remeaning tl = ast2node' mod ({- list ++ -} tl)
     selectors = maybe [] id $ do
         msgAttrTypeEntry <- findMsgAttrTypeEntry (pdcMsgType p) mod
         msgDataTypeEntry <- findRecordDataTypeEntry (pdcMsgTypeType msgAttrTypeEntry) mod
