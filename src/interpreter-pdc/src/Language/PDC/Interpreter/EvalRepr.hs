@@ -17,6 +17,7 @@ import Language.PDC.Interpreter.Utils
 import qualified Data.Tree        as Pretty
 import qualified Data.Tree.Pretty as Pretty
 import qualified Debug.Trace      as Debug
+import qualified GHC.Stack        as GHC
 
 trace a b = b -- Debug.trace a b
 trace2 a b = b -- Debug.trace a b
@@ -163,31 +164,45 @@ data Trans
   = PatternT PDCRulePattern
   | ScopeT ScopeAction
   | AttrContextT PDCAttrContent
+  | EndCallT
 
 trans2EE :: Trans -> EdgeEntry
 trans2EE (ScopeT sa) = ScopeEdgeE sa
 trans2EE (AttrContextT ac) = ActEdgeE ac
-trans2EE _ = error $ "Language.PDC.Interpreter.EvalRepr.transEE: PatternT"
+trans2EE (PatternT _) = error $ "Language.PDC.Interpreter.EvalRepr.transEE: PatternT"
+trans2EE (EndCallT) = error $ "Language.PDC.Interpreter.EvalRepr.transEE: EndCallT" ++ (show $ GHC.getCallStack $ GHC.callStack)
 
 
 ast2node :: PDCModule -> PDCRulePattern -> Node
 ast2node mod p = ast2node' mod [PatternT p]
 
+intrace str pre tl p f = Debug.trace (str++":\n  pre: | " ++ (show $ map prettyTrans pre) ++ "\n   tl: | " ++ (show $ map prettyTrans tl) ++ "\n  pat: | " ++ prettyPDCRulePattern (toRulePattern p) ++ "\n------END") f
+-- intrace _ _ _ _ f = f
+
+data TransConf
+  = TransConf
+    { tl :: [Trans]
+    , pre :: [Trans]
+    , last :: [Trans]
+    }
+
+emptyTransConf = TransConf [] [] []
+
 ast2node' :: PDCModule -> [Trans] -> Node
 ast2node' _ [] = Leaf
 --ast2node' mod ((PatternT o@(PDCMsgPattern p)):tl) =    trace ("ast2node'.msg:    " ++ (prettyPDCRulePattern o)) $ msg2node mod tl o p
-ast2node' mod (tracedSplitOnPattern "split.msg"           -> (pre, Just o@(PDCMsgPattern p), tl)) =      trace ("ast2node'.msg:    " ++ (prettyPDCRulePattern o)) $ msg2node mod tl o pre p
-ast2node' mod (tracedSplitOnPattern "split.seq"           -> (pre, Just o@(PDCSeqPattern p), tl)) =      trace ("ast2node'.seq:    " ++ (prettyPDCRulePattern o)) $ seq2node mod tl o pre p
-ast2node' mod (tracedSplitOnPattern "split.unique"        -> (pre, Just o@(PDCUnSeqPattern p), tl)) =    trace ("ast2node'.unique")                               $ unseq2node mod tl o pre p
-ast2node' mod (tracedSplitOnPattern "split.one-of"        -> (pre, Just o@(PDCOneOfPattern p), tl)) =    trace ("ast2node'.oneof")                                $ oneof2node mod tl o pre p
-ast2node' mod (tracedSplitOnPattern "split.many-of-lead"  -> (pre, Just o@(PDCManyofPattern p), [])) =   trace ("ast2node'.manyofLeaf")                           $ Leaf
-ast2node' mod (tracedSplitOnPattern "split.many-of"       -> (pre, Just o@(PDCManyofPattern p), tl)) =   trace ("ast2node'.manyof: " ++ (prettyPDCRulePattern o)) $ manyof2node mod tl o pre p
-ast2node' mod (tracedSplitOnPattern "split.merge"         -> (pre, Just o@(PDCMergePattern p), tl)) =    trace ("ast2node'.merge")                                $ merge2node mod tl o pre p
-ast2node' mod (tracedSplitOnPattern "split.optional-leaf" -> (pre, Just o@(PDCOptionalPattern p), [])) = trace ("ast2node'.optionalLeaf")                         $ Leaf
-ast2node' mod (tracedSplitOnPattern "split.optional"      -> (pre, Just o@(PDCOptionalPattern p), tl)) = trace ("ast2node'.optional")                             $ optional2node mod tl o pre p
-ast2node' mod (tracedSplitOnPattern "split.more-of"       -> (pre, Just o@(PDCMoreOfPattern p), tl)) =   trace ("ast2node'.moreof")                               $ moreof2node mod tl o pre p
-ast2node' mod (tracedSplitOnPattern "split.call"          -> (pre, Just o@(PDCCallPattern p), tl)) =     trace ("ast2node'.call")                                 $ call2node mod tl o pre p
-ast2node' mod (tracedSplitOnPattern "split.leaf"          -> (pre, Nothing, [])) = Node undefined [(map trans2EE pre, Leaf)]
+ast2node' mod (tracedSplitOnPattern "split.msg"           -> (pre, Just o@(PDCMsgPattern p), tl)) =      trace ("ast2node'.msg:    " ++ (prettyPDCRulePattern o)) $ intrace "MSG" pre tl p $ msg2node mod tl o pre p
+ast2node' mod (tracedSplitOnPattern "split.seq"           -> (pre, Just o@(PDCSeqPattern p), tl)) =      trace ("ast2node'.seq:    " ++ (prettyPDCRulePattern o)) $ intrace "SEQ" pre tl p $ seq2node mod tl o pre p
+ast2node' mod (tracedSplitOnPattern "split.unique"        -> (pre, Just o@(PDCUnSeqPattern p), tl)) =    trace ("ast2node'.unique")                               $ intrace "UNS" pre tl p $ unseq2node mod tl o pre p
+ast2node' mod (tracedSplitOnPattern "split.one-of"        -> (pre, Just o@(PDCOneOfPattern p), tl)) =    trace ("ast2node'.oneof")                                $ intrace "ONE" pre tl p $ oneof2node mod tl o pre p
+ast2node' mod (tracedSplitOnPattern "split.many-of-lead"  -> (pre, Just o@(PDCManyofPattern p), [])) =   trace ("ast2node'.manyofLeaf")                           $ intrace "MANY-LEAF" pre [] p $ Leaf
+ast2node' mod (tracedSplitOnPattern "split.many-of"       -> (pre, Just o@(PDCManyofPattern p), tl)) =   trace ("ast2node'.manyof: " ++ (prettyPDCRulePattern o)) $ intrace "MANY" pre tl p $ manyof2node mod tl o pre p
+ast2node' mod (tracedSplitOnPattern "split.merge"         -> (pre, Just o@(PDCMergePattern p), tl)) =    trace ("ast2node'.merge")                                $ intrace "MERGE" pre tl p $ merge2node mod tl o pre p
+ast2node' mod (tracedSplitOnPattern "split.optional-leaf" -> (pre, Just o@(PDCOptionalPattern p), [])) = trace ("ast2node'.optionalLeaf")                         $ intrace "OPT-LEAF" pre [] p $ Leaf
+ast2node' mod (tracedSplitOnPattern "split.optional"      -> (pre, Just o@(PDCOptionalPattern p), tl)) = trace ("ast2node'.optional")                             $ intrace "OPT" pre tl p $ optional2node mod tl o pre p
+ast2node' mod (tracedSplitOnPattern "split.more-of"       -> (pre, Just o@(PDCMoreOfPattern p), tl)) =   trace ("ast2node'.moreof")                               $ intrace "MORE" pre tl p $ moreof2node mod tl o pre p
+ast2node' mod (tracedSplitOnPattern "split.call"          -> (pre, Just o@(PDCCallPattern p), tl)) =     trace ("ast2node'.call")                                 $ intrace "CALL" pre tl p $ call2node mod tl o pre p
+ast2node' mod (tracedSplitOnPattern "split.leaf"          -> (pre, Nothing, [])) = Node undefined [(map trans2EE $ Debug.trace "---- 1" pre, Leaf)]
 ast2node' mod (tracedSplitOnPattern "split.error"         -> (pre, Nothing, tl)) = error $ "Language.PDC.Interpreter.EvalRepr.ast2node': Nothing and non empty tl list"
 --ast2node' mod (PDCScopeAction PDCScopeClose:tl) =             trace "ast2node'.scopeOut" $ ast2node' mod tl -- top scope end
 --ast2node' mod (PDCScopeAction PDCScopeOpen:tl) =             trace "ast2node'.scopeOut" $ ast2node' mod tl -- top scope end
@@ -199,6 +214,7 @@ prettyTrans (ScopeT ScopeClose) = "scope-close"
 prettyTrans (ScopeT (ScopeOpen e)) = "scope-open{" ++ "TODO" {-(pdcid $ getRuleName e)-} ++ "}"
 prettyTrans (ScopeT ScopeThisBack) = "scope-this-back"
 prettyTrans (AttrContextT _) = "attr-ctx"
+prettyTrans (EndCallT) = "end-call"
 
 --splitTrace = Debug.trace
 splitTrace _ = id
@@ -206,14 +222,13 @@ tracedSplitOnPattern str l = let (a,b,c) = splitOnPattern l in splitTrace (
                                                                      str
                                                                   ++ "\n        "
                                                                   ++ (show $ map prettyTrans l)
-                                                                  ++ "\n        "
-                                                                  ++ "(" 
+                                                                  ++ "\n        pre     |" 
                                                                   ++ (show $ map prettyTrans a)
-                                                                  ++ ","
+                                                                  ++ "\n        pattern |"
                                                                   ++ (maybe "empty" prettyPDCRulePattern b)
-                                                                  ++ ","
+                                                                  ++ "\n        post    |"
                                                                   ++ (show $ map prettyTrans c)
-                                                                  ++ ")"
+                                                                  ++ "\n-------------------------------------------------------"
                                                                   ) (a,b,c)
 
 splitOnPattern :: [Trans] -> ([Trans], Maybe PDCRulePattern, [Trans])
@@ -231,17 +246,19 @@ pattern2Branch mod tl pre p = case (ast2node' mod (pre ++ ((PatternT p):tl))) of
 
 
 msg2node :: PDCModule -> [Trans] -> PDCRulePattern -> [Trans] -> PDCMsgP -> Node
-msg2node mod tl o pre p = Node o [((map trans2EE pre) ++ list, remeaning tl)]
+msg2node mod tl o pre p = Node o [((map trans2EE $ Debug.trace (" ##     pre | " ++ (show $ map prettyTrans pre)) pre) 
+    ++ list
+    ++ (map trans2EE $ Debug.trace (" ## endcall | " ++ (show $ map prettyTrans endcall)) endcall), remeaning tl')]
   where
     list
       | Just ac <- pdcMsgContent p = [ ScopeEdgeE (ScopeOpen selectors), MsgEdgeE p, ScopeEdgeE ScopeThisBack, ActEdgeE ac, ScopeEdgeE ScopeClose ]
       | otherwise                  = [ ScopeEdgeE (ScopeOpen selectors), MsgEdgeE p,                                        ScopeEdgeE ScopeClose ]
---    list
---      | Just ac <- pdcMsgContent p = [ScopeT ScopeThisBack, AttrContextT ac, ScopeT ScopeClose]
---      | otherwise                  = [                                       ScopeT ScopeClose]
---    remeaning []
---      | [] <- list = Leaf
-    remeaning tl = ast2node' mod ({- list ++ -} tl)
+    remeaning tl = ast2node' mod tl
+    (endcall, tl') = checkEndCall tl
+    checkEndCall [] = ([], [])
+    checkEndCall (EndCallT:tl) = let (ptl, tl') = checkEndCall tl in (ptl, tl') -- ([],tl)
+    checkEndCall (o@((PatternT _):tl)) = ([],o)
+    checkEndCall (t:tl) = let (ptl, tl') = checkEndCall tl in (t:ptl, tl')
     selectors = maybe [] id $ do
         msgAttrTypeEntry <- findMsgAttrTypeEntry (pdcMsgType p) mod
         msgDataTypeEntry <- findRecordDataTypeEntry (pdcMsgTypeType msgAttrTypeEntry) mod
@@ -335,7 +352,6 @@ moreof2node mod tl o pre m@(PDCMoreOfP {..})
       -- brs = concat $ catMaybes $ map (pattern2Branch ((PDCMoreOfPattern m):tl)) pdcRulePatternsMoreOf
       
 optional2node :: PDCModule -> [Trans] -> PDCRulePattern -> [Trans] -> PDCOptionalP -> Node
---optional2node mod tl@((PatternT htl):ttl) o pre m@(PDCOptionalP {..})
 optional2node mod tl@(splitOnPattern -> (pre', Just htl, ttl)) o pre m@(PDCOptionalP {..})
     | Nothing <- nullMatch = Leaf
     | otherwise            = Node o (fromJust nullMatch ++ brs)
@@ -394,6 +410,7 @@ call2node mod tl o pre cp@(PDCCallP {..})
       : (ScopeT ScopeThisBack)
       : (AttrContextT ac)
       : (ScopeT ScopeClose)
+      : EndCallT
       : tl
       ))
     | otherwise = ast2node' mod
@@ -401,6 +418,7 @@ call2node mod tl o pre cp@(PDCCallP {..})
       ( (ScopeT (ScopeOpen selectors))
       : (PatternT (pdcRulePattern (callTrace "instanceRuleEntry" $ instanceRuleEntry cp ruleEntry)))
       : (ScopeT ScopeClose)
+      : EndCallT
       : tl
       ))
   where

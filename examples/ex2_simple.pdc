@@ -27,5 +27,14 @@ rule ex2-simple-main(A, B) attr MainAttrSet {
     }
 }
 
+rule test (A, B) {
+    called <A, B>
+    A -> B: END
+}
 
+
+rule called <proc Q, proc W> (Q, W) {
+    Q -> W: MSG
+    optional called <Q, W>
+}
 

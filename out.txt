@@ -1,7 +1,0 @@
-                                   ROOT                                   
-                                    |                                     
-           ["scope-open{TODO}","scope-open{TODO}","(A->B:REQ)"]           
-                                    |                                     
-["scope-this-back","action","scope-close","scope-open{TODO}","(B->A:RES)"]
-                                    |                                     
-         ["scope-this-back","action","scope-close","scope-close"]         
