@@ -1,0 +1,25 @@
+Optional test 8 - positive;
+
+module test-module
+
+rule test (A, B) {
+    A -> B: REQ
+    optional seq {
+        B -> A: RES
+        A -> B: REQ
+        optional B -> A: RES
+    }
+    B -> A: END
+}
+
+;
+
+A -> B: REQ
+B -> A: RES
+A -> B: REQ
+B -> A: RES
+B -> A: END
+
+;
+
+Success {env = "BoundEnv {bmap = fromList []}"}
