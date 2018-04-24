@@ -7,6 +7,26 @@ export simple-rule2
 
 
 
+rule seq-1 (A, B) {
+    A -> B: REQ1
+    A -> B: REQ2
+    B -> A: END
+}
+
+rule optional-1 (A, B) {
+    A -> B: REQ1
+    A -> B: REQ2
+    optional B -> A: RES
+    B -> A: END
+}
+
+rule rec-call-1 (A, B, C, D) {
+    A -> B: REC
+    optional rec-call-1
+    A -> B: END
+}
+
+
 rule atm(User, ATM) {
     loginWithWork <User, ATM, work>
 }

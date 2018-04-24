@@ -1,0 +1,5 @@
+                                                            ROOT                                                           
+                                                             |                                                             
+["scope-open{[\"sid\"]}","scope-open{[\"sessionId\"]}","(A->B:REQ)","scope-this-back","action","scope-close","scope-close"]
+                                                             |                                                             
+                   ["scope-open{[\"sessionId\"]}","(B->A:RES)","scope-this-back","action","scope-close"]                   

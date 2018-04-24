@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards
+           , ViewPatterns
            , FlexibleInstances
            , MultiParamTypeClasses
            , MonoLocalBinds
@@ -9,7 +10,7 @@ module Language.PDC.Interpreter.Scope where
 import Language.PDC.Repr
 import qualified Data.Map as M
 
-import Debug.Trace
+import qualified Debug.Trace as Debug
 
 data Scope a
   = SingletonScope (M.Map String a)
@@ -76,11 +77,13 @@ thisBack (sc:sch) = sc:(thisBack sch)
 thisBack o = o
 
 
-operate :: [String] -> (elem -> elem) -> ScopeH elem -> (elem, ScopeH elem)
+vtrace a = Debug.trace (show a) a
+
+operate :: (Show elem) => [String] -> (elem -> elem) -> ScopeH elem -> (elem, ScopeH elem)
 operate [] _ _               = error $ "Language.PDC.Interpreter.Scope.operate: empty selector list"
 operate sls _ []             = error $ "Language.PDC.Interpreter.Scope.operate: empty scope; not found: `" ++ show sls ++ "` selectors"
 operate sls _ (BlockScope:_) = error $ "Language.PDC.Interpreter.Scope.operate: block scope; not found: `" ++ show sls ++ "` selectors"
-operate [sel] fn (sc@(SingletonScope map):scs)
+operate [sel] fn (vtrace -> (sc@(SingletonScope map):scs))
   | (Just value', map') <- M.updateLookupWithKey (\ _ value -> Just (fn value)) sel map = (value', (SingletonScope map':scs))
   | otherwise = let (e, scs') = operate [sel] fn scs in (e, sc:scs')
 operate [sel] fn (sc@(ThisScope):scs) = let (e, scs') = operate [sel] fn scs in (e, sc:scs')
