@@ -1,0 +1,66 @@
+
+module entrypersist
+
+
+
+type record ProtAttr {
+    ppersist : Boolean
+    tempSId : Integer
+    persisted : Integer
+}
+
+type record SettingsAttr {
+    persist : Boolean
+}
+
+type message Settings SettingsAttr
+
+type record EntryAttr {
+    sessionId : Integer
+}
+
+type message Entry EntryAttr
+
+
+rule instance (DB, Server, a, b, c, d) {
+    unseq {
+        prot // <a>
+        prot // <b>
+        prot // <c>
+        prot // <d>
+    }
+}
+
+rule prot (DB, Server, a) attr ProtAttr {
+    a -> Server : Login
+    Server -> a : LoginOk
+    a -> Server : Settings {
+        ppersist = persist
+        persisted = 0
+    }
+    Server -> a : SettingsOk
+    many-of {
+        seq {
+            a -> Server : Entry {
+                tempSId = sessionId
+                if ppersist == true {
+                    persisted = persisted ~ 1
+                }
+            }
+            optional Server -> DB : Entry {
+                if tempSId /= sessionId {
+                    discard "another session"
+                }
+                if ppersist == true {
+                    persisted = persisted + 1
+                }
+            }
+        }
+    }
+    a -> Server : End {
+        if persisted /= 0 {
+            discard "persist number"
+        }
+    }
+}
+

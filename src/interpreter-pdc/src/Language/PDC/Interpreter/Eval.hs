@@ -58,43 +58,42 @@ evalNode Node {..} [] benv sce = case filterRunnableEdgesWithoutMsg branches of
         Nothing -> head ress
         (Just succ) -> succ
       where
-        ress = map (matcher benv sce (error "Language.PDC.Interpreter.Eval.evalNode: empty msglist, none msgEdgeE, msg") []) branches'
+        ress = map (matcher' benv sce (error "Language.PDC.Interpreter.Eval.evalNode: empty msglist, none msgEdgeE, msg") []) branches'
 evalNode Node {..} (m:ms) benv sce = case findSucces ress of
     Nothing -> head ress
     (Just succ) -> succ
   where
-      ress = map (matcher benv sce m ms) branches
+      ress = map (matcher' benv sce m ms) branches
 
-matcher :: BoundEnv -> ScopeEnv -> PDCMsgP -> [PDCMsgP] -> (Edge, Node) -> EvalNodeRes
-matcher benv sce msg msglist (pattern, node)
-  | ((MsgEdgeE msgPattern):tl) <- pattern
+matcher' benv sce msg msglist (pattern, node) = matcher benv sce msg msglist pattern (pattern, node)
+
+matcher :: BoundEnv -> ScopeEnv -> PDCMsgP -> [PDCMsgP] -> Edge -> (Edge, Node) -> EvalNodeRes
+matcher benv sce msg msglist orig (pattern, node)
+  | ((MsgEdgeE msgPattern):tl)      <- pattern
   , directMatch msgPattern msg
   , Evaluated sce' <- evalMsgAction sce msg
-  = matcher benv sce' (error "Language.PDC.Interpreter.Eval.matcher: more MsgEdge in Node") msglist (tl, node)  -- evalNode node msglist benv sce'
+  = matcher benv sce' msg {-(error "Language.PDC.Interpreter.Eval.matcher: more MsgEdge in Node")-} msglist orig (tl, node)  -- evalNode node msglist benv sce'
 
-  | ((MsgEdgeE msgPattern):tl) <- pattern
+  | ((MsgEdgeE msgPattern):tl)      <- pattern
   , partialMatch msgPattern msg
   , (Just benv') <- matchBounded benv msgPattern msg
   , Evaluated sce' <- evalMsgAction sce msg
-  = matcher benv' sce' (error "Language.PDC.Interpreter.Eval.matcher: more MsgEdge in Node") msglist (tl, node) -- evalNode node msglist benv' sce'
+  = matcher benv' sce' msg {-(error "Language.PDC.Interpreter.Eval.matcher: more MsgEdge in Node")-} msglist orig (tl, node) -- evalNode node msglist benv' sce'
 
-  | ((MsgEdgeE msgPattern):_) <- pattern
+  | ((MsgEdgeE msgPattern):_)       <- pattern
   = EvalNodeFail { failedPattern = toRulePattern pattern, failedMsg = Just msg, boundEnv = benv }
 
---  | [ActEdgeE actPattern] <- pattern
---  , Just () <- actionMatch actPattern
---  = evalNode node (msg:msglist) benv
-
-  | ((ScopeEdgeE ScopeClose):tl) <- pattern = matcher benv (Scope.popScope sce) msg msglist (tl, node)
-  | ((ScopeEdgeE ScopeThisBack):tl) <- pattern = matcher benv (Scope.thisBack sce) msg msglist (tl, node)
-  | ((ScopeEdgeE (ScopeOpen l)):tl) <- pattern = matcher benv (Scope.pushScope sce (createScope l)) msg msglist (tl, node)
-  | ((ActEdgeE action):tl) <- pattern = case evalAttrContent (sce) action of
-      (Evaluated sce') -> matcher benv sce' msg msglist (tl, node)
-      Discard -> EvalNodeFail { failedPattern = toRulePattern pattern, failedMsg = Just msg, boundEnv = benv }
-  | [] <- pattern = evalNode node msglist benv sce
+  | ((ScopeEdgeE ScopeClose):tl)    <- pattern = matcher benv (Scope.popScope sce) msg msglist orig (tl, node)
+  | ((ScopeEdgeE ScopeThisBack):tl) <- pattern = matcher benv (Scope.thisBack sce) msg msglist orig (tl, node)
+  | ((ScopeEdgeE (ScopeOpen l)):tl) <- pattern = matcher benv (Scope.pushScope sce (createScope l)) msg msglist orig (tl, node)
+  | ((ScopeEdgeE ScopeTop):tl)      <- pattern = matcher benv (Scope.thisTop sce) msg msglist orig (tl, node)
+  | ((ActEdgeE action):tl)          <- pattern = case evalAttrContent (sce) action of
+      (Evaluated sce') -> matcher benv sce' msg msglist orig (tl, node)
+      Discard -> EvalNodeFail { failedPattern = toRulePattern orig, failedMsg = Just msg, boundEnv = benv }
+  | []                              <- pattern = evalNode node msglist benv sce
 --  | otherwise = evalNode node msglist benv
 
-  | otherwise = EvalNodeFail { failedPattern = toRulePattern pattern, failedMsg = Just msg, boundEnv = benv }
+  | otherwise = EvalNodeFail { failedPattern = toRulePattern orig, failedMsg = Just msg, boundEnv = benv }
 
 
 

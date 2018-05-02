@@ -53,12 +53,18 @@ tokens :-
     "if"                               { tok TkIf }
     "while"                            { tok TkWhile }
     "discard"                          { tok TkDiscard }
+    "pre"                              { tok TkPre }
+    "post"                             { tok TkPost }
     "@"                                { tok TkAt }
     "=="                               { tok TkEq }
     "/="                               { tok TkNEq }
     "."                                { tok TkDot }
     "="                                { tok TkAssign }
     "->"                               { tok TkArrow }
+    "~"                                { tok TkMinus }
+    "+"                                { tok TkPlus }
+    "false"                            { tok TkFalse }
+    "true"                             { tok TkTrue }
     ":"                                { tok TkColon }
     ","                                { tok TkComma }
     "{"                                { tok TkBraceOpen }
@@ -117,11 +123,17 @@ data Token
   | TkIf           { pos :: Pos }
   | TkWhile        { pos :: Pos }
   | TkDiscard      { pos :: Pos }
+  | TkPre          { pos :: Pos }
+  | TkPost         { pos :: Pos }
   | TkDot          { pos :: Pos }
   | TkAt           { pos :: Pos }
   | TkEq           { pos :: Pos }
   | TkNEq          { pos :: Pos }
   | TkAssign       { pos :: Pos }
+  | TkMinus        { pos :: Pos }
+  | TkPlus         { pos :: Pos }
+  | TkFalse        { pos :: Pos }
+  | TkTrue         { pos :: Pos }
   | TkArrow        { pos :: Pos }
   | TkColon        { pos :: Pos }
   | TkComma        { pos :: Pos }
@@ -163,11 +175,17 @@ tokeneq (TkAction  _)      (TkAction  _)      = True
 tokeneq (TkIf      _)      (TkIf      _)      = True
 tokeneq (TkWhile   _)      (TkWhile   _)      = True
 tokeneq (TkDiscard _)      (TkDiscard _)      = True
+tokeneq (TkPre _)          (TkPre _)          = True
+tokeneq (TkPost _)         (TkPost _)         = True
 tokeneq (TkDot _)          (TkDot _)          = True
 tokeneq (TkAt      _)      (TkAt      _)      = True
 tokeneq (TkEq      _)      (TkEq      _)      = True
 tokeneq (TkNEq     _)      (TkNEq     _)      = True
 tokeneq (TkAssign  _)      (TkAssign  _)      = True
+tokeneq (TkMinus  _)       (TkMinus  _)       = True
+tokeneq (TkPlus  _)        (TkPlus  _)        = True
+tokeneq (TkFalse  _)       (TkFalse  _)       = True
+tokeneq (TkTrue  _)        (TkTrue  _)        = True
 tokeneq (TkArrow _)        (TkArrow _)        = True
 tokeneq (TkColon _)        (TkColon _)        = True
 tokeneq (TkComma _)        (TkComma _)        = True

@@ -94,6 +94,7 @@ evalExpression :: ScopeEnv -> PDCExpression -> ElemType
 evalExpression sce (PDCIdExpression i) = fst $ operate [lcid i] id sce
 evalExpression sce (PDCStringLiteralExpression (PDCStringLiteralE {..})) =   StringET pdcStringLiteralStr
 evalExpression sce (PDCIntegerLiteralExpression (PDCIntegerLiteralE {..})) = IntegerET pdcIntegerLiteralInt
+evalExpression sce (PDCBoolLiteralExpression (PDCBoolLiteralE {..})) = BoolET pdcBoolLiteralBool
 evalExpression sce o@(PDCBinOperatorExpression (PDCBinOperatorE { pdcBinOp = PDCMemberBO })) = let (qs,ss) = leftValue o in fst $ operate ss id sce
 evalExpression sce o@(PDCBinOperatorExpression (PDCBinOperatorE { pdcBinOp = otherOp, .. })) = evalBinOp otherOp
                                                                                                          (evalExpression sce pdcBinOpLeft)
@@ -104,6 +105,8 @@ evalExpression sce o@(PDCBinOperatorExpression (PDCBinOperatorE { pdcBinOp = oth
 evalBinOp :: PDCBinOperator -> ElemType -> ElemType -> ElemType
 evalBinOp PDCEqBO (IntegerET a) (IntegerET b) = BoolET (a == b)
 evalBinOp PDCNEqBO (IntegerET a) (IntegerET b) = BoolET (a /= b)
+evalBinOp PDCMinusBO (IntegerET a) (IntegerET b) = IntegerET (a - b)
+evalBinOp PDCPlusBO (IntegerET a) (IntegerET b) = IntegerET (a + b)
 evalBinOp PDCEqBO (StringET a) (StringET b) = BoolET (a == b)
 evalBinOp PDCNEqBO (StringET a) (StringET b) = BoolET (a /= b)
 evalBinOp PDCEqBO (BoolET a) (BoolET b) = BoolET (a == b)

@@ -6,6 +6,43 @@ export bad-rule
 export simple-rule2
 
 
+rule merge-2 (A, B, C, D) {
+    merge {
+        seq {
+            more-of {
+                seq {
+                    A -> A: A1
+                    A -> A: A2
+                }
+            }
+            A -> A: ENDA
+
+        }
+        seq {
+            B -> B: B1
+            B -> B: B2
+        }
+    }
+    A -> A: END
+}
+
+rule merge-1 (A, B) {
+    merge {
+        seq {
+            many-of {
+                A -> A: M1
+            }
+            A -> A: M2
+        }
+        seq {
+            A -> A: L1
+            A -> A: L2
+        }
+    }
+    A -> A: END
+}
+
+
 
 rule atm(User, ATM) {
     loginWithWork <User, ATM, work>

@@ -33,8 +33,10 @@ rule test (A, B) {
 }
 
 
-rule called <proc Q, proc W> (Q, W) {
+rule called <proc Q, proc W> (Q, W) attr MainAttrSet {
     Q -> W: MSG
-    optional called <Q, W>
+    optional called <Q, W> {
+        this.sid = sid
+    }
 }
 

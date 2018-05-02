@@ -1,24 +1,22 @@
 Complex test 7 - positive;
-False;
-bug: merge is strict;
 
 module test-module
 
 rule test (A, B, C, D) {
     merge {
-        more-of {
-            seq {
-                A -> C: REQ1
-                C -> D: REQ2
-                D -> C: RES2
-                C -> A: RES1
+        seq {
+            many-of {
+                seq {
+                    A -> A: A1
+                    A -> A: A2
+                }
             }
+            A -> A: ENDA
+
         }
         seq {
-            B -> C: REQ1
-            C -> D: REQ2
-            D -> C: RES2
-            C -> B: RES1
+            B -> B: B1
+            B -> B: B2
         }
     }
     A -> A: END
@@ -26,22 +24,26 @@ rule test (A, B, C, D) {
 
 ;
 
-A -> C: REQ1
-C -> D: REQ2
-C -> A: RES1
-D -> C: RES2
+A -> A: A1
+A -> A: A2
 
-B -> C: REQ1
-C -> D: REQ2
-D -> C: RES2
-C -> B: RES1
 
-A -> C: REQ1
-C -> D: REQ2
-D -> C: RES2
-C -> A: RES1
+A -> A: A1
+A -> A: A2
+
+B -> B: B1
+A -> A: A1
+B -> B: B2
+
+A -> A: A2
+
+A -> A: A1
+A -> A: A2
+
+A -> A: ENDA
 
 A -> A: END
+
 
 ;
 

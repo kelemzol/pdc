@@ -29,15 +29,24 @@ findMsgAttrTypeEntry :: (GetId a) => a -> PDCModule -> Maybe PDCMsgTypeE
 findMsgAttrTypeEntry name mod = find (\ re -> ucid (pdcMsgTypeMsg re) == (getId name)) $ filterMsgAttrTypeEntries $ filterDataTypeEntries $ pdcModuleEntries mod
 
 
-instanceRuleEntry :: PDCCallP -> PDCRuleE -> PDCRuleE
-instanceRuleEntry (PDCCallP {..}) r@(PDCRuleE {..}) = r { pdcRulePattern = transformBi transform pdcRulePattern }
+instanceRuleEntry :: Integer -> PDCCallP -> PDCRuleE -> (PDCRuleE, Integer)
+instanceRuleEntry pdcCallUnivSeqNum (PDCCallP {..}) r@(PDCRuleE {..}) = (r { pdcRulePattern = transformBi transform pdcRulePattern }, topUniv)
   where
     transform :: PDCId -> PDCId
-    transform p = case find ((==) (pdcid p) . snd) templatePairs of
+    transform p = case find ((==) (pdcid p) . snd) (templatePairs ++ univPairs) of
         Nothing -> p
         Just n -> p { pdcid = fst n }
     templatePairs :: [(String, String)]
     templatePairs = zip (map pdcid pdcTmplPrmsCall) (map getTmplName (pdcRuleTempParams (pdcRuleType pdcRuleEntryHeader)))
+    procNames :: [String]
+    procNames = map pdcid $ filter (\ p -> ulcase p == LC) $ map pdcIdProcParam $ pdcRuleProcParams (pdcRuleType pdcRuleEntryHeader)
+    univPairs :: [(String, String)]
+    topUniv :: Integer
+    (univPairs, topUniv) = get $ map (\(pn,i) -> if elem pn (map fst templatePairs) then Nothing else Just (i, pn)) $ zip procNames [(pdcCallUnivSeqNum+1)..]
+      where
+        get [] = ([], pdcCallUnivSeqNum)
+        get ((Just (i,p)):ipss) = let (a, b) = get ipss in (("phantom" ++ show i, p):a, b)
+        get (Nothing:ipps) = get ipps
     getTmplName :: PDCRuleTemplParam -> String
     getTmplName (PDCRuleTemplProcParam (PDCTemplProcP {..})) = pdcid pdcTemplProcParamId
     getTmplName (PDCRuleTemplRuleParam (PDCRuleHeader {..})) = pdcid pdcRuleName
@@ -82,3 +91,9 @@ anypath [] = []
 anypath [l] = map (:[]) l
 anypath (a:al) = concat $ map (\ x -> map (:x) a) (anypath al)
     
+
+flatMerged :: [([a], [[a]])] -> [(a, [a])]
+flatMerged preMerged = [ (scheduled, remeaning) | (alt, altl) <- preMerged
+                                      , scheduled   <- alt
+                                      , remeaning   <- anypath altl
+                                      ]

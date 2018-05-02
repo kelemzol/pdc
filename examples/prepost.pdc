@@ -1,0 +1,53 @@
+
+module pprepost
+
+type record StdMsg {
+    sessionId : Integer
+}
+
+type message REQ StdMsg
+type message RES StdMsg
+
+type record MainAttr {
+    sid   : Integer
+    count : Integer
+}
+
+rule main (A, B) {
+    pprepost pre {
+        count = 0
+    } post {
+        if count /= 4 {
+            discard "count is not 4"
+        }
+    }
+}
+
+rule pprepost (A, B) attr MainAttr {
+    req pre {
+        count = count + 1
+    } post {
+        count = count + 1
+        sid = sessionId
+    }
+    res pre {
+        count = count + 1
+        sessionId = sid
+    } post {
+        count = count + 1
+    }
+}
+
+rule req (A, B) attr StdMsg {
+    A -> B : REQ {
+        this.sessionId = sessionId
+    }
+}
+
+rule res (A, B) attr StdMsg {
+    B -> A : RES {
+        if this.sessionId /= sessionId {
+            discard "sessionIds are not equals"
+        }
+    }
+}

@@ -25,6 +25,7 @@ data PDCModule
     { sourceInfoModule  :: SourceInfo
     , pdcModuleName     :: PDCId
     , pdcModuleEntries  :: [PDCModuleEntry]
+    , pdcCallUnivSeqNum :: Integer -- its a workaraound for universal q.
     }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCModule
@@ -182,6 +183,7 @@ data PDCExpression
   = PDCIdExpression LCId
   | PDCStringLiteralExpression PDCStringLiteralE
   | PDCIntegerLiteralExpression PDCIntegerLiteralE
+  | PDCBoolLiteralExpression PDCBoolLiteralE
   | PDCBinOperatorExpression PDCBinOperatorE
   | PDCUnOperatorExpression PDCUnOperatorE
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -206,6 +208,15 @@ data PDCIntegerLiteralE
 instance JSON.ToJSON PDCIntegerLiteralE
 instance JSON.FromJSON PDCIntegerLiteralE
 
+data PDCBoolLiteralE
+  = PDCBoolLiteralE
+    { sourceInfoBoolLiteralExpression :: SourceInfo
+    , pdcBoolLiteralBool :: Bool
+    }
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance JSON.ToJSON PDCBoolLiteralE
+instance JSON.FromJSON PDCBoolLiteralE
+
 data PDCBinOperatorE
   = PDCBinOperatorE
     { sourceInfoBinOperatorExpression :: SourceInfo
@@ -221,6 +232,8 @@ data PDCBinOperator
   = PDCMemberBO
   | PDCEqBO
   | PDCNEqBO
+  | PDCMinusBO
+  | PDCPlusBO
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCBinOperator
 instance JSON.FromJSON PDCBinOperator
@@ -502,6 +515,7 @@ data PDCCallP
     { sourceInfoCall    :: SourceInfo
     , pdcRuleId         :: PDCId
     , pdcTmplPrmsCall   :: [PDCId]
+    , pdcPreCallContent :: Maybe PDCAttrContent
     , pdcCallContent    :: Maybe PDCAttrContent
     }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)

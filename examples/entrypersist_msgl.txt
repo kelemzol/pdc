@@ -1,0 +1,74 @@
+
+
+Client1 -> Server : Login
+Server -> Client1 : LoginOk
+Client1 -> Server : Settings {
+    persist = true
+}
+Server -> Client1 : SettingsOk
+
+Client1 -> Server : Entry {
+    sessionId = 1
+}
+Server -> DB : Entry {
+    sessionId = 1
+}
+Client1 -> Server : Entry {
+    sessionId = 1
+}
+Server -> DB : Entry {
+    sessionId = 1
+}
+Client1 -> Server : Entry {
+    sessionId = 1
+}
+Server -> DB : Entry {
+    sessionId = 1
+}
+Client1 -> Server : End
+
+
+
+Client2 -> Server : Login
+Server -> Client2 : LoginOk
+Client2 -> Server : Settings {
+    persist = true
+}
+Server -> Client2 : SettingsOk
+Client2 -> Server : End
+
+
+
+Client3 -> Server : Login
+Server -> Client3 : LoginOk
+Client3 -> Server : Settings {
+    persist = false
+}
+Server -> Client3 : SettingsOk
+Client3 -> Server : Entry {
+    sessionId = 3
+}
+Client3 -> Server : Entry {
+    sessionId = 3
+}
+Client3 -> Server : Entry {
+    sessionId = 3
+}
+Client3 -> Server : End
+
+
+
+Client4 -> Server : Login
+Server -> Client4 : LoginOk
+Client4 -> Server : Settings {
+    persist = true
+}
+Server -> Client4 : SettingsOk
+Client4 -> Server : Entry {
+    sessionId = 3
+}
+Server -> DB : Entry {
+    sessionId = 3
+}
+Client4 -> Server : End
+

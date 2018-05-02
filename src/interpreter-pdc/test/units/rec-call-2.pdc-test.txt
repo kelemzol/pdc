@@ -1,6 +1,4 @@
 Rec Call test 2 - positive;
-False;
-bug: merge is strict;
 
 module test-module
 

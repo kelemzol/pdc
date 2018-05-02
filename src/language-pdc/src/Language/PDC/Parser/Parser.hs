@@ -70,9 +70,9 @@ getSourceInfoP = SourceInfo <$> getPosition
 
 
 tkUc, tkLc, tkStringLit, tkIntegerLit :: PDCParser String
-tkModule, tkRule, tkStart, tkSeq, tkOptional, tkOneOf, tkMoreOf, tkManyOf, tkUnSeq, tkInstantly, tkMerge :: PDCParser ()
+tkModule, tkRule, tkStart, tkSeq, tkOptional, tkOneOf, tkMoreOf, tkManyOf, tkUnSeq, tkInstantly, tkMerge, tkPre, tkPost :: PDCParser ()
 tkExport, tkArrow, tkColon, tkComma, tkBraceOpen, tkBraceClose, tkBracketOpen, tkBracketClose, tkAngleOpen, tkAngleClose, tkSquareOpen, tkSquareClose :: PDCParser ()
-tkType, tkRecord, tkMsg, tkAttr, tkBegin, tkAction, tkIf, tkWhile, tkDiscard, tkAt, tkEq, tkNEq, tkAssign, tkDot :: PDCParser ()
+tkType, tkRecord, tkMsg, tkAttr, tkBegin, tkAction, tkIf, tkWhile, tkDiscard, tkAt, tkEq, tkNEq, tkAssign, tkDot, tkMinus, tkPlus, tkFalse, tkTrue :: PDCParser ()
 brace, bracket, angle, square :: PDCParser a -> PDCParser a
 
 tkUc           = idTok TkIdUC
@@ -97,15 +97,21 @@ tkRecord       = normTok TkRecord
 tkMsg          = normTok TkMsg       
 tkAttr         = normTok TkAttr
 tkBegin        = normTok TkBegin     
-tkAction       = normTok TkAction    
+tkAction       = normTok TkAction
 tkIf           = normTok TkIf        
 tkWhile        = normTok TkWhile     
-tkDiscard      = normTok TkDiscard   
+tkDiscard      = normTok TkDiscard
+tkPre          = normTok TkPre
+tkPost         = normTok TkPost
 tkDot          = normTok TkDot
 tkAt           = normTok TkAt        
 tkEq           = normTok TkEq        
 tkNEq          = normTok TkNEq       
-tkAssign       = normTok TkAssign    
+tkAssign       = normTok TkAssign
+tkMinus        = normTok TkMinus
+tkPlus         = normTok TkPlus
+tkFalse        = normTok TkFalse
+tkTrue         = normTok TkTrue
 tkArrow        = normTok TkArrow
 tkColon        = normTok TkColon
 tkComma        = normTok TkComma
@@ -123,7 +129,7 @@ angle p        = id <$> tkAngleOpen *> p <* tkAngleClose
 square p       = id <$> tkSquareOpen *> p <* tkSquareClose
 
 parseModule :: PDCParser PDCModule
-parseModule = PDCModule <$> getSourceInfoP <*> (tkModule *> parsePDCId) <*> (many parsePDCModuleEntry)
+parseModule = PDCModule <$> getSourceInfoP <*> (tkModule *> parsePDCId) <*> (many parsePDCModuleEntry) <*> (pure 0)
 
 parsePDCId :: PDCParser PDCId
 parsePDCId = (try (PDCId <$> getSourceInfoP <*> tkUc <*> (pure UC)))
@@ -172,8 +178,8 @@ parsePDCActionBody = PDCActionBody <$> getSourceInfoP <*> (brace (many parsePDCA
 
 parsePDCActionStatement :: PDCParser PDCActionStatement
 parsePDCActionStatement = ((PDCAssignStatement <$> parsePDCAssignS))
-                      <|> (try (PDCIfStatement <$> parsePDCIfS))
-                      <|> (try (PDCWhileStatement <$> parsePDCWhileS))
+                      <|> ({-try-} (PDCIfStatement <$> parsePDCIfS))
+                      <|> ({-try-} (PDCWhileStatement <$> parsePDCWhileS))
                       <|>      (PDCDiscardStatement <$> parsePDCDiscardS)
                       <?> "PDC-action-statement"
 
@@ -193,19 +199,23 @@ parsePDCExpression :: PDCParser PDCExpression
 parsePDCExpression = buildExpressionParser table term
                  <?> "expression"
   where
-    term = (try (bracket parsePDCExpression))
-       <|> (try (PDCIdExpression <$> parseLCId))
-       <|> (try (PDCStringLiteralExpression <$> parsePDCStringLiteralE))
+    term = ({-try-} (bracket parsePDCExpression))
+       <|> ({-try-} (PDCIdExpression <$> parseLCId))
+       <|> ({-try-} (PDCStringLiteralExpression <$> parsePDCStringLiteralE))
        <|> ({-try-} (PDCIntegerLiteralExpression <$> parsePDCIntegerLiteralE))
+       <|> ({-try-} (PDCBoolLiteralExpression <$> parsePDCBoolLiteralE))
        <?> "term expression"
     table = [ [memberOp]
             , [eqOp, nEqOp]
+            , [minusOp, plusOp]
             ]
     binop tok op assoc = Infix (getSourceInfoP >>= \pos ->  tok >> return (\ a b -> PDCBinOperatorExpression (PDCBinOperatorE pos a b op)) ) assoc
     --binop tok op assoc = Infix (do {tok; return (\ a b -> PDCBinOperatorExpression (PDCBinOperatorE undefined a b op)) }) assoc
-    eqOp = binop tkEq PDCEqBO AssocNone
-    nEqOp = binop tkNEq PDCNEqBO AssocNone
-    memberOp = binop tkDot PDCMemberBO AssocRight
+    eqOp     = binop tkEq    PDCEqBO     AssocNone
+    nEqOp    = binop tkNEq   PDCNEqBO    AssocNone
+    minusOp  = binop tkMinus PDCMinusBO  AssocLeft
+    plusOp   = binop tkPlus  PDCPlusBO   AssocLeft
+    memberOp = binop tkDot   PDCMemberBO AssocRight
 
 
 parsePDCStringLiteralE :: PDCParser PDCStringLiteralE
@@ -214,7 +224,8 @@ parsePDCStringLiteralE = PDCStringLiteralE <$> getSourceInfoP <*> tkStringLit
 parsePDCIntegerLiteralE :: PDCParser PDCIntegerLiteralE
 parsePDCIntegerLiteralE = PDCIntegerLiteralE <$> getSourceInfoP <*> (read <$> tkIntegerLit)
 
-
+parsePDCBoolLiteralE :: PDCParser PDCBoolLiteralE
+parsePDCBoolLiteralE = PDCBoolLiteralE <$> getSourceInfoP <*> ((tkFalse >> (return False)) <|> (tkTrue >> (return True)))
 
 parsePDCDataTypeE :: PDCParser PDCDataTypeE
 parsePDCDataTypeE = (try (PDCRecordTypeEntry <$> parsePDCRecordTypeE))
@@ -296,12 +307,21 @@ parseUnSeqP = blockPatternConstructor PDCUnSeqP tkUnSeq
 parseMergeP = blockPatternConstructor PDCMergeP tkMerge
 parseOptionalP = PDCOptionalP <$> getSourceInfoP <*> (tkOptional *> blockOrSingleton)
 parseMsgP = PDCMsgP <$> getSourceInfoP <*> parsePDCId <*> (tkArrow *> parsePDCId) <*> (tkColon *> parsePDCId) <*> (optionMaybe parsePDCAttrContent) <?> "message pattern"
-parseCallP = PDCCallP <$> getSourceInfoP <*> parsePDCId <*> (try (angle (parsePDCId `sepBy` tkComma)) <|> (pure [])) <*> (optionMaybe parsePDCAttrContent) <?> "call pattern"
+parseCallP = PDCCallP <$> getSourceInfoP
+                      <*> parsePDCId
+                      <*> (try (angle (parsePDCId `sepBy` tkComma)) <|> (pure []))
+                      <*> (optionMaybe (tkPre *> parsePDCAttrContent))
+                      <*> (optionMaybe ((tkPost *> parsePDCAttrContent) <|> parsePDCAttrContent))
+                      <?> "call pattern"
+    
+--    (try (PDCCallP <$> getSourceInfoP <*> parsePDCId <*> (try (angle (parsePDCId `sepBy` tkComma)) <|> (pure [])) <*> pure Nothing <*> (optionMaybe parsePDCAttrContent)))
+--             <|>  (PDCCallP <$> getSourceInfoP <*> parsePDCId <*> (try (angle (parsePDCId `sepBy` tkComma)) <|> (pure [])) <*> (optionMaybe (tkPre *> parsePDCAttrContent)) <*> (optionMaybe (tkPost *> parsePDCAttrContent)))
+--             <?> "call pattern"
 
 parsePDCAttrContent :: PDCParser PDCAttrContent
 parsePDCAttrContent = ({-try-} (PDCAttrContentInlineAction <$> parsePDCActionBody))
-                 <|> ({-try-} (PDCAttrContentActionCall <$> parsePDCActionCall))
-                 <?> "attribute content"
+                  <|> ({-try-} (PDCAttrContentActionCall <$> parsePDCActionCall))
+                  <?> "attribute content"
 
 parsePDCActionCall :: PDCParser PDCActionCall
 parsePDCActionCall = PDCActionCall <$> getSourceInfoP <*> (tkAt *> parseLCId)

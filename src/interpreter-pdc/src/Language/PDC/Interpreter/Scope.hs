@@ -76,7 +76,7 @@ thisBack (sc:sch) = sc:(thisBack sch)
 thisBack o = o
 
 
-operate :: [String] -> (elem -> elem) -> ScopeH elem -> (elem, ScopeH elem)
+operate :: (Show elem) => [String] -> (elem -> elem) -> ScopeH elem -> (elem, ScopeH elem)
 operate [] _ _               = error $ "Language.PDC.Interpreter.Scope.operate: empty selector list"
 operate sls _ []             = error $ "Language.PDC.Interpreter.Scope.operate: empty scope; not found: `" ++ show sls ++ "` selectors"
 operate sls _ (BlockScope:_) = error $ "Language.PDC.Interpreter.Scope.operate: block scope; not found: `" ++ show sls ++ "` selectors"
@@ -84,8 +84,15 @@ operate [sel] fn (sc@(SingletonScope map):scs)
   | (Just value', map') <- M.updateLookupWithKey (\ _ value -> Just (fn value)) sel map = (value', (SingletonScope map':scs))
   | otherwise = let (e, scs') = operate [sel] fn scs in (e, sc:scs')
 operate [sel] fn (sc@(ThisScope):scs) = let (e, scs') = operate [sel] fn scs in (e, sc:scs')
-operate _ _ _ = error $ "Language.PDC.Interpreter.Scope.noQlfrOperate: undefined error"
+operate ("this":sls) fn (sc@(ThisScope):scs) = let (e, scs') = operate sls fn scs in (e, sc:scs')
+operate ("this":sls) fn (sc@(_):scs) = let (e, scs') = operate ("this":sls) fn scs in (e, sc:scs')
+operate sels _ sc = error $ "Language.PDC.Interpreter.Scope.noQlfrOperate: undefined error; selectors: " ++ (show sels) ++ "; scope: " ++ (showScope sc)
 
+showScope :: (Show elem) => [Scope elem] -> String
+showScope [] = []
+showScope ((SingletonScope map):scs) = "{Singleton:" ++ (show map) ++ "}" ++ (showScope scs)
+showScope (ThisScope:scs) = "{ThisScope}" ++ (showScope scs)
+showScope (BlockScope:scs) = "{BlockScope}" ++ (showScope scs)
 
 
 
