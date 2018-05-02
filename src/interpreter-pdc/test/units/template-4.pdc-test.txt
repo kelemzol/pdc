@@ -20,4 +20,4 @@ A -> B: UseBoundding
 
 ;
 
-Success {env = "BoundEnv {bmap = fromList [(\"a\",\"A\")]}"}
+Success {env = BoundEnv {bmap = fromList [("a","A")]}}

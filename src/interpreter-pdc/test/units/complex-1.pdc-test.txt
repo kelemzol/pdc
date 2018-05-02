@@ -30,4 +30,4 @@ rule test (A, B, C, D) {
 
 ;
 
-Success {env = "BoundEnv {bmap = fromList []}"}
+Success {env = BoundEnv {bmap = fromList []}}

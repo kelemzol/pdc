@@ -19,6 +19,9 @@ import Text.Parsec.Char
 import Text.Parsec.Expr
 import qualified Text.Parsec.Token as P
 
+import Control.Monad.IO.Class
+import Control.Concurrent.MVar
+
 import Language.PDC.Parser.Token
 import Language.PDC.Repr
 
@@ -57,10 +60,13 @@ parserIO bp fn = do
     content <- readFile fn
     case bp fn content of
         (Left e) -> return $ Left (show e)
-        (Right m) -> return $ Right m
+        (Right m) -> return $ Right m 
 
 moduleParserIO :: String -> IO (Either String PDCModule)
-moduleParserIO = parserIO moduleParser
+moduleParserIO str = do
+    mvar <- newMVar 0
+    res <- parserIO moduleParser str
+    return (fmap (\ m -> m { pdcCallUnivSeqNum = Just mvar } ) res)
 
 msgListParserIO :: String -> IO (Either String [PDCMsgP])
 msgListParserIO = parserIO msgListParser
@@ -129,7 +135,7 @@ angle p        = id <$> tkAngleOpen *> p <* tkAngleClose
 square p       = id <$> tkSquareOpen *> p <* tkSquareClose
 
 parseModule :: PDCParser PDCModule
-parseModule = PDCModule <$> getSourceInfoP <*> (tkModule *> parsePDCId) <*> (many parsePDCModuleEntry) <*> (pure 0)
+parseModule = PDCModule <$> getSourceInfoP <*> (tkModule *> parsePDCId) <*> (many parsePDCModuleEntry) <*> (pure Nothing)
 
 parsePDCId :: PDCParser PDCId
 parsePDCId = (try (PDCId <$> getSourceInfoP <*> tkUc <*> (pure UC)))

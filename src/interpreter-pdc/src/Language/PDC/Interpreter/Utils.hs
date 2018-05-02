@@ -1,5 +1,6 @@
 
 {-# LANGUAGE RecordWildCards
+           , ViewPatterns
            #-}
 
 module Language.PDC.Interpreter.Utils where
@@ -11,6 +12,9 @@ import Data.Generics.Uniplate.Data
 import Data.Generics.Uniplate.Operations
 
 import Language.PDC.Repr
+
+import System.IO.Unsafe
+import Control.Concurrent.MVar
 
 import Debug.Trace
 
@@ -29,8 +33,9 @@ findMsgAttrTypeEntry :: (GetId a) => a -> PDCModule -> Maybe PDCMsgTypeE
 findMsgAttrTypeEntry name mod = find (\ re -> ucid (pdcMsgTypeMsg re) == (getId name)) $ filterMsgAttrTypeEntries $ filterDataTypeEntries $ pdcModuleEntries mod
 
 
-instanceRuleEntry :: Integer -> PDCCallP -> PDCRuleE -> (PDCRuleE, Integer)
-instanceRuleEntry pdcCallUnivSeqNum (PDCCallP {..}) r@(PDCRuleE {..}) = (r { pdcRulePattern = transformBi transform pdcRulePattern }, topUniv)
+instanceRuleEntry :: Maybe (MVar Integer) -> PDCCallP -> PDCRuleE -> (PDCRuleE, Integer)
+instanceRuleEntry pdcCallUnivSeqNum (PDCCallP {..}) r@(PDCRuleE {..}) 
+    = (r { pdcRulePattern = transformBi transform pdcRulePattern }, topUniv)
   where
     transform :: PDCId -> PDCId
     transform p = case find ((==) (pdcid p) . snd) (templatePairs ++ univPairs) of
@@ -42,15 +47,20 @@ instanceRuleEntry pdcCallUnivSeqNum (PDCCallP {..}) r@(PDCRuleE {..}) = (r { pdc
     procNames = map pdcid $ filter (\ p -> ulcase p == LC) $ map pdcIdProcParam $ pdcRuleProcParams (pdcRuleType pdcRuleEntryHeader)
     univPairs :: [(String, String)]
     topUniv :: Integer
-    (univPairs, topUniv) = get $ map (\(pn,i) -> if elem pn (map fst templatePairs) then Nothing else Just (i, pn)) $ zip procNames [(pdcCallUnivSeqNum+1)..]
+    -- (univPairs, topUniv) = get $ map (\(pn,i) -> if elem pn (map fst templatePairs) then Nothing else Just (i, pn)) $ zip procNames [(pdcCallUnivSeqNum+1)..]
+    (univPairs, topUniv) = get $ map (\(pn,i) -> if elem pn (map fst templatePairs) then Nothing else Just (i, pn)) $ zip procNames [(getI pdcCallUnivSeqNum), (getI pdcCallUnivSeqNum)..]
       where
-        get [] = ([], pdcCallUnivSeqNum)
-        get ((Just (i,p)):ipss) = let (a, b) = get ipss in (("phantom" ++ show i, p):a, b)
+        get [] = ([], 0)-- pdcCallUnivSeqNum)
+        get ((Just (i,p)):ipss) = let (a, b) = get ipss in (("phantom" ++ show i, p):a, max i b)
         get (Nothing:ipps) = get ipps
     getTmplName :: PDCRuleTemplParam -> String
     getTmplName (PDCRuleTemplProcParam (PDCTemplProcP {..})) = pdcid pdcTemplProcParamId
     getTmplName (PDCRuleTemplRuleParam (PDCRuleHeader {..})) = pdcid pdcRuleName
 
+
+getI :: Maybe (MVar Integer) -> Integer
+getI (Just a) = unsafePerformIO $ do { i <- takeMVar a; putMVar a (i+1); return (i+1) }
+    
 
 {-
   = PDCRuleE

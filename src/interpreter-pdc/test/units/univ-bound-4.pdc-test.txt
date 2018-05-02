@@ -1,0 +1,37 @@
+Univ Bound test 4 - positive;
+
+module test-module
+
+rule test (A) {
+    merge {
+        univ
+        univ2
+    }
+    A -> A: END
+}
+
+rule univ (a, A) {
+    a -> A: REQ
+    A -> a: RES
+}
+
+rule univ2 (a, A) {
+    a -> A: REQ2
+    a -> A: REQ3
+    A -> a: RES
+}
+
+;
+
+X -> A : REQ
+A -> X : RES
+
+Z -> A: REQ2
+Z -> A: REQ3
+A -> Z: RES
+
+A -> A : END
+
+;
+
+Success {env = BoundEnv {bmap = fromList [("phantom1","X"),("phantom2","Z")]}}

@@ -30,4 +30,4 @@ rule test (A, B, c, d) {
 
 ;
 
-Success {env = "BoundEnv {bmap = fromList [(\"c\",\"C\"),(\"d\",\"D\")]}"}
+Success {env = BoundEnv {bmap = fromList [("c","C"),("d","D")]}}

@@ -15,6 +15,7 @@ import Test.Tasty.HUnit
 
 import System.Directory
 import Control.Monad
+import Control.Concurrent
 
 import Language.PDC.Parser
 import Language.PDC.Repr
@@ -32,8 +33,9 @@ main = do
     let units = sort dirContext
     putStrLn ""
     files <- forM (map ("./test/units/"++) units) readFile
+    mvar <- newMVar 0
     let unitTests = map processFileContent (zip files units)
-        tests = map unitTestTree $ filter uactive unitTests
+        tests = map (unitTestTree mvar) $ filter uactive unitTests
     putStrLn "Found unit tests:"
     forM_ (zip [1..] unitTests) $ \ (i,u) -> do
         let activityIcon = if uactive u then "[X]" else "[_]"
@@ -48,8 +50,9 @@ sayYoTest :: TestTree
 sayYoTest = testCase "Testing sayYo"
   (assertEqual "Should say Yo to Friend!" (3*2) 6)
 
-unitTestTree :: PDCUnitTest -> TestTree
-unitTestTree (PDCUnitTest {..}) =
+
+unitTestTree :: MVar Integer -> PDCUnitTest -> TestTree
+unitTestTree mvar (PDCUnitTest {..}) =
     testCase (unitTId ++ " \\ (" ++ unitFn ++ ")")
              (assertEqual "Result" res (Right (read tResult :: SimpleRes)))
   where
@@ -62,21 +65,23 @@ unitTestTree (PDCUnitTest {..}) =
         (Right m@(PDCModule {..}), Right msglist) -> do
             case findRuleEntry "test" m of
                 Nothing -> Left ("not found main rule: test")
-                (Just re) -> let node = ast2node m (pdcRulePattern re)
+                (Just re) -> let node = ast2node m { pdcCallUnivSeqNum = Just mvar } (pdcRulePattern re)
                              in Right (res2res (evalNode node msglist emptyBoundEnv emptyScopeH))
 
 res2res :: EvalNodeRes -> SimpleRes
-res2res EvalNodeFail {..} = Failed (prettyPDCRulePattern failedPattern) (fmap (\m -> (prettyPDCRulePattern $ PDCMsgPattern m) {- ++ (show $ sourceInfoMsg m) -} ) failedMsg) (show boundEnv)
-res2res EvalNodeSuccess {..} = Success (show boundEnv)
+res2res EvalNodeFail {..} = Failed (prettyPDCRulePattern failedPattern) (fmap (\m -> (prettyPDCRulePattern $ PDCMsgPattern m) {- ++ (show $ sourceInfoMsg m) -} ) failedMsg) boundEnv
+res2res EvalNodeSuccess {..} = Success boundEnv --(updateIdEnv boundEnv phElim))
+  where
+    phElim a = if isPrefixOf "phantom" a then "phantom" else a
 
 data SimpleRes
   = Failed
     { failedPattern_ :: String
     , failedMessage :: Maybe String
-    , env :: String
+    , env :: BoundEnv -- String
     }
   | Success
-    { env :: String
+    { env :: BoundEnv -- String
     }
   deriving (Eq, Show, Read)
 

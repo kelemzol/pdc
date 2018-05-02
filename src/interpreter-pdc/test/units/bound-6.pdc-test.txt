@@ -18,4 +18,4 @@ B -> A: MSG3
 
 ;
 
-Success {env = "BoundEnv {bmap = fromList [(\"a\",\"A\")]}"}
+Success {env = BoundEnv {bmap = fromList [("a","A")]}}

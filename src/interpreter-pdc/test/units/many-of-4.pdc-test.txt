@@ -21,4 +21,4 @@ B -> A: MSG2
 
 ;
 
-Success {env = "BoundEnv {bmap = fromList []}"}
+Success {env = BoundEnv {bmap = fromList []}}

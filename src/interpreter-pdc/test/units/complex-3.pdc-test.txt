@@ -36,4 +36,4 @@ rule test (A, B, c, d, e) {
 
 ;
 
-Success {env = "BoundEnv {bmap = fromList [(\"c\",\"C\"),(\"d\",\"D\"),(\"e\",\"E\")]}"}
+Success {env = BoundEnv {bmap = fromList [("c","C"),("d","D"),("e","E")]}}

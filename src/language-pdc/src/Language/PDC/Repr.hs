@@ -19,17 +19,18 @@ import qualified Control.Applicative as JSON (empty)
 import qualified Data.ByteString.Lazy.Char8 as BL
 import GHC.Generics (Generic)
 
+import Control.Concurrent.MVar
 
 data PDCModule
   = PDCModule
     { sourceInfoModule  :: SourceInfo
     , pdcModuleName     :: PDCId
     , pdcModuleEntries  :: [PDCModuleEntry]
-    , pdcCallUnivSeqNum :: Integer -- its a workaraound for universal q.
+    , pdcCallUnivSeqNum :: Maybe (MVar Integer) -- its a workaraound for universal q.
     }
-  deriving (Eq, Ord, Show, Data, Typeable, Generic)
-instance JSON.ToJSON PDCModule
-instance JSON.FromJSON PDCModule
+  deriving (Eq, {- Ord, Show, Data, -} Typeable, Generic)
+-- instance JSON.ToJSON PDCModule
+-- instance JSON.FromJSON PDCModule
 
 data PDCId
   = PDCId

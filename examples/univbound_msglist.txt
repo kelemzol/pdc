@@ -1,0 +1,8 @@
+
+Alma -> A : REQ
+A -> Alma : RES
+
+Korte -> A : REQ
+A -> Korte : RES
+
+A -> A : END

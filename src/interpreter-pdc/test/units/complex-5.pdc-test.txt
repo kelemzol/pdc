@@ -32,4 +32,4 @@ C -> B: RES1
 
 ;
 
-Success {env = "BoundEnv {bmap = fromList [(\"a\",\"A\"),(\"b\",\"B\")]}"}
+Success {env = BoundEnv {bmap = fromList [("a","A"),("b","B")]}}

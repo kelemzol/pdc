@@ -1,0 +1,15 @@
+
+module univbound
+
+rule main (A) {
+    more-of {
+        univ
+    }
+    A -> A: END
+}
+
+rule univ (a, A) {
+    a -> A: REQ
+    A -> a: RES
+}
+

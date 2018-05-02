@@ -55,8 +55,8 @@ work options@(Options {..}) = do
                 Nothing -> do putStrLn "not found main rule"
                               putStrLn "rules:"
                               forM_ (map (pdcid . pdcRuleName . pdcRuleEntryHeader) (filterRuleEntries $ pdcModuleEntries)) $ putStrLn . show
-                              putStrLn "module ast:"
-                              putStrLn (show m)
+                              -- putStrLn "module ast:"
+                              -- putStrLn (show m)
                 (Just re) -> do
                     let node = ast2node m (pdcRulePattern re)
                         result = evalNode node msglist emptyBoundEnv emptyScopeH

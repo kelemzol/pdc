@@ -563,7 +563,7 @@ mergeBr (m1, n1) (m2, n2)
 call2node :: PDCModule -> [Trans] -> PDCRulePattern -> [Trans] -> PDCCallP -> Node
 call2node mod tl o pre cp@(PDCCallP {..})
     | Just ac <- pdcCallContent
-    = ast2node' mod { pdcCallUnivSeqNum = Debug.trace ("newUniv: " ++ show newUniv) $ newUniv }
+    = ast2node' newMod
       (pre ++ [ScopeT (ScopeOpen selectors)] ++ (maybe [] (\ a -> [ScopeT ScopeThisBack, AttrContextT a, ScopeT ScopeTop]) pdcPreCallContent) ++
       ( (PatternT (pdcRulePattern (callTrace "instanceRuleEntry" $ entry)))
       : (ScopeT ScopeThisBack)
@@ -572,7 +572,7 @@ call2node mod tl o pre cp@(PDCCallP {..})
       : EndCallT
       : tl
       ))
-    | otherwise = ast2node' mod
+    | otherwise = ast2node' newMod
       (pre ++
       ( (ScopeT (ScopeOpen selectors))
       : (PatternT (pdcRulePattern (callTrace "instanceRuleEntry" $ entry)))
@@ -581,7 +581,8 @@ call2node mod tl o pre cp@(PDCCallP {..})
       : tl
       ))
   where
-    (entry, newUniv) = instanceRuleEntry (Debug.trace ("univ in mod:" ++ show (pdcCallUnivSeqNum mod)) $ pdcCallUnivSeqNum mod) cp ruleEntry
+    newMod = mod -- { pdcCallUnivSeqNum = newUniv }
+    (entry, newUniv) = instanceRuleEntry (pdcCallUnivSeqNum mod) cp ruleEntry
     Just ruleEntry = findRuleEntry pdcRuleId mod
     id = pdcRuleAttr $ pdcRuleType $ pdcRuleEntryHeader ruleEntry
     Just selectors = if ucid id == "NullAttr" then Just [] else fmap pdcRecordEntries $ findRecordDataTypeEntry id mod
