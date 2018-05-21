@@ -1,0 +1,61 @@
+Rec Call test 5 - positive;
+
+module test-module
+
+rule test (Server) {
+    parallel-client-server
+    Server -> Server : End
+}
+
+rule client-server(client, Server) {
+    client -> Server: Request
+    work<client, Server>
+}
+
+rule parallel-client-server (Server) {
+    merge {
+        optional parallel-client-server
+        client-server
+    }
+}
+
+
+rule work<proc a, proc b> (a, b) {
+    many-of {
+        seq {
+            a -> b: Response
+            b -> a: Request
+        }
+    }
+    one-of {
+        Server -> client: Response
+        Server -> client: Error
+    }
+}
+
+
+
+;
+
+
+C1 -> Server: Request
+Server -> C1: Response
+C1 -> Server: Request
+Server -> C1: Error
+
+//C2 -> Server: Request
+//Server -> C2: Response
+//C2 -> Server: Request
+//Server -> C2: Error
+
+//C3 -> Server: Request
+//Server -> C3: Response
+//C3 -> Server: Request
+//Server -> C3: Error
+
+Server -> Server : End
+
+
+;
+
+Success {env = BoundEnv {bmap = fromList []}}

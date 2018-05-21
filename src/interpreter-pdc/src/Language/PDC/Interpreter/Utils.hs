@@ -32,6 +32,9 @@ findRecordDataTypeEntry name mod = find (\ re -> ucid (pdcRecordTypeName re) == 
 findMsgAttrTypeEntry :: (GetId a) => a -> PDCModule -> Maybe PDCMsgTypeE
 findMsgAttrTypeEntry name mod = find (\ re -> ucid (pdcMsgTypeMsg re) == (getId name)) $ filterMsgAttrTypeEntries $ filterDataTypeEntries $ pdcModuleEntries mod
 
+findActionEntry :: (GetId a) => a -> PDCModule -> Maybe PDCActionE
+findActionEntry name mod = find (\ re -> lcid (pdcActionName $ pdcActionHeader re) == (getId name)) $ filterActionEntries (pdcModuleEntries mod)
+
 
 instanceRuleEntry :: Maybe (MVar Integer) -> PDCCallP -> PDCRuleE -> (PDCRuleE, Integer)
 instanceRuleEntry pdcCallUnivSeqNum (PDCCallP {..}) r@(PDCRuleE {..}) 

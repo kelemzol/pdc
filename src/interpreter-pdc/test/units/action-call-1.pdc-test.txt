@@ -1,0 +1,29 @@
+Action call test 1 - positive;
+
+module test-module
+
+type record Attr {
+    i : Integer
+}
+
+type message MSG Attr
+
+rule test (A, B) {
+    A -> B: MSG @value
+}
+
+action value {
+    if i == 0 {
+        discard "i is zero"
+    }
+}
+
+;
+
+A -> B: MSG {
+    i = 1
+}
+
+;
+
+Success {env = BoundEnv {bmap = fromList []}}

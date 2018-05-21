@@ -161,13 +161,13 @@ parsePDCActionTypeE :: PDCParser PDCActionE
 parsePDCActionTypeE = PDCActionE <$> getSourceInfoP <*> parsePDCActionHeader <*> parsePDCActionBody
 
 parsePDCActionHeader :: PDCParser PDCActionHeader
-parsePDCActionHeader = PDCActionHeader <$> getSourceInfoP <*> (tkAction *> parseLCId) <*> parsePDCActionType
+parsePDCActionHeader = PDCActionHeader <$> getSourceInfoP <*> (tkAction *> parseLCId) -- <*> parsePDCActionType
 
-parsePDCActionType :: PDCParser PDCActionType
-parsePDCActionType = PDCActionType <$> getSourceInfoP
-                                   <*> (try (angle (parsePDCActionTemplParam `sepBy` tkComma)) <|> (pure []))
-                                   <*> (bracket (parsePDCActionCallParam `sepBy` tkComma))
-
+-- parsePDCActionType :: PDCParser PDCActionType
+-- parsePDCActionType = PDCActionType <$> getSourceInfoP
+--                                    <*> (try (angle (parsePDCActionTemplParam `sepBy` tkComma)) <|> (pure []))
+--                                    <*> (bracket (parsePDCActionCallParam `sepBy` tkComma))
+{-
 parsePDCActionTemplParam :: PDCParser PDCActionTemplParam
 parsePDCActionTemplParam = ({-try-} (PDCActionTemplTypeParam <$> parsePDCTemplTypeP))
 --                     <|>      (PDCRuleTemplRuleParam <$> parsePDCRuleHeader) -- parsePDCRuleTemplRuleP)
@@ -178,7 +178,7 @@ parsePDCTemplTypeP = PDCTemplTypeP <$> getSourceInfoP <*> (tkType *> parseUCId)
 
 parsePDCActionCallParam :: PDCParser PDCActionCallParam
 parsePDCActionCallParam = PDCActionCallParam <$> getSourceInfoP <*> parseLCId <*> (tkColon *> parseUCId)
-
+-}
 parsePDCActionBody :: PDCParser PDCActionBody
 parsePDCActionBody = PDCActionBody <$> getSourceInfoP <*> (brace (many parsePDCActionStatement))
 

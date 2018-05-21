@@ -1,0 +1,39 @@
+
+
+type record StdAttr {
+    sessionId : Intger
+}
+
+type record MainAttr {
+    sid : Integer
+}
+
+type message Login StdAttr
+type message Req StdAttr
+type message Res StdAttr
+
+implicit action getSessionId Login from MainAttr
+implicit action checkSessionId Req from MainAttr
+implicit action checkSessionId Res from MainAttr
+
+action getSessionId from MainAttr, StdAttr {
+    sid = sessionId
+}
+action checkSessionId from MainAttr, StdAttr {
+    if sid /= sessionId {
+        discard "session ids are not equal"
+    }
+}
+
+rule main (A, B) attr MainAttr {
+    A -> B : Logon @getSessionId
+    A -> B : Req @checkSessionId
+    B -> A : Res @checkSessionId
+}
+
+
+
+<implicit-entry> ::= 'implicit' <implicit-pattern>
+<implicit-pattern> ::= 'action' <lc-id> <uc-id> <optional <from-attr>>
+                     | 'pre' 'action' <lc-id> <lc-id> <optional <from-attr>>
+                     | 'post' 'action' <lc-id> <lc-id> <optional <from-attr>>

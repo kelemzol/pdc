@@ -1,0 +1,42 @@
+Action call test 2 - positive;
+
+module test-module
+
+type message MSG Attr
+
+type record Attr {
+    i : Integer
+}
+
+rule test (A, B) {
+    main
+}
+
+rule main (A, B) attr Attr {
+    A -> B: MSG @getValue
+    B -> A: MSG @checkValue
+}
+
+action getValue {
+    this.i = i
+}
+
+action checkValue {
+    if this.i /= i {
+        discard "i is not equal"
+    }
+}
+
+;
+
+A -> B: MSG {
+    i = 1
+}
+B -> A: MSG {
+    i = 1
+}
+
+
+;
+
+Success {env = BoundEnv {bmap = fromList []}}

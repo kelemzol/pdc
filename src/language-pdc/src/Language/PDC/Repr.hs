@@ -90,12 +90,13 @@ data PDCActionHeader
   = PDCActionHeader
     { sourceInfoActionHeader :: SourceInfo
     , pdcActionName :: LCId
-    , pdcActionType :: PDCActionType
+--    , pdcActionType :: PDCActionType
     }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCActionHeader
 instance JSON.FromJSON PDCActionHeader
 
+{-
 data PDCActionType
   = PDCActionType
    { sourceInfoActionType :: SourceInfo
@@ -121,7 +122,7 @@ data PDCActionCallParam
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance JSON.ToJSON PDCActionCallParam
 instance JSON.FromJSON PDCActionCallParam
-
+-}
 data PDCActionBody
   = PDCActionBody
     { sourceInfoActionBody :: SourceInfo
@@ -676,6 +677,10 @@ maybeMsgAttrTypeEntry :: PDCDataTypeE -> Maybe PDCMsgTypeE
 maybeMsgAttrTypeEntry (PDCMsgTypeEntry e) = Just e
 maybeMsgAttrTypeEntry _ = Nothing
 
+maybeActionEntry :: PDCModuleEntry -> Maybe PDCActionE
+maybeActionEntry (PDCActionEntry e) = Just e
+maybeActionEntry _ = Nothing
+
 
 
 filterRuleEntries :: [PDCModuleEntry] -> [PDCRuleE]
@@ -693,6 +698,9 @@ filterRecordDataTypeEntries = catMaybes . map maybeRecordDataTypeEntry
 filterMsgAttrTypeEntries :: [PDCDataTypeE] -> [PDCMsgTypeE]
 filterMsgAttrTypeEntries = catMaybes . map maybeMsgAttrTypeEntry
 
+
+filterActionEntries :: [PDCModuleEntry] -> [PDCActionE]
+filterActionEntries = catMaybes . map maybeActionEntry
 
 
 prettyPDCRulePattern :: PDCRulePattern -> String

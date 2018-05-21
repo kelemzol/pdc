@@ -1,0 +1,16 @@
+
+
+rule main (A, B) {
+    A -> B : L2Req
+}
+
+rule l2-req<proc a, proc b> (a, b) {
+    more-of {
+        a -> b : ReqFrame
+    }
+    a -> b : ReqEndFrame
+}
+
+type message a -> b : L2Req l2-req
+
+

@@ -266,8 +266,8 @@ msg2node mod tl o pre p = Node o [((map (trans2EE "msg2node.pre") $ msg2nodeTrac
     ++ (map (trans2EE "msg2node.endcall") $ msg2nodeTrace (" ## endcall | " ++ (show $ map prettyTrans endcall)) endcall), remeaning tl')]
   where
     list
-      | Just ac <- pdcMsgContent p = [ ScopeEdgeE (ScopeOpen selectors), MsgEdgeE p, ScopeEdgeE ScopeThisBack, ActEdgeE ac, ScopeEdgeE ScopeClose ]
-      | otherwise                  = [ ScopeEdgeE (ScopeOpen selectors), MsgEdgeE p,                                        ScopeEdgeE ScopeClose ]
+      | Just ac <- pdcMsgContent p = [ ScopeEdgeE (ScopeOpen selectors), MsgEdgeE p, ScopeEdgeE ScopeThisBack, ActEdgeE (inlineAC ac), ScopeEdgeE ScopeClose ]
+      | otherwise                  = [ ScopeEdgeE (ScopeOpen selectors), MsgEdgeE p,                                                   ScopeEdgeE ScopeClose ]
     remeaning tl = ast2node' mod tl
     (endcall, tl') = checkEndCall tl
     checkEndCall [] = ([], [])
@@ -283,6 +283,14 @@ msg2node mod tl o pre p = Node o [((map (trans2EE "msg2node.pre") $ msg2nodeTrac
         msgAttrTypeEntry <- findMsgAttrTypeEntry (pdcMsgType p) mod
         msgDataTypeEntry <- findRecordDataTypeEntry (pdcMsgTypeType msgAttrTypeEntry) mod
         return (pdcRecordEntries msgDataTypeEntry)
+    inlineAC :: PDCAttrContent -> PDCAttrContent
+    inlineAC (PDCAttrContentActionCall acc) = maybe err PDCAttrContentInlineAction $ do
+        a <- findActionEntry name mod
+        return (pdcActionBody a)
+      where
+        name = lcid (pdcActionCallName acc)
+        err = error $ "Language.PDC.Interpreter.EvalRepr.msg2node.inlineAC: not found action " ++ name
+    inlineAC acb = acb
 {-
   = Node
     { pattern  :: PDCRulePattern
@@ -564,10 +572,10 @@ call2node :: PDCModule -> [Trans] -> PDCRulePattern -> [Trans] -> PDCCallP -> No
 call2node mod tl o pre cp@(PDCCallP {..})
     | Just ac <- pdcCallContent
     = ast2node' newMod
-      (pre ++ [ScopeT (ScopeOpen selectors)] ++ (maybe [] (\ a -> [ScopeT ScopeThisBack, AttrContextT a, ScopeT ScopeTop]) pdcPreCallContent) ++
+      (pre ++ [ScopeT (ScopeOpen selectors)] ++ (maybe [] (\ a -> [ScopeT ScopeThisBack, AttrContextT (inlineAC a), ScopeT ScopeTop]) pdcPreCallContent) ++
       ( (PatternT (pdcRulePattern (callTrace "instanceRuleEntry" $ entry)))
       : (ScopeT ScopeThisBack)
-      : (AttrContextT ac)
+      : (AttrContextT (inlineAC ac))
       : (ScopeT ScopeClose)
       : EndCallT
       : tl
@@ -586,6 +594,14 @@ call2node mod tl o pre cp@(PDCCallP {..})
     Just ruleEntry = findRuleEntry pdcRuleId mod
     id = pdcRuleAttr $ pdcRuleType $ pdcRuleEntryHeader ruleEntry
     Just selectors = if ucid id == "NullAttr" then Just [] else fmap pdcRecordEntries $ findRecordDataTypeEntry id mod
+    inlineAC :: PDCAttrContent -> PDCAttrContent
+    inlineAC (PDCAttrContentActionCall acc) = maybe err PDCAttrContentInlineAction $ do
+        a <- findActionEntry name mod
+        return (pdcActionBody a)
+      where
+        name = lcid (pdcActionCallName acc)
+        err = error $ "Language.PDC.Interpreter.EvalRepr.call2node.inlineAC: not found action " ++ name
+    inlineAC acb = acb
 
     {-
     selectors = maybe [] id $ do

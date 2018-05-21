@@ -1,0 +1,64 @@
+Action call test 3 - positive;
+
+module test-module
+
+type message MSG Attr
+
+type record Attr {
+    i : Integer
+}
+
+rule test (A, B) {
+    main
+}
+
+rule main (A, B, C, D) attr Attr {
+    first @getValue
+    second pre @putValue
+           post @getValue
+    third pre @putValue
+          post @getValue
+}
+
+rule first(A, B, C, D) attr Attr {
+    A -> B: MSG @getValue
+}
+
+rule second(A, B, C, D) attr Attr {
+    B -> C: MSG @checkValue
+}
+
+rule third(A, B, C, D) attr Attr {
+    C -> D: MSG @checkValue
+}
+
+action putValue {
+    i = this.i
+}
+
+action getValue {
+    this.i = i
+}
+
+action checkValue {
+    if (this.i + 1) /= i {
+        discard "i is not equal"
+    }
+    this.i = i
+}
+
+;
+
+A -> B: MSG {
+    i = 1
+}
+B -> C: MSG {
+    i = 2
+}
+C -> D: MSG {
+    i = 3
+}
+
+;
+
+Success {env = BoundEnv {bmap = fromList []}}
