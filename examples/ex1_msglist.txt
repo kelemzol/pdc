@@ -1,6 +1,4 @@
-//A -> B : S1
-//A -> B : S2
-//A -> B : S3
+
 User -> ATM: Identifier
 ATM -> User: Success
 User -> ATM: Withdraw

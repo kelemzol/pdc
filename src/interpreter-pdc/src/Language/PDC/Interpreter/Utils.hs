@@ -51,7 +51,12 @@ instanceRuleEntry pdcCallUnivSeqNum (PDCCallP {..}) r@(PDCRuleE {..})
     univPairs :: [(String, String)]
     topUniv :: Integer
     -- (univPairs, topUniv) = get $ map (\(pn,i) -> if elem pn (map fst templatePairs) then Nothing else Just (i, pn)) $ zip procNames [(pdcCallUnivSeqNum+1)..]
-    (univPairs, topUniv) = get $ map (\(pn,i) -> if elem pn (map fst templatePairs) then Nothing else Just (i, pn)) $ zip procNames [(getI pdcCallUnivSeqNum), (getI pdcCallUnivSeqNum)..]
+    (univPairs, topUniv) = get $ map (\(pn,i) -> if elem pn (map fst templatePairs) then Nothing else Just (i, pn)) $ zip procNames [ (getI pdcCallUnivSeqNum), (getI pdcCallUnivSeqNum), (getI pdcCallUnivSeqNum)
+                                                                                                                                    , (getI pdcCallUnivSeqNum), (getI pdcCallUnivSeqNum), (getI pdcCallUnivSeqNum)
+                                                                                                                                    , (getI pdcCallUnivSeqNum), (getI pdcCallUnivSeqNum), (getI pdcCallUnivSeqNum)
+                                                                                                                                    , (getI pdcCallUnivSeqNum), (getI pdcCallUnivSeqNum), (getI pdcCallUnivSeqNum)
+                                                                                                                                    , (getI pdcCallUnivSeqNum), (getI pdcCallUnivSeqNum), (getI pdcCallUnivSeqNum)
+                                                                                                                                    ]
       where
         get [] = ([], 0)-- pdcCallUnivSeqNum)
         get ((Just (i,p)):ipss) = let (a, b) = get ipss in (("phantom" ++ show i, p):a, max i b)

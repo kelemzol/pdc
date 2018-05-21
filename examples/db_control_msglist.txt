@@ -1,0 +1,54 @@
+
+// Startup
+Control -> Store-1 : Startup
+Control -> Store-2 : Startup
+Control -> Journal : Startup
+Journal -> Control : StartupOk
+Store-1 -> Control : StartupOk
+Store-2 -> Control : StartupOk
+
+// Client1 session
+Client1 -> Control : Login
+Control -> Client1 : LoginOk
+Client1 -> Control : CommitRequest
+Control -> Store-1 : CommitRequest
+Control -> Store-2 : CommitRequest
+Control -> Journal : CommitRequest
+Store-1 -> Control : CommitResponse
+Journal -> Control : CommitResponse
+Store-2 -> Control : CommitResponse
+
+// Client2 session
+Client2 -> Control : LoginRequest
+Control -> Client2 : LoginACK
+Client2 -> Control : LoginACK
+Client2 -> Control : QuerryRequest
+Control -> Store-1 : QuerryRequest
+Control -> Store-2 : QuerryRequest
+Store-1 -> Control : QuerryResponse
+Control -> Client2 : QuerryResponse
+Store-2 -> Control : QuerryResponse
+Control -> Journal : Measurement
+
+// Client3
+Client3 -> Control : Login
+Control -> Client3 : LoginOk
+Client3 -> Control : QuerryRequest
+Control -> Store-1 : QuerryRequest
+Control -> Store-2 : QuerryRequest
+Store-2 -> Control : QuerryResponse
+Control -> Client3 : QuerryResponse
+Store-1 -> Control : QuerryResponse
+Control -> Journal : Measurement
+
+
+// Shutdown
+Control -> Store-1 : Shutdown
+Control -> Store-2 : Shutdown
+Control -> Journal : Shutdown
+Store-1 -> Control : ShutdownOk
+Journal -> Control : ShutdownOk
+Store-2 -> Control : ShutdownOk
+
+Control -> Control : Shutdown
+Control -> Control : ShutdownOk

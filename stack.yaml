@@ -4,8 +4,6 @@ packages:
   - src/language-pdc
   - src/interpreter-pdc
   - src/pdc
-#  - src/pdc-krunner
-#  - src/pdc-k-test
 
 extra-deps:
   - pretty-tree-0.1.0.0

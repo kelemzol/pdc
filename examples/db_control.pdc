@@ -1,0 +1,138 @@
+
+module db_control
+
+
+type record ControlMainAttr {
+    main-session-id    : Integer
+    store-1-session-id : Integer
+    sotre-2-session-id : Integer
+    journal-session-id : Integer
+}
+
+type record StoreRequestAttr {
+    store-session-id   : Integer
+}
+
+type record StoreResponseAttr {
+    store-session-id   : Integer
+    errorFlag          : Boolean
+}
+
+type record JournalRequestAttr {
+    journal-session-id : Integer
+}
+
+type record JournalResponseAttr {
+    journal-session-id : Integer
+    errorFlag          : Boolean
+}
+
+
+rule db-control-main(Control) {
+    db-control-work
+}
+
+rule db-control-work(Control, store-1, store-2, journal, client) {
+    db-control-startup<store-1, store-2, journal>
+    many-of {
+        db-control-loop<store-1, store-2, journal>
+    }
+    db-control-shutdown<store-1, store-2, journal>
+}
+
+rule db-control-startup <proc store-1, proc store-2, proc journal>
+                       (Control, store-1, store-2, journal) {
+    Control -> store-1 : Startup
+    Control -> store-2 : Startup
+    Control -> journal : Startup
+    merge {
+        store-1 -> Control : StartupOk
+        store-2 -> Control : StartupOk
+        journal -> Control : StartupOk
+    }
+}
+
+rule db-control-shutdown <proc store-1, proc store-2, proc journal>
+                         (Control, store-1, store-2, journal) {
+    Control -> store-1 : Shutdown
+    Control -> store-2 : Shutdown
+    Control -> journal : Shutdown
+    merge {
+        store-1 -> Control : ShutdownOk
+        store-2 -> Control : ShutdownOk
+        journal -> Control : ShutdownOk
+    }
+    Control -> Control : Shutdown
+    Control -> Control : ShutdownOk
+}
+
+
+rule db-control-loop <proc store-1, proc store-2, proc journal>
+                     (Control, store-1, store-2, journal, client) {
+    client-login<client>
+    one-of {
+        client-commit-request<client, store-1, store-2, journal>
+        client-query-requests<client, store-1, store-2, journal>
+    }
+}
+
+rule client-login <proc client> (Control, client) {
+    one-of {
+        simple-login-method<client>
+        ack-login-method<client>
+    }
+}
+
+rule simple-login-method <proc client> (Control, client) {
+    client -> Control : Login
+    Control -> client : LoginOk
+}
+
+rule ack-login-method <proc client> (Control, client) {
+    client -> Control : LoginRequest
+    Control -> client : LoginACK
+    client -> Control : LoginACK
+}
+
+
+rule client-commit-request <proc client, proc store-1, proc store-2, proc journal>
+                           (Control, client, store-1, store-2, journal) {
+    client -> Control : CommitRequest
+    Control -> store-1 : CommitRequest
+    Control -> store-2 : CommitRequest
+    Control -> journal : CommitRequest
+    merge {
+        store-1 -> Control : CommitResponse
+        store-2 -> Control : CommitResponse
+        journal -> Control : CommitResponse
+    }
+}
+
+rule client-query-requests <proc client, proc store-1, proc store-2, proc journal>
+                          (Control, client, store-1, store-2, journal) {
+    client -> Control : QuerryRequest
+    Control -> store-1 : QuerryRequest
+    Control -> store-2 : QuerryRequest
+    one-of {
+        client-query-response<store-1, store-2, client>
+        client-query-response<store-2, store-1, client>
+    }
+}
+
+
+rule client-query-response <proc faster-store, proc slower-store, proc client, proc journal>
+                            (Control, faster-store, slower-store, client, journal) {
+    faster-store -> Control : QuerryResponse
+    merge {
+        Control -> client : QuerryResponse
+        slower-store -> Control : QuerryResponse
+    }
+    Control -> journal : Measurement
+}
+
+
+
+
+
+
+
