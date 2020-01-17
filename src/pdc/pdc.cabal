@@ -20,7 +20,7 @@ executable pdc
   main-is:             Main.hs
   -- other-modules:       
   -- other-extensions:    
-  build-depends:       base >=4.10 && <4.11
+  build-depends:       base >=4.12 && <4.13
                      , optparse-applicative >= 0.13
                      , language-pdc >= 0.1.0
                      , interpreter-pdc >= 0.1.0
